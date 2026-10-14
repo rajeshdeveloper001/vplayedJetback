@@ -44,7 +44,11 @@ Response `{"ip": "203.0.113.10"}`. Accepted only when the value is an IPv4/IPv6 
 
 Plain JSON `{"email": "<trimmed email>"}`. Resend is the same call. Response envelope (`UserResponse`/`ResponseStatus`): `error: Boolean`, `statusCode: Int`, `status: String`, `message: String`, `response: User` (read only for `get_devices` / `device_limit` on 202).
 
-| HTTP | Meaning (previous app) | This app |
+The status in these tables is the one that decides (decision D1, shared with iOS since the login moved
+to the KMP shared layer): a non-2xx HTTP status always fails; within 2xx the envelope's `statusCode`
+decides when present, else the HTTP status. The previous app read the HTTP status only.
+
+| Status | Meaning (previous app) | This app |
 |---|---|---|
 | 200 | Existing user, code sent | `CodeSent(isNewUser = false)` → OTP screen |
 | 203 | New user, code sent | `CodeSent(isNewUser = true)` → OTP screen |

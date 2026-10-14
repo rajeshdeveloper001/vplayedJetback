@@ -15,8 +15,8 @@ import okhttp3.OkHttpClient
 
 /**
  * The one [SharedGraph] (Kotlin Multiplatform shared layer, ../kmp) of the process. Features move
- * onto it phase by phase (KMP_PLANNING/KMP_MIGRATION_PLAN.md); until a feature's repository is
- * re-bound to a shared implementation, nothing calls it.
+ * onto it phase by phase (KMP_PLANNING/KMP_MIGRATION_PLAN.md). Login uses it since Phase 3
+ * (`SharedAuthRepository`); Home and geo still use Retrofit.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,7 +24,12 @@ object SharedModule {
 
     @Provides
     @Singleton
-    fun provideSharedGraph(config: AppConfig, deviceInfo: AndroidSharedDeviceInfo, okHttpClient: OkHttpClient): SharedGraph {
+    fun provideSharedGraph(
+        config: AppConfig,
+        deviceInfo: AndroidSharedDeviceInfo,
+        credentials: AndroidRequestCredentials,
+        okHttpClient: OkHttpClient,
+    ): SharedGraph {
         // Shares the app client's connection pool and dispatcher, but none of its interceptors:
         // the shared layer adds the VPlayed headers and its own redacting log itself.
         val engineClient = okHttpClient.newBuilder()
@@ -40,6 +45,7 @@ object SharedModule {
                 logger = platformLogger(),
                 engineFactory = { createOkHttpEngine(engineClient) },
                 cryptoPrimitives = platformCryptoPrimitives(),
+                requestCredentials = credentials,
             ),
         )
     }

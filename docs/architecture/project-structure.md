@@ -24,14 +24,15 @@ app/src/main/java/com/vplayed/
 │   ├── security/                    CryptoTransport (request-payload encryption expected by the backend)
 │   ├── session/                     UserSession, SessionRepository (DataStore + Keystore cipher), di/
 │   ├── shared/                      bridge to the KMP shared layer (../kmp): SharedModule (Hilt, one SharedGraph),
-│   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo — see shared-module.md
+│   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo, AndroidRequestCredentials — see shared-module.md
 │   └── dispatcher/                  coroutine dispatcher qualifiers, @ApplicationScope
 ├── reference/
 │   └── typography/OttTextStylesReference.kt   reference sheet of OTT text styles (+ phone/tablet previews)
 ├── core/error/                      AppError, DataResult, resultOf
 └── feature/
     ├── splashscreen/                start destination (≥ 3 s), startup work; di/SplashModule
-    ├── auth/                        Login + OTP: data/ (AuthApi, DTOs, DefaultAuthRepository, di),
+    ├── auth/                        Login + OTP: data/ (SharedAuthRepository → KMP shared layer, bound; Retrofit AuthApi,
+    │                                DTOs, DefaultAuthRepository kept as rollback until Phase 7; di),
     │                                domain/ (AuthRepository, EmailLoginResult, model/OtpVerificationResult …, DeviceLimitHandoff),
     │                                presentation/ (LoginFragment, OtpFragment, viewmodel/Login|OtpViewModel,
     │                                screen/Login|OtpScreen, components/ (AuthLayout, OtpCodeField, DeviceLimitStep …),

@@ -48,12 +48,14 @@ core/geo/           GeoRestrictionStore (single source of IP / geo token / curre
 core/security/      CryptoTransport (backend request encryption)
 core/session/       UserSession, SessionRepository (encrypted DataStore + Keystore), sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
-core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig
+core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig;
+                    AndroidRequestCredentials feeds it the session and geo token
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /
-                       OtpScreen (shared AuthLayout), Login/OtpViewModel, DefaultAuthRepository (email-login, verifyEmailOtp,
-                       device limit), DeviceLimitHandoff
+                       OtpScreen (shared AuthLayout), Login/OtpViewModel, SharedAuthRepository (bound; calls the KMP shared
+                       layer for email-login, verifyEmailOtp, device limit), DefaultAuthRepository (Retrofit, rollback until
+                       Phase 7), DeviceLimitHandoff
 feature/dashboard/     navigation/ (DashboardTab: Home, Search, Promos, Subscription)
   home/                data/ (HomeApi, DTOs, HomeMapper, DefaultHomeRepository, di) · domain/ · presentation/
   search|promos|subscription/  placeholder screens until their APIs exist

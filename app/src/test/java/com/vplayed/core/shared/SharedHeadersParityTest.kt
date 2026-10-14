@@ -10,7 +10,6 @@ import com.vplayed.core.session.UserSession
 import com.vplayed.shared.PlatformDependencies
 import com.vplayed.shared.SharedGraph
 import com.vplayed.shared.core.crypto.platformCryptoPrimitives
-import com.vplayed.shared.core.network.AuthTokens
 import com.vplayed.shared.core.network.RequestOptions
 import com.vplayed.shared.core.network.createOkHttpEngine
 import com.vplayed.shared.core.platform.NoOpLogger
@@ -69,6 +68,7 @@ class SharedHeadersParityTest {
             logger = NoOpLogger,
             engineFactory = { createOkHttpEngine(OkHttpClient.Builder().addInterceptor(capture).build()) },
             cryptoPrimitives = platformCryptoPrimitives(),
+            requestCredentials = AndroidRequestCredentials(sessions, geoStore),
         ),
     )
 
@@ -97,10 +97,8 @@ class SharedHeadersParityTest {
     fun givenSessionAndGeoToken_whenSendingTheSameRequest_thenBothStacksSendTheSameHeaders() = runTest {
         val session = UserSession(userId = "u1", email = "user@example.com", accessToken = "access-abc", profileId = "profile-1")
         sessions.save(session)
+        // Both stacks read the same stores (`AndroidRequestCredentials`), so nothing is mirrored.
         geoStore.updateGeo("geo-xyz", null)
-        // Phase 3/5 moves session and geo state into the shared layer; until then the app mirrors them.
-        graph.requestCredentials.setAuthTokens(AuthTokens(session.accessToken, session.profileId))
-        graph.requestCredentials.setGeoToken("geo-xyz")
 
         val (legacy, shared) = headersOfBoth()
 
@@ -113,7 +111,6 @@ class SharedHeadersParityTest {
     @Test
     fun givenRequestOptingOutOfGeoToken_whenSent_thenSharedStackOmitsItLikeWithoutGeoToken() = runTest {
         geoStore.updateGeo("geo-xyz", null)
-        graph.requestCredentials.setGeoToken("geo-xyz")
 
         val (_, shared) = headersOfBoth(RequestOptions(sendGeoToken = false))
 
