@@ -9,7 +9,9 @@ OTT Android app. Single `:app` module, feature-oriented packages, MVVM + unidire
 - compileSdk/targetSdk 37, minSdk 24, Java 11 bytecode.
 - All versions live in `gradle/libs.versions.toml`. Prefer stable releases; justify any new dependency in `docs/dependencies.md`.
 
-Command-line builds need JDK 25: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
+Command-line builds need JDK 25: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`, and the SDK via `local.properties` (`sdk.dir`) or `ANDROID_HOME`.
+
+The KMP shared layer (`com.vplayed:shared`) is built from source: the `kmp` repository must be checked out next to this one (`../kmp`); `settings.gradle.kts` includes it as a composite build. Its toolchain is kept identical to this project's. Details: `docs/architecture/shared-module.md`.
 
 ## Build types (no product flavors)
 
@@ -46,6 +48,7 @@ core/geo/           GeoRestrictionStore (single source of IP / geo token / curre
 core/security/      CryptoTransport (backend request encryption)
 core/session/       UserSession, SessionRepository (encrypted DataStore + Keystore), sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
+core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /

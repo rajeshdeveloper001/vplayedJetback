@@ -252,6 +252,8 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    implementation(libs.vplayed.shared)
+
     // Preview rendering for every debuggable build type.
     "devImplementation"(libs.androidx.compose.ui.tooling)
     "qaImplementation"(libs.androidx.compose.ui.tooling)

@@ -35,6 +35,8 @@ Versions: `gradle/libs.versions.toml`. All are stable releases (verified against
 | retrofit + converter-kotlinx-serialization | 3.0.0 | REST client (Home API) |
 | okhttp + logging-interceptor | 5.5.0 | HTTP client; body logging only in dev/qa |
 | io.coil-kt.coil3:coil-compose + coil-network-okhttp | 3.6.3 | Image loading with memory/disk cache (Home artwork) |
+| com.vplayed:shared | 0.1.0 (source) | Kotlin Multiplatform business logic shared with the iOS app; built from `../kmp` by the composite build, not downloaded. See `docs/architecture/shared-module.md` |
+| ↳ io.ktor:ktor-client-core + ktor-client-okhttp | 3.6.0 (transitive) | HTTP client of the shared layer; runs on the app's OkHttp 5.5.0 (same version Ktor 3.6.0 depends on), sharing its connection pool |
 
 ## Testing
 

@@ -31,6 +31,9 @@ okhttp = "5.5.0"
 # Images
 coil = "3.6.3"
 
+# Shared KMP library (../kmp, substituted by the composite build in settings.gradle.kts)
+vplayedShared = "0.1.0"
+
 # Testing
 junit = "4.13.2"
 androidxTestRunner = "1.7.0"
@@ -82,6 +85,9 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 # Images
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+# Shared business logic (Kotlin Multiplatform)
+vplayed-shared = { group = "com.vplayed", name = "shared", version.ref = "vplayedShared" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

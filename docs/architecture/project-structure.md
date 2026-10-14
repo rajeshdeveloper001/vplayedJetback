@@ -23,6 +23,8 @@ app/src/main/java/com/vplayed/
 │   │                                GeoTokenDecoder, GeoRestrictionSync, work/GeoRefreshWorker, data/ (ipify + geo-data APIs)
 │   ├── security/                    CryptoTransport (request-payload encryption expected by the backend)
 │   ├── session/                     UserSession, SessionRepository (DataStore + Keystore cipher), di/
+│   ├── shared/                      bridge to the KMP shared layer (../kmp): SharedModule (Hilt, one SharedGraph),
+│   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo — see shared-module.md
 │   └── dispatcher/                  coroutine dispatcher qualifiers, @ApplicationScope
 ├── reference/
 │   └── typography/OttTextStylesReference.kt   reference sheet of OTT text styles (+ phone/tablet previews)

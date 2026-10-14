@@ -21,6 +21,8 @@ Unit tests are enabled for **every** build type (`android.onlyEnableUnitTestForT
 | `core/network/ApiHeadersInterceptorTest` | Mobile app headers, `device_id`, geo token header (never null/empty, latest value, skipped on `@WithoutGeoToken`), `Authorization` / `profile_id` only with a session |
 | `core/common/validation/EmailValidatorTest` | Empty, malformed and valid (trimmed) addresses |
 | `core/security/CryptoTransportTest` | OpenSSL-compatible output (fixed-salt vector), random salt, no empty payload |
+| `core/shared/SharedConfigMappingTest` | Per build type: the KMP shared layer gets the same environment, URLs, logging, version and transport key as `AppConfig`; key never printed |
+| `core/shared/SharedHeadersParityTest` | The shared Ktor client (OkHttp engine) sends the same backend headers as `ApiHeadersInterceptor`: signed out, session + profile, geo token, geo token suppressed |
 | `core/geo/GeoTokenDecoderTest` | Currency from Base64 JSON; invalid Base64 / malformed JSON / missing currency return null |
 | `core/geo/GeoRestrictionRepositoryTest` | IP → geo token → currency; failures keep the last valid state; serialized refreshes; geo-data path |
 | `core/geo/GeoRestrictionSyncTest` | Refresh on start online, reconnect and network switch; none while unchanged; flapping debounced (virtual time) |
