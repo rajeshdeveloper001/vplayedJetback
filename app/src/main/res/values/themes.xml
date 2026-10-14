@@ -1,0 +1,18 @@
+<resources>
+    <!--
+        Launch theme (AndroidX SplashScreen; system splash on Android 12+, emulated below).
+        The icon is intentionally empty: the system draws splash icons at its own size and
+        position, so the logo would jump when LaunchScreen takes over. The system splash shows
+        only splash_background, then LaunchScreen fades the logo in on the same color.
+    -->
+    <style name="Theme.Vplayed30.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_empty</item>
+        <item name="postSplashScreenTheme">@style/Theme.Vplayed30</item>
+    </style>
+
+    <!-- Window theme only; the UI theme is AppTheme in core/designsystem/theme. -->
+    <style name="Theme.Vplayed30" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>

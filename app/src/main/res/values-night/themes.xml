@@ -1,0 +1,6 @@
+<resources>
+    <!-- Window theme only; the UI theme is AppTheme in core/designsystem/theme. -->
+    <style name="Theme.Vplayed30" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>

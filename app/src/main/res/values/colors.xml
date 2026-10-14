@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Launch background, shared by the system splash (Theme.Vplayed30.Starting), the window
+        and the Compose LaunchScreen so the launch never changes color. Follows the system
+        light/dark setting. All other colors are Compose design tokens.
+    -->
+    <color name="splash_background">#FFDDDDDD</color>
+</resources>

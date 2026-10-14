@@ -1,0 +1,34 @@
+{
+  "statusCode": 200,
+  "status": "success",
+  "message": "Home banners fetched successfully.",
+  "response": {
+    "data": [
+      {
+        "_id": "banner-1",
+        "master_details": {
+          "_id": "content-1",
+          "title": "Sample Feature",
+          "sho_type": 2,
+          "description": "A synthetic banner used by unit tests.",
+          "genre": ["6a1432f418d4d53c2c6003c4"],
+          "default_genre": { "_id": "g-adventure", "title": { "en": "Adventure" } },
+          "video_banner_images": { "default": { "mobile": "banners/feature-mobile.jpg", "web": "banners/feature-web.jpg" } },
+          "title_images": { "default": { "mobile": "titles/feature-mobile.png", "web": "titles/feature-web.png" } },
+          "title_image": "titles/feature.avif"
+        }
+      },
+      {
+        "_id": "banner-2",
+        "master_details": {
+          "_id": "content-2",
+          "title": "Second Feature",
+          "sho_type": 6,
+          "genre": [{ "_id": "g-drama", "title": "Drama" }],
+          "new_thumbnail_images": { "default": { "tl": "thumbs/second-tl.jpg" } }
+        }
+      },
+      { "_id": "banner-without-content" }
+    ]
+  }
+}

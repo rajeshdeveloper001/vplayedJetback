@@ -1,0 +1,26 @@
+{
+  "statusCode": 200,
+  "status": "success",
+  "response": {
+    "total": 7, "currentPage": 3, "totalPages": 3, "next": null,
+    "data": [
+      {
+        "_id": "sec-micro", "title": "Micro Series", "type": 7, "is_top_ten": false, "row_count": 2, "total": 1, "next": null,
+        "data": [ { "_id": "micro-1", "title": "Short Story", "type": 7, "sho_type": 6, "episodes_count": 12,
+                    "default_genre": { "title": "drama" }, "genre": [{ "title": "Drama", "slug": "drama" }], "thumbnail_image": "posters/micro-1.jpg",
+                    "video_banner_images": { "default": { "mobile": "banners/micro-1-mobile.jpg" } } } ]
+      },
+      {
+        "_id": "sec-promos", "title": "Promos", "type": 2, "is_top_ten": false, "row_count": 1, "total": 1, "next": null,
+        "data": [ { "_id": "promo-1", "title": "Official Trailer", "type": 2, "video_duration": "148.2",
+                    "view_count": 4200000, "guds_count": "312000",
+                    "new_thumbnail_images": { "default": { "tv": "thumbs/promo-1-tv.jpg" } } } ]
+      },
+      {
+        "_id": "sec-audio", "title": "Audio", "type": 3, "is_top_ten": false, "row_count": 1, "total": 1, "next": null,
+        "data": [ { "_id": "audio-1", "title": "Title Song", "type": 3, "artist_name": "Sample Artist",
+                    "audio_duration": "9488.3", "thumbnail_image": "covers/audio-1.jpg" } ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- System splash icon: intentionally empty (see Theme.Vplayed30.Starting). The logo is shown by
+     LaunchScreen, so it appears once, at one size, with no jump. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <size
+        android:width="288dp"
+        android:height="288dp" />
+    <solid android:color="@android:color/transparent" />
+</shape>

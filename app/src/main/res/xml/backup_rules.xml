@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Backup rules for Android 11 and lower. The stored session is encrypted with a device-bound
+   Keystore key, so it is excluded (see data_extraction_rules.xml for Android 12+).
+-->
+<full-backup-content>
+    <exclude domain="file" path="datastore/session.preferences_pb" />
+</full-backup-content>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   The stored session (datastore/session.preferences_pb) is encrypted with a Keystore key that does
+   not leave the device, so it is useless after a restore. Exclude it from cloud backup and from
+   device-to-device transfer; the user simply signs in again.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/session.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/session.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>
