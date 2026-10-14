@@ -1,18 +1,18 @@
 package com.vplayed.feature.auth
 
-import com.vplayed.R
-import com.vplayed.core.common.validation.EmailValidationResult
-import com.vplayed.core.error.AppError
 import com.vplayed.core.session.UserSession
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
-import com.vplayed.feature.auth.domain.EmailLoginResult
-import com.vplayed.feature.auth.domain.model.DeviceKind
-import com.vplayed.feature.auth.domain.model.DeviceLimit
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.SignedInDevice
-import com.vplayed.feature.auth.presentation.viewmodel.AuthMessage
 import com.vplayed.feature.auth.presentation.viewmodel.LoginEvent
 import com.vplayed.feature.auth.presentation.viewmodel.LoginViewModel
+import com.vplayed.shared.auth.AuthMessage
+import com.vplayed.shared.auth.AuthMessageKey
+import com.vplayed.shared.auth.DeviceKind
+import com.vplayed.shared.auth.DeviceLimit
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.EmailLoginResult
+import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.core.error.AppError
+import com.vplayed.shared.validation.EmailValidationResult
 import com.vplayed.testing.FakeAuthRepository
 import com.vplayed.testing.FakeSessionRepository
 import com.vplayed.testing.MainDispatcherRule
@@ -120,10 +120,10 @@ class LoginViewModelTest {
 
     @Test
     fun givenDeviceLimitWithoutDevices_whenSubmitting_thenToastAndNoNavigation() = runTest {
-        repository.result = EmailLoginResult.DeviceLimitReached(null)
+        repository.result = EmailLoginResult.DeviceLimitReached(null, null)
         viewModel.onEmailChange("user@example.com")
         viewModel.onSubmit()
-        assertEquals(AuthMessage.Resource(R.string.login_device_limit), nextMessage())
+        assertEquals(AuthMessage.Localized(AuthMessageKey.DEVICE_LIMIT), nextMessage())
         assertNull(handoff.take())
     }
 
@@ -140,7 +140,7 @@ class LoginViewModelTest {
         repository.result = EmailLoginResult.Rejected("<html><body>Fatal error at line 3</body></html>")
         viewModel.onEmailChange("user@example.com")
         viewModel.onSubmit()
-        assertEquals(AuthMessage.Resource(R.string.login_failed), nextMessage())
+        assertEquals(AuthMessage.Localized(AuthMessageKey.LOGIN_FAILED), nextMessage())
     }
 
     @Test
@@ -148,7 +148,7 @@ class LoginViewModelTest {
         repository.result = EmailLoginResult.Failure(AppError.Network)
         viewModel.onEmailChange("user@example.com")
         viewModel.onSubmit()
-        assertEquals(AuthMessage.Resource(R.string.error_network), nextMessage())
+        assertEquals(AuthMessage.Localized(AuthMessageKey.ERROR_NETWORK), nextMessage())
         assertFalse(viewModel.uiState.value.isSubmitting)
     }
 

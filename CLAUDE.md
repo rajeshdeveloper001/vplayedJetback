@@ -34,7 +34,7 @@ The KMP shared layer (`com.vplayed:shared`) is built from source: the `kmp` repo
 ```
 app/            Application (Coil loader, starts GeoRestrictionSync), MainActivity (BaseActivity + SplashScreen API),
                 VPlayedApp (side menu + nav shell + tab bar), AppDrawer
-core/common/    AppConfig, AppEnvironment, ConfigModule, validation/EmailValidator
+core/common/    AppConfig, AppEnvironment, ConfigModule, validation/EmailValidator (alias of the shared rule)
 core/error/     AppError, DataResult, resultOf { } (typed failures from the data layer)
 core/designsystem/  color/ typography/ dimension/ shape/ theme/ component/ icon/
 core/ui/        AppScreenScaffold, adaptive/ (AppLayoutInfo, ResponsiveContent), preview/ annotations,
@@ -45,7 +45,6 @@ core/network/       OkHttp/Retrofit/Json, ApiHeadersInterceptor (device_id, x-be
                     @WithoutGeoToken / @RedactBody, connectivity/NetworkMonitor
 core/geo/           GeoRestrictionStore (single source of IP / geo token / currency), GeoRestrictionRepository,
                     GeoRestrictionSync, work/GeoRefreshWorker (WorkManager)
-core/security/      CryptoTransport (backend request encryption)
 core/session/       UserSession, SessionRepository (encrypted DataStore + Keystore), sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
 core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig;
@@ -53,9 +52,9 @@ core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provid
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /
-                       OtpScreen (shared AuthLayout), Login/OtpViewModel, SharedAuthRepository (bound; calls the KMP shared
-                       layer for email-login, verifyEmailOtp, device limit), DefaultAuthRepository (Retrofit, rollback until
-                       Phase 7), DeviceLimitHandoff
+                       OtpScreen (shared AuthLayout), Login/OtpViewModel on the KMP shared EmailLoginController / OtpController
+                       (rules, messages as AuthMessageKey → strings.xml in AuthMessage.kt), DeviceLimitHandoff,
+                       AuthSessionMapping; requests, encryption and models come from the shared layer
 feature/dashboard/     navigation/ (DashboardTab: Home, Search, Promos, Subscription)
   home/                data/ (HomeApi, DTOs, HomeMapper, DefaultHomeRepository, di) · domain/ · presentation/
   search|promos|subscription/  placeholder screens until their APIs exist
@@ -103,7 +102,7 @@ Compose destinations are the default. A screen that must be a Fragment extends `
 
 ## API
 
-Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`. Mark Retrofit methods `@RedactBody` when bodies hold credentials or personal data, and `@WithoutGeoToken` when the geo token must not be sent. Data layers return `DataResult` (never throw); map exceptions with `resultOf { }`. Parse with the app `Json` (lenient: unknown keys ignored, `coerceInputValues`). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
+Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`; login requests are made by the KMP shared layer. Mark Retrofit methods `@RedactBody` when bodies hold credentials or personal data, and `@WithoutGeoToken` when the geo token must not be sent. Data layers return `DataResult` (never throw); map exceptions with `resultOf { }`. Parse with the app `Json` (lenient: unknown keys ignored, `coerceInputValues`). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
 
 ## Testing
 

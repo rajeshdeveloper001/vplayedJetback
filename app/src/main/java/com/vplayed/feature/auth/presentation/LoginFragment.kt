@@ -11,8 +11,8 @@ import com.vplayed.core.ui.base.BaseFragment
 import com.vplayed.feature.auth.presentation.screen.LoginActions
 import com.vplayed.feature.auth.presentation.screen.LoginScreen
 import com.vplayed.feature.auth.presentation.viewmodel.LoginEvent
-import com.vplayed.feature.auth.presentation.viewmodel.AuthMessage
 import com.vplayed.feature.auth.presentation.viewmodel.LoginViewModel
+import com.vplayed.feature.auth.presentation.viewmodel.resolve
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -36,7 +36,7 @@ class LoginFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         viewModel.events.collectOnViewLifecycle { event ->
             when (event) {
-                is LoginEvent.ShowMessage -> showToast(event.message.resolve())
+                is LoginEvent.ShowMessage -> showToast(event.message.resolve(requireContext()))
                 is LoginEvent.OpenOtp -> onOpenOtp?.invoke(event.email, event.startWithDeviceLimit)
             }
         }
@@ -63,10 +63,5 @@ class LoginFragment : BaseFragment() {
         onCloseRequested = null
         onOpenOtp = null
         super.onDestroy()
-    }
-
-    private fun AuthMessage.resolve(): String = when (this) {
-        is AuthMessage.Server -> text
-        is AuthMessage.Resource -> getString(id)
     }
 }

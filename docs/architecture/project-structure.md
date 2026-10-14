@@ -21,7 +21,6 @@ app/src/main/java/com/vplayed/
 │   │                                SelectiveLoggingInterceptor, @WithoutGeoToken/@RedactBody, connectivity/NetworkMonitor
 │   ├── geo/                         GeoRestrictionStore (IP, geo token, currency), GeoRestrictionRepository,
 │   │                                GeoTokenDecoder, GeoRestrictionSync, work/GeoRefreshWorker, data/ (ipify + geo-data APIs)
-│   ├── security/                    CryptoTransport (request-payload encryption expected by the backend)
 │   ├── session/                     UserSession, SessionRepository (DataStore + Keystore cipher), di/
 │   ├── shared/                      bridge to the KMP shared layer (../kmp): SharedModule (Hilt, one SharedGraph),
 │   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo, AndroidRequestCredentials — see shared-module.md
@@ -31,9 +30,9 @@ app/src/main/java/com/vplayed/
 ├── core/error/                      AppError, DataResult, resultOf
 └── feature/
     ├── splashscreen/                start destination (≥ 3 s), startup work; di/SplashModule
-    ├── auth/                        Login + OTP: data/ (SharedAuthRepository → KMP shared layer, bound; Retrofit AuthApi,
-    │                                DTOs, DefaultAuthRepository kept as rollback until Phase 7; di),
-    │                                domain/ (AuthRepository, EmailLoginResult, model/OtpVerificationResult …, DeviceLimitHandoff),
+    ├── auth/                        Login + OTP on the KMP shared controllers (EmailLoginController, OtpController):
+    │                                data/ (AuthSessionMapping; di provides the shared AuthRepository),
+    │                                domain/ (DeviceLimitHandoff; the models are the shared ones),
     │                                presentation/ (LoginFragment, OtpFragment, viewmodel/Login|OtpViewModel,
     │                                screen/Login|OtpScreen, components/ (AuthLayout, OtpCodeField, DeviceLimitStep …),
     │                                navigation/LoginDestination, OtpDestination)
@@ -111,4 +110,4 @@ Failures keep the previous valid values; currency defaults to INR. Nothing is pe
 
 ## Dependency injection
 
-Hilt modules sit next to what they provide: `ConfigModule` (AppConfig), `DispatchersModule` (+ `@ApplicationScope`), `DataStoreModule` + `RepositoryModule`, `NetworkModule` + `NetworkBindingsModule`, `GeoApiModule` + `GeoBindingsModule`, `AuthNetworkModule` + `AuthRepositoryModule`, `SessionStorageModule` + `SessionRepositoryModule`. All are `SingletonComponent`. `GeoRefreshWorker` reads its dependencies through a Hilt `@EntryPoint`, so WorkManager's default initializer is kept.
+Hilt modules sit next to what they provide: `ConfigModule` (AppConfig), `DispatchersModule` (+ `@ApplicationScope`), `DataStoreModule` + `RepositoryModule`, `NetworkModule` + `NetworkBindingsModule`, `GeoApiModule` + `GeoBindingsModule`, `AuthRepositoryModule` (shared `AuthRepository` from `SharedGraph`), `SessionStorageModule` + `SessionRepositoryModule`. All are `SingletonComponent`. `GeoRefreshWorker` reads its dependencies through a Hilt `@EntryPoint`, so WorkManager's default initializer is kept.

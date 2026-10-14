@@ -15,8 +15,8 @@ import okhttp3.OkHttpClient
 
 /**
  * The one [SharedGraph] (Kotlin Multiplatform shared layer, ../kmp) of the process. Features move
- * onto it phase by phase (KMP_PLANNING/KMP_MIGRATION_PLAN.md). Login uses it since Phase 3
- * (`SharedAuthRepository`); Home and geo still use Retrofit.
+ * onto it phase by phase (KMP_PLANNING/KMP_MIGRATION_PLAN.md). Login runs on it since Phase 3
+ * (shared `AuthRepository` and controllers); Home and geo still use Retrofit.
  */
 @Module
 @InstallIn(SingletonComponent::class)

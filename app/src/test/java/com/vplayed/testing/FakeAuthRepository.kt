@@ -1,17 +1,36 @@
 package com.vplayed.testing
 
-import com.vplayed.feature.auth.domain.AuthRepository
-import com.vplayed.feature.auth.domain.EmailLoginResult
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.OtpVerificationResult
-import com.vplayed.feature.auth.domain.model.SignOutDeviceResult
+import com.vplayed.shared.auth.AuthRepository
+import com.vplayed.shared.auth.AuthSession
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.EmailLoginResult
+import com.vplayed.shared.auth.GuestLoginResult
+import com.vplayed.shared.auth.LogoutResult
+import com.vplayed.shared.auth.OtpVerificationResult
+import com.vplayed.shared.auth.SignOutDeviceResult
 import kotlinx.coroutines.CompletableDeferred
 
-/** Scriptable [AuthRepository]: records each call and answers with the configured result, optionally held. */
+/** A signed-in session as the shared layer returns it (synthetic). */
+val testAuthSession = AuthSession(
+    accessToken = "access-1",
+    refreshToken = "refresh-1",
+    userId = "u-1",
+    uniqueUserId = 42,
+    email = "user@example.com",
+    phone = null,
+    firstName = "Sam",
+    profileId = "p-1",
+    isGuest = false,
+)
+
+fun verified(isNewUser: Boolean = false, hasMultipleProfiles: Boolean = false) =
+    OtpVerificationResult.Verified(testAuthSession, isNewUser, hasMultipleProfiles)
+
+/** Scriptable shared [AuthRepository]: records each call and answers with the configured result, optionally held. */
 class FakeAuthRepository : AuthRepository {
     var result: EmailLoginResult = EmailLoginResult.CodeSent(message = null, isNewUser = false)
-    var verifyResult: OtpVerificationResult = OtpVerificationResult.Verified(isNewUser = false, hasMultipleProfiles = false)
-    var continueResult: OtpVerificationResult = OtpVerificationResult.Verified(isNewUser = false, hasMultipleProfiles = false)
+    var verifyResult: OtpVerificationResult = verified()
+    var continueResult: OtpVerificationResult = verified()
     var signOutResult: SignOutDeviceResult = SignOutDeviceResult.Success
 
     /** Holds [requestEmailLogin] until completed. */
@@ -46,4 +65,9 @@ class FakeAuthRepository : AuthRepository {
         continuedEmails += email
         return continueResult
     }
+
+    // This app has no guest login or logout yet.
+    override suspend fun guestLogin(): GuestLoginResult = error("not used by AndroidJP")
+
+    override suspend fun logout(): LogoutResult = error("not used by AndroidJP")
 }

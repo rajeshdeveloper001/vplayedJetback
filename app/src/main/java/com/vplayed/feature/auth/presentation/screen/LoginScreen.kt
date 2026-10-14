@@ -125,6 +125,7 @@ private fun ColumnScope.LoginForm(
     val errorMessage = when (uiState.emailError) {
         EmailValidationResult.EMPTY -> stringResource(R.string.login_email_error_empty)
         EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.login_email_error_invalid)
+        EmailValidationResult.TOO_LONG -> stringResource(R.string.login_email_error_too_long)
         EmailValidationResult.VALID, null -> null
     }
     LoginEmailField(

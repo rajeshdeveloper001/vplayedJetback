@@ -28,26 +28,45 @@ The shared HTTP client runs on a copy of the app's `OkHttpClient` **without its 
 shares the connection pool and dispatcher, and the shared layer adds the VPlayed headers and its own
 redacting log itself.
 
-## Current state (Phase 3: login)
+## Current state (Phase 3 done: login)
 
-**Login runs on the shared layer.** `AuthRepositoryModule` binds `AuthRepository` to
-`feature/auth/data/SharedAuthRepository`, which calls `SharedGraph.authRepository` (email-login,
-verifyEmailOtp, logout-device, verifyEmailLogin), maps its results to the app's domain types and saves
-a verified session in `SessionRepository`. ViewModels, screens and the `TestModules.kt` fake are
-unchanged. `DefaultAuthRepository` and `AuthApi` (Retrofit) stay until the Phase 7 cleanup; binding
-`DefaultAuthRepository` again in `AuthRepositoryModule` is the rollback.
+**Login runs on the shared layer.** `LoginViewModel` and `OtpViewModel` delegate to the shared
+`EmailLoginController` and `OtpController` (`../kmp`, `auth/`), which hold every rule of the flow:
+- email validation (decision D16: TLD of 2–64 letters, at most 50 characters)
+- one request at a time
+- reading the answers (D1–D5)
+- the 60 s resend countdown
+- the device-limit steps
+- the 3 s success step
 
-The shared layer reads auth answers by the rules both apps now follow (decisions in
-`KMP_PLANNING/KMP_ARCHITECTURE_ANALYSIS.md` §13; contract in `docs/api/auth-api.md`):
+The ViewModels keep their public API (`uiState`, `events`, the same functions). They:
+- turn the controllers' effects into navigation and Toasts,
+- hand the device list to the OTP screen through `DeviceLimitHandoff`,
+- store the session the controller hands over (`AuthSession.toUserSession`) in `SessionRepository`.
+
+`LoginUiState` and `OtpUiState` are aliases of the shared `EmailLoginState` and `OtpState`. Messages
+are shared `AuthMessage`s: the server's own words when safe, else an `AuthMessageKey` that
+`AuthMessage.kt` maps to `strings.xml`.
+
+`AuthRepositoryModule` provides the shared `AuthRepository` (`SharedGraph.authRepository`); the
+`TestModules.kt` fake implements the same interface. `core/common/validation/EmailValidator` is an alias
+of the shared validator, so every form uses the same rule.
+
+The previous Android login code (Retrofit `AuthApi` and DTOs, `DefaultAuthRepository`, the app-side
+domain models, the Phase 3 bridge `SharedAuthRepository` and `core/security/CryptoTransport`) was
+deleted: requests, encryption and models now come from the shared layer.
+
+The rules (decisions in `KMP_PLANNING/KMP_ARCHITECTURE_ANALYSIS.md` §5; contract in `docs/api/auth-api.md`):
 
 - **D1**: a non-2xx HTTP status is always a failure. Within 2xx, the envelope's `statusCode` decides when present, otherwise the HTTP status.
 - **D2–D4**: this app's existing behaviour, now shared with iOS.
-- **D5**: the device-limit sign-out and `verifyEmailLogin` are used here only. iOS keeps them off until the backend confirms that signing in without a code is safe.
+- **D5**: this app offers the device-limit step (`AuthFlowConfig(deviceSignOutEnabled = true)`), including `verifyEmailLogin`. iOS keeps it off until the backend confirms that signing in without a code is safe.
+- **D16**: the shared email rule.
 
 Home and geo still use Retrofit (Phase 4). Tests:
-- `SharedAuthRepositoryTest` covers the wiring, the mapping and the saved session on the real shared client.
-- The shared module's own `AuthRepositoryTest` covers the status-code rules.
-- `SharedHeadersParityTest` proves the shared client sends the same backend headers as `ApiHeadersInterceptor`. It covers four cases: signed out, signed in with a profile, with a geo token, and with the geo token suppressed.
+- The flow rules are tested in the shared module: `EmailLoginControllerTest`, `OtpControllerTest` (ported from this app's `OtpViewModelTest`), `AuthRepositoryTest` and `AuthMessageTest`.
+- Here, `LoginViewModelTest` and `OtpViewModelTest` run the real controllers with a fake repository, including the stored session.
+- `SharedHeadersParityTest` proves the shared client sends the same backend headers as `ApiHeadersInterceptor`.
 - `SharedConfigMappingTest` runs per build type.
 
 Next, Home moves over by re-binding `HomeRepository` (Phase 4). The session moves into the shared layer in Phase 5.

@@ -20,20 +20,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.vplayed.R
 import com.vplayed.core.designsystem.theme.AppTheme
-import com.vplayed.feature.auth.presentation.viewmodel.AuthMessage
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
-import com.vplayed.feature.auth.domain.model.DeviceKind
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.SignedInDevice
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.components.OtpTestTags
 import com.vplayed.feature.auth.presentation.screen.OtpActions
 import com.vplayed.feature.auth.presentation.screen.OtpScreen
-import com.vplayed.feature.auth.presentation.viewmodel.OtpStep
 import com.vplayed.feature.auth.presentation.viewmodel.OtpUiState
 import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
+import com.vplayed.shared.auth.AuthMessage
+import com.vplayed.shared.auth.AuthMessageKey
+import com.vplayed.shared.auth.DeviceKind
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.OtpStep
+import com.vplayed.shared.auth.SignedInDevice
 import com.vplayed.testing.FakeAuthRepository
 import com.vplayed.testing.FakeSessionRepository
 import org.junit.Assert.assertEquals
@@ -49,7 +49,7 @@ class OtpScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private val repository = FakeAuthRepository(FakeSessionRepository())
+    private val repository = FakeAuthRepository()
 
     private fun setStatic(state: OtpUiState, size: DpSize = PHONE, actions: OtpActions = OtpActions()) {
         composeRule.setContent {
@@ -70,6 +70,7 @@ class OtpScreenTest {
                             SavedStateHandle(mapOf(OtpViewModel.ARG_EMAIL to EMAIL, OtpViewModel.ARG_START_WITH_DEVICE_LIMIT to false)),
                             repository,
                             DeviceLimitHandoff(),
+                            FakeSessionRepository(),
                         )
                     }
                     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -199,7 +200,7 @@ class OtpScreenTest {
 
     @Test
     fun givenRefusedCode_whenShown_thenInlineErrorUnderBoxesAndNoToastNeeded() {
-        setStatic(OtpUiState(email = EMAIL, error = AuthMessage.Resource(R.string.otp_invalid), shakeCount = 1))
+        setStatic(OtpUiState(email = EMAIL, error = AuthMessage.Localized(AuthMessageKey.OTP_INVALID), shakeCount = 1))
 
         composeRule.onNodeWithTag(OtpTestTags.ERROR).assertIsDisplayed()
         composeRule.onNodeWithText("Incorrect code. Try again.").assertIsDisplayed()
@@ -226,7 +227,7 @@ class OtpScreenTest {
 
     @Test
     fun givenNewUserNotice_whenSuccessShown_thenNoticeIsDisplayed() {
-        setStatic(OtpUiState(email = EMAIL, step = OtpStep.Success, notice = AuthMessage.Resource(R.string.otp_new_user_pending)))
+        setStatic(OtpUiState(email = EMAIL, step = OtpStep.Success, notice = AuthMessage.Localized(AuthMessageKey.PROFILE_SETUP_PENDING)))
         composeRule.onNodeWithTag(OtpTestTags.NOTICE).assertIsDisplayed()
     }
 

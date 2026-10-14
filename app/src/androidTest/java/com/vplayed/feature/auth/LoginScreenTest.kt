@@ -15,12 +15,12 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.vplayed.core.common.validation.EmailValidationResult
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.screen.LoginActions
 import com.vplayed.feature.auth.presentation.screen.LoginScreen
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.shared.validation.EmailValidationResult
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

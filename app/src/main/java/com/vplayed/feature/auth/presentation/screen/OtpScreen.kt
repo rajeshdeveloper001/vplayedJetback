@@ -1,13 +1,14 @@
 package com.vplayed.feature.auth.presentation.screen
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
@@ -28,23 +29,23 @@ import com.vplayed.R
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ScreenPreviews
-import com.vplayed.feature.auth.domain.model.DeviceKind
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.SignedInDevice
 import com.vplayed.feature.auth.presentation.components.AuthBackButton
 import com.vplayed.feature.auth.presentation.components.AuthInlineError
-import com.vplayed.feature.auth.presentation.components.shakeOnChange
-import com.vplayed.feature.auth.presentation.viewmodel.AuthMessage
-import androidx.compose.foundation.layout.fillMaxWidth
 import com.vplayed.feature.auth.presentation.components.AuthLayout
 import com.vplayed.feature.auth.presentation.components.AuthSuccessStep
 import com.vplayed.feature.auth.presentation.components.DeviceLimitStep
 import com.vplayed.feature.auth.presentation.components.LoginPrimaryButton
 import com.vplayed.feature.auth.presentation.components.OtpCodeField
 import com.vplayed.feature.auth.presentation.components.OtpTestTags
-import com.vplayed.feature.auth.presentation.viewmodel.OtpStep
+import com.vplayed.feature.auth.presentation.components.shakeOnChange
 import com.vplayed.feature.auth.presentation.viewmodel.OtpUiState
 import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
+import com.vplayed.feature.auth.presentation.viewmodel.textOf
+import com.vplayed.shared.auth.AuthMessage
+import com.vplayed.shared.auth.DeviceKind
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.OtpStep
+import com.vplayed.shared.auth.SignedInDevice
 
 /** Callbacks of the OTP screen. */
 data class OtpActions(

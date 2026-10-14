@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vplayed.R
+import com.vplayed.core.common.validation.EmailValidationResult
 import com.vplayed.core.designsystem.component.AppButton
 import com.vplayed.core.designsystem.component.AppButtonStyle
 import com.vplayed.core.designsystem.component.AppCard
@@ -43,16 +44,15 @@ import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.AppScreenScaffold
-import com.vplayed.core.ui.plus
 import com.vplayed.core.ui.adaptive.ResponsiveContent
+import com.vplayed.core.ui.plus
 import com.vplayed.core.ui.preview.ScreenPreviews
-import com.vplayed.core.common.validation.EmailValidationResult
 import com.vplayed.reference.showcase.presentation.components.ColorSwatch
 import com.vplayed.reference.showcase.presentation.components.SectionTitle
 import com.vplayed.reference.showcase.presentation.viewmodel.DemoContentState
-import com.vplayed.reference.showcase.presentation.viewmodel.EnvironmentInfo
 import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseUiState
 import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseViewModel
+import com.vplayed.reference.showcase.presentation.viewmodel.EnvironmentInfo
 import com.vplayed.reference.typography.OttTextStylesReference
 
 /** Stateful entry point used by navigation. */
@@ -194,6 +194,7 @@ private fun ComponentsCard(
                 errorMessage = when (emailError) {
                     EmailValidationResult.EMPTY -> stringResource(R.string.showcase_email_error_empty)
                     EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.showcase_email_error_format)
+                    EmailValidationResult.TOO_LONG -> stringResource(R.string.showcase_email_error_too_long)
                     EmailValidationResult.VALID, null -> null
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),

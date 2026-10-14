@@ -37,10 +37,10 @@ import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
-import com.vplayed.feature.auth.domain.model.DeviceKind
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.SignedInDevice
 import com.vplayed.feature.auth.presentation.viewmodel.OtpUiState
+import com.vplayed.shared.auth.DeviceKind
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.SignedInDevice
 
 // Prototype `.dev-row`: 13/15 padding, 10dp corners, 13dp gaps; `.dev-list` 10dp apart.
 private val RowVerticalPadding = 13.dp

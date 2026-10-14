@@ -7,9 +7,9 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * Device facts for the shared layer, from the same providers `ApiHeadersInterceptor` and
- * `DefaultAuthRepository` use, so shared requests send identical `device_id`, `deviceDetail` and
- * `X-Language-Code` values.
+ * Device facts for the shared layer, from the same providers `ApiHeadersInterceptor` uses, so
+ * shared requests send identical `device_id` and `X-Language-Code` values; `deviceDetail` on login
+ * is the [DeviceNameProvider] name, as in the previous app.
  */
 class AndroidSharedDeviceInfo @Inject constructor(
     private val deviceIdProvider: DeviceIdProvider,

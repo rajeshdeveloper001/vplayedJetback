@@ -79,6 +79,7 @@
     <string name="login_email_help">We\'ll send a 6-digit code to verify it\'s you.</string>
     <string name="login_email_error_empty">Email is required</string>
     <string name="login_email_error_invalid">Please enter a valid email address</string>
+    <string name="login_email_error_too_long">Email must be at most 50 characters</string>
     <string name="login_continue">Continue</string>
     <string name="login_terms">I am above 18 years of age and by proceeding I agree to the %1$s and %2$s.</string>
     <string name="login_terms_of_use">Terms of use</string>
@@ -167,6 +168,7 @@
     <string name="showcase_email_accepted">Looks good</string>
     <string name="showcase_email_error_empty">Enter your email</string>
     <string name="showcase_email_error_format">Enter a valid email address</string>
+    <string name="showcase_email_error_too_long">Use at most 50 characters</string>
     <string name="showcase_action_submit">Submit</string>
     <string name="showcase_action_show_dialog">Show dialog</string>
     <string name="showcase_action_disabled">Disabled</string>

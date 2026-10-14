@@ -2,7 +2,7 @@
 
 Contracts taken from the previous app (`VplayedApp`: `GudShoServices`, `LoginNewBottomSheet`, `PhoneOTPBaseView`, `LogoutUsersFragment`, `NetworkChangeWorker`, `SessionRequestInterceptor`). The HTML prototype ("VPlayed Sign Up") defines the **screens** only — it contains no network calls. Nothing here was invented; open questions are listed at the end.
 
-All paths are relative to the environment's server URL (`AppConfig.serverUrl`). Every call is a Retrofit method in `feature/auth/data/remote/AuthApi` marked `@RedactBody` (request/response bodies are never logged).
+All paths are relative to the environment's server URL (`AppConfig.serverUrl`). Login calls are made by the KMP shared layer (`../kmp`, `auth/DefaultAuthRepository`) with `RequestOptions.Sensitive` (request/response bodies are never logged); the geo calls are Retrofit methods marked `@RedactBody` / `@WithoutGeoToken`.
 
 ## Flow
 
@@ -30,7 +30,7 @@ The previous app sent `x-bearer-token` only together with `Authorization`; this 
 
 ## Request encryption
 
-`email-login` and `verifyEmailOtp` bodies are `{"data": "<cipher>"}` where `<cipher>` = `CryptoTransport.encryptForTransport(SALT_KEY, <plain JSON>)`: OpenSSL/CryptoJS passphrase AES (EVP_BytesToKey MD5, AES-256-CBC, `Base64("Salted__" + salt + ciphertext)`), the previous app's legacy `AESEncryption` path, encrypted **once**. `SALT_KEY` comes from `secrets.properties` (`vplayed.saltKey`, git-ignored), `-Pvplayed.saltKey` or `VPLAYED_SALT_KEY`; without it no request is sent and the user sees a generic error. `verifyEmailLogin` and `logout-device` are plain form posts (as in the previous app).
+`email-login` and `verifyEmailOtp` bodies are `{"data": "<cipher>"}` where `<cipher>` = the shared `TransportCipher.encrypt(SALT_KEY, <plain JSON>)`: OpenSSL/CryptoJS passphrase AES (EVP_BytesToKey MD5, AES-256-CBC, `Base64("Salted__" + salt + ciphertext)`), the previous app's legacy `AESEncryption` path, encrypted **once**. `SALT_KEY` comes from `secrets.properties` (`vplayed.saltKey`, git-ignored), `-Pvplayed.saltKey` or `VPLAYED_SALT_KEY`; without it no request is sent and the user sees a generic error. `verifyEmailLogin` and `logout-device` are plain form posts (as in the previous app).
 
 ## Public IP — `GET https://api.ipify.org/?format=json`
 
@@ -51,7 +51,7 @@ decides when present, else the HTTP status. The previous app read the HTTP statu
 | Status | Meaning (previous app) | This app |
 |---|---|---|
 | 200 | Existing user, code sent | `CodeSent(isNewUser = false)` → OTP screen |
-| 203 | New user, code sent | `CodeSent(isNewUser = true)` → OTP screen |
+| 203 | New user, code sent | `CodeSent(isNewUser = true)` → OTP screen. Backend (2026-10-14): 203 means a new user who must register; registration is out of scope for now, so the current handling stays |
 | 202 | Device limit reached (`response.get_devices`, `response.device_limit`) | `DeviceLimitReached(devices)`: OTP screen on the device step (no devices in the answer → Toast only) |
 | 200 with `error: true` | — | `Rejected` → Toast on Login, no navigation (a 202/203 is decided by its status alone, as in the previous app) |
 | other 2xx, empty or malformed body | — | Failure (never "OTP sent") |

@@ -2,32 +2,24 @@ package com.vplayed.feature.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vplayed.R
-import com.vplayed.core.common.validation.EmailValidationResult
-import com.vplayed.core.common.validation.EmailValidator
 import com.vplayed.core.session.SessionRepository
-import com.vplayed.feature.auth.domain.AuthRepository
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
-import com.vplayed.feature.auth.domain.EmailLoginResult
+import com.vplayed.shared.auth.AuthMessage
+import com.vplayed.shared.auth.AuthRepository
+import com.vplayed.shared.auth.EmailLoginController
+import com.vplayed.shared.auth.EmailLoginEffect
+import com.vplayed.shared.auth.EmailLoginState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class LoginUiState(
-    val email: String = "",
-    /** EMPTY or INVALID_FORMAT while the field shows an error; null otherwise. */
-    val emailError: EmailValidationResult? = null,
-    /** A login request is in flight: the button shows progress and input is locked. */
-    val isSubmitting: Boolean = false,
-)
+/** The email step's screen state: the shared controller's state (`../kmp`, `auth/EmailLoginController`). */
+typealias LoginUiState = EmailLoginState
 
 sealed interface LoginEvent {
     /** Shown as a Toast. */
@@ -38,78 +30,52 @@ sealed interface LoginEvent {
 }
 
 /**
- * Email step of login: validates the address and requests a login code once at a time. The OTP
- * screen opens only when the backend says a code was sent (HTTP 200/203 with no API error) or the
- * account is at its device limit with a device list to act on; everything else is a Toast.
+ * Email step of login on the shared [EmailLoginController], which validates the address, requests a
+ * code once at a time and reads the answer. This ViewModel turns its effects into navigation and
+ * Toasts: the OTP screen opens when a code was sent or the account is at its device limit with a
+ * device list to act on (handed over through [DeviceLimitHandoff]).
  *
  * It is scoped to the activity so the typed email survives the trip to the OTP screen and back
  * (the Login fragment is removed while OTP is shown); it is cleared on sign-in and when Login is closed.
  */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val repository: AuthRepository,
+    repository: AuthRepository,
     private val deviceLimitHandoff: DeviceLimitHandoff,
     sessions: SessionRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    private val controller = EmailLoginController(repository, viewModelScope, AUTH_FLOW_CONFIG)
+
+    val uiState: StateFlow<LoginUiState> = controller.state
 
     private val _events = Channel<LoginEvent>(Channel.BUFFERED)
     val events: Flow<LoginEvent> = _events.receiveAsFlow()
 
     init {
+        viewModelScope.launch { controller.effects.collect { effect -> effect.toEvent()?.let { _events.send(it) } } }
         // Once signed in, the typed email has no further use.
-        viewModelScope.launch {
-            sessions.session.filterNotNull().collect { _uiState.value = LoginUiState() }
-        }
+        viewModelScope.launch { sessions.session.filterNotNull().collect { controller.clear() } }
     }
 
-    fun onEmailChange(value: String) {
-        _uiState.update { if (it.isSubmitting) it else it.copy(email = value, emailError = null) }
-    }
+    fun onEmailChange(value: String) = controller.onEmailChange(value)
 
     /** Like the prototype: a non-empty, malformed address is flagged when the field loses focus. */
-    fun onEmailFocusLost() {
-        val state = _uiState.value
-        if (state.isSubmitting || state.email.isBlank()) return
-        val result = EmailValidator.validate(state.email)
-        if (result != EmailValidationResult.VALID) _uiState.update { it.copy(emailError = result) }
-    }
+    fun onEmailFocusLost() = controller.onEmailFocusLost()
 
     /** Login is being closed (close button, guest): forget the typed email. */
-    fun onClosed() {
-        if (!_uiState.value.isSubmitting) _uiState.value = LoginUiState()
-    }
+    fun onClosed() = controller.onClosed()
 
-    fun onSubmit() {
-        val state = _uiState.value
-        if (state.isSubmitting) return
-        val validation = EmailValidator.validate(state.email)
-        if (validation != EmailValidationResult.VALID) {
-            _uiState.update { it.copy(emailError = validation) }
-            return
-        }
-        _uiState.update { it.copy(isSubmitting = true, emailError = null) }
-        viewModelScope.launch {
-            try {
-                _events.send(repository.requestEmailLogin(state.email).toEvent(state.email.trim()))
-            } finally {
-                _uiState.update { it.copy(isSubmitting = false) }
-            }
-        }
-    }
+    fun onSubmit() = controller.onSubmit()
 
-    private fun EmailLoginResult.toEvent(email: String): LoginEvent = when (this) {
-        is EmailLoginResult.CodeSent -> LoginEvent.OpenOtp(email, startWithDeviceLimit = false)
-        is EmailLoginResult.DeviceLimitReached ->
-            if (limit != null) {
-                deviceLimitHandoff.put(limit)
-                LoginEvent.OpenOtp(email, startWithDeviceLimit = true)
-            } else {
-                LoginEvent.ShowMessage(AuthMessage.serverOr(message, R.string.login_device_limit))
-            }
-        is EmailLoginResult.Rejected -> LoginEvent.ShowMessage(AuthMessage.serverOr(message, R.string.login_failed))
-        is EmailLoginResult.Failure -> LoginEvent.ShowMessage(AuthMessage.from(error))
+    private fun EmailLoginEffect.toEvent(): LoginEvent? = when (this) {
+        is EmailLoginEffect.CodeSent -> LoginEvent.OpenOtp(email, startWithDeviceLimit = false)
+        is EmailLoginEffect.ShowDevices -> {
+            deviceLimitHandoff.put(limit)
+            LoginEvent.OpenOtp(email, startWithDeviceLimit = true)
+        }
+        is EmailLoginEffect.ShowMessage -> LoginEvent.ShowMessage(message)
+        // This app has no guest entry point.
+        is EmailLoginEffect.GuestSignedIn -> null
     }
 }
