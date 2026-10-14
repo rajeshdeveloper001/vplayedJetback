@@ -6,6 +6,7 @@ import com.vplayed.shared.SharedGraph
 import com.vplayed.shared.core.crypto.platformCryptoPrimitives
 import com.vplayed.shared.core.network.createOkHttpEngine
 import com.vplayed.shared.core.platform.platformLogger
+import com.vplayed.shared.geo.GeoStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,7 +17,7 @@ import okhttp3.OkHttpClient
 /**
  * The one [SharedGraph] (Kotlin Multiplatform shared layer, ../kmp) of the process. Features move
  * onto it phase by phase (KMP_PLANNING/KMP_MIGRATION_PLAN.md). Login runs on it since Phase 3
- * (shared `AuthRepository` and controllers); Home and geo still use Retrofit.
+ * (shared `AuthRepository` and controllers); Home and geo restriction since Phase 4.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,6 +29,7 @@ object SharedModule {
         config: AppConfig,
         deviceInfo: AndroidSharedDeviceInfo,
         credentials: AndroidRequestCredentials,
+        geoStore: GeoStore,
         okHttpClient: OkHttpClient,
     ): SharedGraph {
         // Shares the app client's connection pool and dispatcher, but none of its interceptors:
@@ -47,6 +49,7 @@ object SharedModule {
                 cryptoPrimitives = platformCryptoPrimitives(),
                 requestCredentials = credentials,
             ),
+            geoStore = geoStore,
         )
     }
 }

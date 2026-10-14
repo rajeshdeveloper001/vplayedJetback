@@ -1,20 +1,20 @@
 package com.vplayed.testing
 
-import com.vplayed.core.error.AppError
-import com.vplayed.core.error.DataResult
-import com.vplayed.feature.dashboard.home.domain.HomeRepository
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ContentType
-import com.vplayed.feature.dashboard.home.domain.model.HomeBanner
-import com.vplayed.feature.dashboard.home.domain.model.HomeSection
-import com.vplayed.feature.dashboard.home.domain.model.HomeSectionsPage
-import com.vplayed.feature.dashboard.home.domain.model.SectionItemsPage
-import com.vplayed.feature.dashboard.home.domain.model.SectionStyle
-import com.vplayed.feature.dashboard.home.domain.model.ShowType
+import com.vplayed.shared.core.error.AppError
+import com.vplayed.shared.core.error.DataResult
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ContentType
+import com.vplayed.shared.home.HomeBanner
+import com.vplayed.shared.home.HomeRepository
+import com.vplayed.shared.home.HomeSection
+import com.vplayed.shared.home.HomeSectionsPage
+import com.vplayed.shared.home.SectionItemsPage
+import com.vplayed.shared.home.SectionStyle
+import com.vplayed.shared.home.ShowType
 import kotlinx.coroutines.CompletableDeferred
 
 /**
- * Scriptable [HomeRepository]. Each call records its arguments; results come from the maps, and
+ * Scriptable shared [HomeRepository]. Each call records its arguments; results come from the maps, and
  * a page can be held with [holdSections] to observe in-flight states.
  */
 class FakeHomeRepository : HomeRepository {
@@ -39,6 +39,8 @@ class FakeHomeRepository : HomeRepository {
         itemCalls += sectionId to page
         return itemPages[sectionId to page] ?: DataResult.Failure(AppError.Server(404))
     }
+
+    override suspend fun setFollowing(channelSlug: String, follow: Boolean): DataResult<Unit> = DataResult.Success(Unit)
 
     companion object {
         fun banner(id: String) = HomeBanner(id, "Banner $id", null, ShowType.VIDEO, null, null)

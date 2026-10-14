@@ -2,8 +2,9 @@ package com.vplayed.core.network
 
 import com.vplayed.core.common.config.AppConfig
 import com.vplayed.core.common.config.AppEnvironment
-import com.vplayed.core.geo.GeoRestrictionStore
 import com.vplayed.core.session.UserSession
+import com.vplayed.shared.geo.GeoInfo
+import com.vplayed.shared.geo.GeoStore
 import com.vplayed.testing.FakeSessionRepository
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -33,7 +34,7 @@ class ApiHeadersInterceptorTest {
 
     private val server = MockWebServer()
     private val config = AppConfig(AppEnvironment.DEVELOPMENT, "https://api.test/", "https://images.test/", true, true, "2.4")
-    private val store = GeoRestrictionStore()
+    private val store = GeoStore()
     private var deviceId: String? = "device-123"
     private val sessions = FakeSessionRepository()
 
@@ -95,7 +96,7 @@ class ApiHeadersInterceptorTest {
 
     @Test
     fun givenBlankGeoToken_whenStored_thenGeoHeaderStillOmitted() {
-        store.updateGeo("   ", "USD")
+        store.updateGeo("   ", GeoInfo(currency = "USD"))
         assertNull(sendPlain()["x-bearer-token"])
     }
 

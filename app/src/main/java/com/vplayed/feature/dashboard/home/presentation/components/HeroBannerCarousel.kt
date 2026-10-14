@@ -41,10 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -68,8 +68,8 @@ import com.vplayed.core.designsystem.component.skeleton
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.ui.rememberReducedMotion
-import com.vplayed.feature.dashboard.home.domain.model.HomeBanner
-import com.vplayed.feature.dashboard.home.domain.model.ShowType
+import com.vplayed.shared.home.HomeBanner
+import com.vplayed.shared.home.ShowType
 import kotlin.math.max
 import kotlin.math.min
 

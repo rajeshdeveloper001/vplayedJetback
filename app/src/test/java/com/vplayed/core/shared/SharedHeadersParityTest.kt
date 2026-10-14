@@ -2,7 +2,6 @@ package com.vplayed.core.shared
 
 import com.vplayed.core.common.config.AppConfig
 import com.vplayed.core.common.config.AppEnvironment
-import com.vplayed.core.geo.GeoRestrictionStore
 import com.vplayed.core.network.ApiHeadersInterceptor
 import com.vplayed.core.network.DeviceIdProvider
 import com.vplayed.core.network.DeviceNameProvider
@@ -13,6 +12,7 @@ import com.vplayed.shared.core.crypto.platformCryptoPrimitives
 import com.vplayed.shared.core.network.RequestOptions
 import com.vplayed.shared.core.network.createOkHttpEngine
 import com.vplayed.shared.core.platform.NoOpLogger
+import com.vplayed.shared.geo.GeoStore
 import com.vplayed.testing.FakeSessionRepository
 import kotlinx.coroutines.test.runTest
 import okhttp3.Headers
@@ -35,7 +35,7 @@ import org.junit.Test
 class SharedHeadersParityTest {
 
     private val appConfig = AppConfig(AppEnvironment.DEVELOPMENT, "https://api.test/", "https://images.test/", true, true, "2.4")
-    private val geoStore = GeoRestrictionStore()
+    private val geoStore = GeoStore()
     private val sessions = FakeSessionRepository()
     private val deviceIdProvider = object : DeviceIdProvider {
         override val deviceId: String? = "device-123"

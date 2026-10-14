@@ -1,32 +1,19 @@
 package com.vplayed.feature.dashboard.home.data.di
 
-import com.vplayed.core.common.config.AppConfig
-import com.vplayed.feature.dashboard.home.data.DefaultHomeRepository
-import com.vplayed.feature.dashboard.home.data.mapper.HomeMapper
-import com.vplayed.feature.dashboard.home.data.remote.HomeApi
-import com.vplayed.feature.dashboard.home.domain.HomeRepository
-import dagger.Binds
+import com.vplayed.shared.SharedGraph
+import com.vplayed.shared.home.HomeRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import retrofit2.Retrofit
-import retrofit2.create
 
+/**
+ * Home data comes from the shared layer since Phase 4 (../kmp `home/`: endpoints, mapping, paging
+ * rules). A module of its own so UI tests can replace the repository.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-object HomeNetworkModule {
+object HomeRepositoryModule {
     @Provides
-    fun provideHomeApi(retrofit: Retrofit): HomeApi = retrofit.create()
-
-    @Provides
-    fun provideHomeMapper(config: AppConfig): HomeMapper = HomeMapper(config.imageBaseUrl)
-}
-
-/** Separate from [HomeNetworkModule] so UI tests can replace only the repository. */
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class HomeRepositoryModule {
-    @Binds
-    abstract fun bindHomeRepository(impl: DefaultHomeRepository): HomeRepository
+    fun provideHomeRepository(graph: SharedGraph): HomeRepository = graph.homeRepository
 }

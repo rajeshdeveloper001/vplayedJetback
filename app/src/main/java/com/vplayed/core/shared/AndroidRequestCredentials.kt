@@ -1,9 +1,9 @@
 package com.vplayed.core.shared
 
-import com.vplayed.core.geo.GeoRestrictionStore
 import com.vplayed.core.session.SessionRepository
 import com.vplayed.shared.core.network.AuthTokens
 import com.vplayed.shared.core.network.RequestCredentials
+import com.vplayed.shared.geo.GeoStore
 import javax.inject.Inject
 
 /**
@@ -13,10 +13,10 @@ import javax.inject.Inject
  */
 class AndroidRequestCredentials @Inject constructor(
     private val sessionRepository: SessionRepository,
-    private val geoRestrictionStore: GeoRestrictionStore,
+    private val geoStore: GeoStore,
 ) : RequestCredentials {
     override val authTokens: AuthTokens?
         get() = sessionRepository.session.value?.let { AuthTokens(it.accessToken, it.profileId) }
 
-    override val geoToken: String? get() = geoRestrictionStore.state.value.geoToken
+    override val geoToken: String? get() = geoStore.geoToken
 }

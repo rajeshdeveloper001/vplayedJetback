@@ -4,10 +4,10 @@ import com.vplayed.core.session.SessionRepository
 import com.vplayed.core.session.di.SessionRepositoryModule
 import com.vplayed.feature.auth.data.di.AuthRepositoryModule
 import com.vplayed.feature.dashboard.home.data.di.HomeRepositoryModule
-import com.vplayed.feature.dashboard.home.domain.HomeRepository
 import com.vplayed.feature.splashscreen.di.SplashConfig
 import com.vplayed.feature.splashscreen.di.SplashModule
 import com.vplayed.shared.auth.AuthRepository
+import com.vplayed.shared.home.HomeRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

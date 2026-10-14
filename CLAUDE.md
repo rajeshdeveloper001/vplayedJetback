@@ -43,12 +43,12 @@ core/repository/    interfaces (AppearanceRepository)
 core/datastore/     DataStore implementations + Hilt modules
 core/network/       OkHttp/Retrofit/Json, ApiHeadersInterceptor (device_id, x-bearer-token), SelectiveLoggingInterceptor,
                     @WithoutGeoToken / @RedactBody, connectivity/NetworkMonitor
-core/geo/           GeoRestrictionStore (single source of IP / geo token / currency), GeoRestrictionRepository,
-                    GeoRestrictionSync, work/GeoRefreshWorker (WorkManager)
+core/geo/           GeoRestrictionSync, work/GeoRefreshWorker (WorkManager): when to refresh; the shared GeoStore
+                    (single source of IP / geo token / currency) and GeoRepository come from ../kmp
 core/session/       UserSession, SessionRepository (encrypted DataStore + Keystore), sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
 core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig;
-                    AndroidRequestCredentials feeds it the session and geo token
+                    AndroidRequestCredentials feeds it the session and geo token; SharedAppError texts in core/ui
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /
@@ -56,7 +56,8 @@ feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, i
                        (rules, messages as AuthMessageKey → strings.xml in AuthMessage.kt), DeviceLimitHandoff,
                        AuthSessionMapping; requests, encryption and models come from the shared layer
 feature/dashboard/     navigation/ (DashboardTab: Home, Search, Promos, Subscription)
-  home/                data/ (HomeApi, DTOs, HomeMapper, DefaultHomeRepository, di) · domain/ · presentation/
+  home/                data/di (provides the shared HomeRepository) · presentation/ (HomeViewModel runs the shared
+                       HomeFeedController; the UI uses the shared models com.vplayed.shared.home.*)
   search|promos|subscription/  placeholder screens until their APIs exist
 feature/settings/      Appearance (theme mode, palette, text size, density)
 reference/          not product UI: typography/OttTextStylesReference, showcase/ (design-system demo)
@@ -102,11 +103,11 @@ Compose destinations are the default. A screen that must be a Fragment extends `
 
 ## API
 
-Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`; login requests are made by the KMP shared layer. Mark Retrofit methods `@RedactBody` when bodies hold credentials or personal data, and `@WithoutGeoToken` when the geo token must not be sent. Data layers return `DataResult` (never throw); map exceptions with `resultOf { }`. Parse with the app `Json` (lenient: unknown keys ignored, `coerceInputValues`). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
+Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`. Login, Home and geo requests are made by the KMP shared layer (no Retrofit API is left). Mark Retrofit methods `@RedactBody` when bodies hold credentials or personal data, and `@WithoutGeoToken` when the geo token must not be sent. Data layers return `DataResult` (never throw); map exceptions with `resultOf { }`. Parse with the app `Json` (lenient: unknown keys ignored, `coerceInputValues`). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
 
 ## Testing
 
-Test names: `givenX_whenY_thenZ`. See `docs/testing/` — `user-flows.md` lists every user flow with manual steps and its automated test. Instrumented tests run on `HiltTestApplication` (`com.vplayed.testing.HiltTestRunner`); `TestModules.kt` replaces the Home and auth repositories with `FakeHomeRepository` / `FakeAuthRepository` and the splash minimum with 0 ms. `GeoRestrictionSync` starts in `VPlayedApplication`, so it does not run under `HiltTestApplication` (no real network in tests). Unit-test API responses are synthetic fixtures in `src/test/resources/home` — never commit real API responses (they contain personal data).
+Test names: `givenX_whenY_thenZ`. See `docs/testing/` — `user-flows.md` lists every user flow with manual steps and its automated test. Instrumented tests run on `HiltTestApplication` (`com.vplayed.testing.HiltTestRunner`); `TestModules.kt` replaces the Home and auth repositories with `FakeHomeRepository` / `FakeAuthRepository` and the splash minimum with 0 ms. `GeoRestrictionSync` starts in `VPlayedApplication`, so it does not run under `HiltTestApplication` (no real network in tests). API response tests live with the shared code in `../kmp` (synthetic fixtures in `home/HomeFixtures.kt`) — never commit real API responses (they contain personal data).
 
 ```bash
 ./gradlew testDevUnitTest testQaUnitTest testStageUnitTest testDemoUnitTest testReleaseUnitTest   # unit tests, every variant

@@ -19,8 +19,8 @@ app/src/main/java/com/vplayed/
 │   ├── datastore/                   DataStore-backed implementations + DataStoreModule
 │   ├── network/                     NetworkModule (OkHttp, Retrofit, Json), ApiHeadersInterceptor, DeviceIdProvider,
 │   │                                SelectiveLoggingInterceptor, @WithoutGeoToken/@RedactBody, connectivity/NetworkMonitor
-│   ├── geo/                         GeoRestrictionStore (IP, geo token, currency), GeoRestrictionRepository,
-│   │                                GeoTokenDecoder, GeoRestrictionSync, work/GeoRefreshWorker, data/ (ipify + geo-data APIs)
+│   ├── geo/                         GeoRestrictionSync, work/GeoRefreshWorker, di/GeoModule (provides the shared
+│   │                                GeoStore and GeoRepository; the refresh itself runs in ../kmp)
 │   ├── session/                     UserSession, SessionRepository (DataStore + Keystore cipher), di/
 │   ├── shared/                      bridge to the KMP shared layer (../kmp): SharedModule (Hilt, one SharedGraph),
 │   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo, AndroidRequestCredentials — see shared-module.md
@@ -39,11 +39,9 @@ app/src/main/java/com/vplayed/
     ├── dashboard/
     │   ├── navigation/              DashboardTab (Home, Search, Promos, Subscription), dashboardGraph
     │   ├── home/
-    │   │   ├── data/remote/         HomeApi (Retrofit), dto/HomeDtos
-    │   │   ├── data/mapper/         HomeMapper (DTO → domain, image URLs, card styles)
-    │   │   ├── data/                DefaultHomeRepository, di/HomeDataModule
-    │   │   ├── domain/              HomeRepository, model/ (HomeBanner, HomeSection, ContentItem …)
-    │   │   └── presentation/        viewmodel/HomeViewModel, screen/HomeScreen,
+    │   │   ├── data/di/             HomeDataModule (provides the shared HomeRepository; endpoints, mapping
+    │   │   │                        and models live in ../kmp `home/`)
+    │   │   └── presentation/        viewmodel/HomeViewModel (runs the shared HomeFeedController), screen/HomeScreen,
     │   │                            components/ (HeroBannerCarousel, SectionRow, ContentCards, HomeShimmer, HomeTopBar)
     │   ├── search/  promos/  subscription/   placeholder screens
     └── settings/                    Appearance (full screen, from the Home top bar)
@@ -99,14 +97,14 @@ Data source (DataStore, Retrofit service, Room DAO later)
 ConnectivityManager default-network callback (NetworkMonitor)
    → GeoRestrictionSync: debounce 1 s, distinct; on app start online, offline → online, network switch
    → GeoRefreshScheduler: WorkManager unique work "geo-restriction-refresh" (REPLACE, CONNECTED, backoff)
-   → GeoRefreshWorker → GeoRestrictionRepository.refresh() (serialized by a Mutex)
-        GET api.ipify.org (third-party client) → store.updateIp
-        GET mediaview/api/v1/common/geo-data/{ip} (@WithoutGeoToken) → token
-        GeoTokenDecoder (Base64 → {"currency"}) → store.updateGeo(token, currency)
-   → GeoRestrictionStore.state (StateFlow) → ApiHeadersInterceptor adds x-bearer-token
+   → GeoRefreshWorker → shared GeoRepository.refresh() (../kmp, serialized by a Mutex)
+        GET api.ipify.org (shared third-party client, no app headers) → store.updateIp
+        GET mediaview/api/v1/common/geo-data/{ip} (no geo token, body redacted) → token
+        GeoTokenDecoder (Base64 → {"currency", "countryCode", …}) → store.updateGeo(token, info)
+   → shared GeoStore.state (StateFlow) → ApiHeadersInterceptor and AndroidRequestCredentials add x-bearer-token
 ```
 
-Failures keep the previous valid values; currency defaults to INR. Nothing is persisted (as in the previous app). Explicit refresh: `GeoRestrictionSync.refreshNow()`. The previous app's `KEY_NETWORK_CHANGED` broadcast had no receivers and is not reproduced; observers collect `GeoRestrictionStore.state`.
+Failures keep the previous valid values; currency defaults to INR. Nothing is persisted (as in the previous app). Explicit refresh: `GeoRestrictionSync.refreshNow()`. The previous app's `KEY_NETWORK_CHANGED` broadcast had no receivers and is not reproduced; observers collect `GeoStore.state`.
 
 ## Dependency injection
 

@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ItemDetails
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ItemDetails
 
 // Prototype `.mcard` (disc 94% of the cover, label 46% of the disc, 7dp spindle hole).
 private const val DISC_FRACTION = 0.94f

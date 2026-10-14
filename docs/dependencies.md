@@ -32,7 +32,7 @@ Versions: `gradle/libs.versions.toml`. All are stable releases (verified against
 | androidx.hilt:hilt-lifecycle-viewmodel-compose | 1.4.0 | `hiltViewModel()` |
 | kotlinx-coroutines-android | 1.11.0 | Coroutines / Flow |
 | kotlinx-serialization-json | 1.11.0 | Navigation routes, JSON for Retrofit |
-| retrofit + converter-kotlinx-serialization | 3.0.0 | REST client (Home API) |
+| retrofit + converter-kotlinx-serialization | 3.0.0 | REST client. No API uses it since Phase 4 (Login, Home and geo run on the KMP shared layer); `NetworkModule` still provides it until the cleanup phase removes it |
 | okhttp + logging-interceptor | 5.5.0 | HTTP client; body logging only in dev/qa |
 | io.coil-kt.coil3:coil-compose + coil-network-okhttp | 3.6.3 | Image loading with memory/disk cache (Home artwork) |
 | com.vplayed:shared | 0.1.0 (source) | Kotlin Multiplatform business logic shared with the iOS app; built from `../kmp` by the composite build, not downloaded. See `docs/architecture/shared-module.md` |

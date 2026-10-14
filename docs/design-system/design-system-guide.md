@@ -136,7 +136,7 @@ Components read only tokens, so restyle them by changing tokens (e.g. `AppShapes
 
 ## Home (prototype mapping)
 
-Every Home row renders with the prototype component for its API type (`SectionStyle`, chosen in `HomeMapper`). Measurements are the prototype's computed styles at 427dp (`#rows > .row` etc.); the emulator used for checks (1280×2856 @ 480dpi) is 427dp wide.
+Every Home row renders with the prototype component for its API type (`SectionStyle`, chosen by the shared `HomeMapper` in `../kmp`). Measurements are the prototype's computed styles at 427dp (`#rows > .row` etc.); the emulator used for checks (1280×2856 @ 480dpi) is 427dp wide.
 
 | API row | Prototype component | Implementation |
 |---|---|---|

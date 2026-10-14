@@ -42,10 +42,10 @@ import com.vplayed.core.designsystem.component.cssRadialGradient
 import com.vplayed.core.designsystem.component.mixWith
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
-import com.vplayed.feature.dashboard.home.domain.model.BundleAccent
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ItemDetails
-import com.vplayed.feature.dashboard.home.domain.model.Price
+import com.vplayed.shared.home.BundleAccent
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ItemDetails
+import com.vplayed.shared.home.Price
 import java.text.NumberFormat
 
 // Prototype `.premium-in` (mobile): 24×26 padding, 16dp column gap, 60dp icon tile.
@@ -176,9 +176,11 @@ private fun PriceLine(bundle: ItemDetails.Bundle) {
     val styles = AppDesignSystem.textStyles
     val extended = AppDesignSystem.extendedColors
     val price = bundle.price ?: return
+    val discountPercent = bundle.discountPercent
+    val days = bundle.days
     val sub = when {
-        bundle.discountPercent != null -> stringResource(R.string.home_save_up_to, bundle.discountPercent)
-        bundle.days != null -> pluralStringResource(R.plurals.home_bundle_days, bundle.days, bundle.days)
+        discountPercent != null -> stringResource(R.string.home_save_up_to, discountPercent)
+        days != null -> pluralStringResource(R.plurals.home_bundle_days, days, days)
         else -> null
     }
     val text = buildAnnotatedString {

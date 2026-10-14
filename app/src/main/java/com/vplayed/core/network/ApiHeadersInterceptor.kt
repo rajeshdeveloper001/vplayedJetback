@@ -1,8 +1,8 @@
 package com.vplayed.core.network
 
 import com.vplayed.core.common.config.AppConfig
-import com.vplayed.core.geo.GeoRestrictionStore
 import com.vplayed.core.session.SessionRepository
+import com.vplayed.shared.geo.GeoStore
 import java.util.Locale
 import javax.inject.Inject
 import okhttp3.Interceptor
@@ -12,14 +12,14 @@ import okhttp3.Response
  * Headers the VPlayed backend expects from the mobile app (same names as the previous app).
  *
  * - `device_id` is sent when the platform provides one.
- * - `x-bearer-token` carries the latest geo token from [GeoRestrictionStore] when one is known;
+ * - `x-bearer-token` carries the latest geo token from [GeoStore] when one is known;
  *   it is omitted (never empty) otherwise, and on requests marked [WithoutGeoToken].
  * - With a signed-in session: `Authorization: Bearer <access token>` and `profile_id` (omitted
  *   when the user has no default profile id). Nothing is sent for a signed-out user.
  */
 class ApiHeadersInterceptor @Inject constructor(
     private val config: AppConfig,
-    private val geoRestrictionStore: GeoRestrictionStore,
+    private val geoStore: GeoStore,
     private val deviceIdProvider: DeviceIdProvider,
     private val sessionRepository: SessionRepository,
 ) : Interceptor {
@@ -38,7 +38,7 @@ class ApiHeadersInterceptor @Inject constructor(
                 session.profileId?.takeIf { it.isNotBlank() }?.let { builder.header(PROFILE_ID_HEADER, it) }
             }
         }
-        val geoToken = geoRestrictionStore.state.value.geoToken
+        val geoToken = geoStore.geoToken
         if (!geoToken.isNullOrBlank() && !original.hasMethodAnnotation<WithoutGeoToken>()) {
             builder.header(GEO_TOKEN_HEADER, geoToken)
         }

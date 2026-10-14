@@ -2,7 +2,7 @@
 
 Contracts taken from the previous app (`VplayedApp`: `GudShoServices`, `LoginNewBottomSheet`, `PhoneOTPBaseView`, `LogoutUsersFragment`, `NetworkChangeWorker`, `SessionRequestInterceptor`). The HTML prototype ("VPlayed Sign Up") defines the **screens** only — it contains no network calls. Nothing here was invented; open questions are listed at the end.
 
-All paths are relative to the environment's server URL (`AppConfig.serverUrl`). Login calls are made by the KMP shared layer (`../kmp`, `auth/DefaultAuthRepository`) with `RequestOptions.Sensitive` (request/response bodies are never logged); the geo calls are Retrofit methods marked `@RedactBody` / `@WithoutGeoToken`.
+All paths are relative to the environment's server URL (`AppConfig.serverUrl`). Login calls are made by the KMP shared layer (`../kmp`, `auth/DefaultAuthRepository`) with `RequestOptions.Sensitive` (request/response bodies are never logged); the geo calls are made by the shared `GeoRepository` (`../kmp`, `geo/`): the IP lookup through a client without app headers, `geo-data` without the old geo token and with its body never logged.
 
 ## Flow
 
@@ -22,7 +22,7 @@ Every request to the VPlayed backend carries `Accept: application/json`, `X-REQU
 | Header | Value | When |
 |---|---|---|
 | `device_id` | `Settings.Secure.ANDROID_ID` | Whenever the platform provides it (previous app: always) |
-| `x-bearer-token` | Geo token from `GeoRestrictionStore` | Whenever a token is known, except on requests marked `@WithoutGeoToken` (the geo-data request itself). Never sent empty or null. |
+| `x-bearer-token` | Geo token from the shared `GeoStore` | Whenever a token is known, except on the geo-data request itself. Never sent empty or null. |
 | `Authorization` | `Bearer <access_token>` | When a session is stored |
 | `profile_id` | Default profile id | When a session is stored and it has a profile id |
 
@@ -38,7 +38,7 @@ Response `{"ip": "203.0.113.10"}`. Accepted only when the value is an IPv4/IPv6 
 
 ## Geo access key — `GET mediaview/api/v1/common/geo-data/{ip}`
 
-`{ip}` is a path segment (encoded = true). Response envelope `{"error", "message", "response": {"geo_token": "…"}}`; only `response.geo_token` is read. The token is Base64 of JSON such as `{"currency": "USD"}`; only `currency` is read. Missing token or bad Base64/JSON never crashes and never clears the last valid values.
+`{ip}` is a path segment (encoded = true). Response envelope `{"error", "message", "response": {"geo_token": "…"}}`; only `response.geo_token` is read. The token is Base64 of JSON such as `{"currency": "USD", "countryCode": "US", …}`; this app uses `currency` (VPlayed also reads the location). Missing token or bad Base64/JSON never crashes and never clears the last valid values.
 
 ## Send / resend the code — `POST users/api/v1/auth/email-login`
 

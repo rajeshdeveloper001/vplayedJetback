@@ -40,9 +40,9 @@ import androidx.compose.ui.unit.em
 import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ItemDetails
-import com.vplayed.feature.dashboard.home.domain.model.LiveStatus
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ItemDetails
+import com.vplayed.shared.home.LiveStatus
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale

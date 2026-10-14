@@ -34,8 +34,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -56,8 +56,8 @@ import com.vplayed.R
 import com.vplayed.core.designsystem.component.skeleton
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ItemDetails
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ItemDetails
 import java.util.Locale
 
 /** Landscape artwork is 16:9 (`.hshot`); posters are 221:295 (`.pcard .poster`) and 3:4 (`.t10 .poster`). */
