@@ -22,13 +22,13 @@ in `../KMP_PLANNING/` next to the repositories (`KMP_MIGRATION_PLAN.md`, `KMP_IM
 | `SharedModule` | Hilt `@Provides @Singleton SharedGraph`, the single shared dependency graph for the process |
 | `SharedConfigMapping` | `AppConfig.toSharedConfig()`: environment, server/image URLs, logging, version, transport key. `AppConfig` stays the only reader of `BuildConfig` |
 | `AndroidSharedDeviceInfo` | `device_id`, `deviceDetail` and `X-Language-Code` from `DeviceIdProvider`, `DeviceNameProvider` and the default locale, the same sources `ApiHeadersInterceptor` uses |
-| `AndroidRequestCredentials` | `Authorization`, `profile_id` and `x-bearer-token` for shared requests, read live from `SessionRepository` and the shared `GeoStore` (the stores `ApiHeadersInterceptor` reads), so nothing is mirrored |
+| (graph arguments) | The shared `SessionManager` (`core/session/di/SessionManagerModule`, over `KeystoreSecureStore`) and `GeoStore` (`GeoModule`). The graph sends their `Authorization`, `profile_id` and `x-bearer-token`; `ApiHeadersInterceptor` reads the same two objects, so nothing is mirrored |
 
 The shared HTTP client runs on a copy of the app's `OkHttpClient` **without its interceptors**. It
 shares the connection pool and dispatcher, and the shared layer adds the VPlayed headers and its own
 redacting log itself.
 
-## Current state (Phase 3 done: login · Phase 4 done: Home, geo restriction)
+## Current state (Phase 3 done: login · Phase 4 done: Home, geo restriction · Phase 5 done: session)
 
 **Login runs on the shared layer.** `LoginViewModel` and `OtpViewModel` delegate to the shared
 `EmailLoginController` and `OtpController` (`../kmp`, `auth/`), which hold every rule of the flow:
@@ -42,7 +42,17 @@ redacting log itself.
 The ViewModels keep their public API (`uiState`, `events`, the same functions). They:
 - turn the controllers' effects into navigation and Toasts,
 - hand the device list to the OTP screen through `DeviceLimitHandoff`,
-- store the session the controller hands over (`AuthSession.toUserSession`) in `SessionRepository`.
+- start the session the controller hands over with the shared `SessionManager.signIn`.
+
+**The session is shared (Phase 5).** The shared `SessionManager` (`../kmp`, `session/`) owns it:
+- `KeystoreSecureStore` stores it in the same DataStore file, key (`session`) and Keystore alias as
+  before, and the shared `SessionCodec` reads the old `UserSession` JSON, so signed-in users stay
+  signed in after the upgrade;
+- every shared request waits until the stored session has been read; `SplashViewModel` also waits,
+  so the menu shows the right account;
+- a 401 on a request that carried the session's token ends it (decision D21); `AppShellViewModel`
+  then shows Login again;
+- the side menu's **Sign out** (`AppShellViewModel.signOut`) uses the shared `SessionManager.logout`: the session ends when the server confirms or no longer knows the token; other failures keep it and show a Toast.
 
 `LoginUiState` and `OtpUiState` are aliases of the shared `EmailLoginState` and `OtpState`. Messages
 are shared `AuthMessage`s: the server's own words when safe, else an `AuthMessageKey` that

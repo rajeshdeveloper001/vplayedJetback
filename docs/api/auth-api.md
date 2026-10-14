@@ -64,7 +64,7 @@ Plain JSON `{"email": "<trimmed>", "otp": "<6 digits>", "deviceDetail": "<device
 
 | HTTP | This app |
 |---|---|
-| 200 with `error != true` and `response.access_token` | **Signed in**: `UserSession` stored (see below) → success step → Dashboard |
+| 200 with `error != true` and `response.access_token` | **Signed in**: session stored (see below) → success step → Dashboard |
 | 200 / 203 without a usable `access_token` | 200: failure (not a login). 203: `RegistrationRequired` → Toast (registration screen not built) |
 | 203 with `access_token` | Signed in as a new user (assumption: the previous app stored nothing at 203 and went to registration; confirm) |
 | 202 | `DeviceLimitReached` → device step |
@@ -87,13 +87,15 @@ Rows come from `response.get_devices[]` (`device_name`, `device_type`, `browser_
 
 ## Session (`core/session`)
 
-On a verified login the repository stores `UserSession(userId = _id, email, displayName = first_name, accessToken = access_token, refreshToken = refresh_token, profileId = default_profile._id)`:
+On a verified login `OtpViewModel` hands the shared `AuthSession` (`_id`, email, `first_name`, `access_token`, `refresh_token`, `default_profile._id`, …) to the shared `SessionManager`:
 
-- one JSON value, encrypted with an Android Keystore AES-256-GCM key, in its own DataStore file (`session.preferences_pb`), excluded from cloud backup and device transfer;
+- one JSON value (`SessionCodec` format 1; the previous `UserSession` JSON is still read), encrypted with an Android Keystore AES-256-GCM key, in its own DataStore file (`session.preferences_pb`), excluded from cloud backup and device transfer;
 - unreadable or foreign data means "signed out" and is cleared; if the Keystore is unavailable the session lives in memory for that run only (never stored in plain text);
-- read before the first request (the splash waits for it), then sent as `Authorization` / `profile_id`.
+- read before the first request (every shared request waits for it, and so does the splash), then sent as `Authorization` / `profile_id`;
+- a 401 (HTTP or envelope `statusCode`) on a request that carried the session's token ends the session (decision D21; the auth endpoints are exempt). There is no token refresh.
+- **Sign out** (side menu): `POST users/api/v1/auth/logout` with an empty JSON body and the session's token, through the shared `SessionManager.logout`. 200–203 or 401/403 end the session here; other answers keep it and show a Toast (the server's text is not shown).
 
-Not implemented yet (the previous app has them): refreshing an expired token (`POST users/api/v1/auth/refresh-token`, form `refresh_token`), logout (`POST users/api/v1/auth/logout`), registration after a 203, multi-profile selection, FCM device-token registration (`POST mediadetails/api/v1/device-tokens`).
+Not implemented yet (the previous app has them): refreshing an expired token (`POST users/api/v1/auth/refresh-token`, form `refresh_token`), registration after a 203, multi-profile selection, FCM device-token registration (`POST mediadetails/api/v1/device-tokens`).
 
 ## Open questions for the backend
 

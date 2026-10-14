@@ -1,8 +1,8 @@
 package com.vplayed.core.network
 
 import com.vplayed.core.common.config.AppConfig
-import com.vplayed.core.session.SessionRepository
 import com.vplayed.shared.geo.GeoStore
+import com.vplayed.shared.session.SessionManager
 import java.util.Locale
 import javax.inject.Inject
 import okhttp3.Interceptor
@@ -14,14 +14,14 @@ import okhttp3.Response
  * - `device_id` is sent when the platform provides one.
  * - `x-bearer-token` carries the latest geo token from [GeoStore] when one is known;
  *   it is omitted (never empty) otherwise, and on requests marked [WithoutGeoToken].
- * - With a signed-in session: `Authorization: Bearer <access token>` and `profile_id` (omitted
+ * - With a [SessionManager] session: `Authorization: Bearer <access token>` and `profile_id` (omitted
  *   when the user has no default profile id). Nothing is sent for a signed-out user.
  */
 class ApiHeadersInterceptor @Inject constructor(
     private val config: AppConfig,
     private val geoStore: GeoStore,
     private val deviceIdProvider: DeviceIdProvider,
-    private val sessionRepository: SessionRepository,
+    private val sessionManager: SessionManager,
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
@@ -32,7 +32,7 @@ class ApiHeadersInterceptor @Inject constructor(
             .header("device_type", "android")
             .header("X-LANGUAGE-CODE", Locale.getDefault().language.ifBlank { DEFAULT_LANGUAGE })
         deviceIdProvider.deviceId?.let { builder.header(DEVICE_ID_HEADER, it) }
-        sessionRepository.session.value?.let { session ->
+        sessionManager.session?.let { session ->
             if (session.accessToken.isNotBlank()) {
                 builder.header(AUTHORIZATION_HEADER, "Bearer ${session.accessToken}")
                 session.profileId?.takeIf { it.isNotBlank() }?.let { builder.header(PROFILE_ID_HEADER, it) }

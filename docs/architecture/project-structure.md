@@ -21,9 +21,9 @@ app/src/main/java/com/vplayed/
 │   │                                SelectiveLoggingInterceptor, @WithoutGeoToken/@RedactBody, connectivity/NetworkMonitor
 │   ├── geo/                         GeoRestrictionSync, work/GeoRefreshWorker, di/GeoModule (provides the shared
 │   │                                GeoStore and GeoRepository; the refresh itself runs in ../kmp)
-│   ├── session/                     UserSession, SessionRepository (DataStore + Keystore cipher), di/
+│   ├── session/                     KeystoreSecureStore + KeystoreSessionCipher for the shared SessionManager, di/
 │   ├── shared/                      bridge to the KMP shared layer (../kmp): SharedModule (Hilt, one SharedGraph),
-│   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo, AndroidRequestCredentials — see shared-module.md
+│   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo — see shared-module.md
 │   └── dispatcher/                  coroutine dispatcher qualifiers, @ApplicationScope
 ├── reference/
 │   └── typography/OttTextStylesReference.kt   reference sheet of OTT text styles (+ phone/tablet previews)
@@ -31,7 +31,7 @@ app/src/main/java/com/vplayed/
 └── feature/
     ├── splashscreen/                start destination (≥ 3 s), startup work; di/SplashModule
     ├── auth/                        Login + OTP on the KMP shared controllers (EmailLoginController, OtpController):
-    │                                data/ (AuthSessionMapping; di provides the shared AuthRepository),
+    │                                data/ (di provides the shared AuthRepository),
     │                                domain/ (DeviceLimitHandoff; the models are the shared ones),
     │                                presentation/ (LoginFragment, OtpFragment, viewmodel/Login|OtpViewModel,
     │                                screen/Login|OtpScreen, components/ (AuthLayout, OtpCodeField, DeviceLimitStep …),
@@ -101,11 +101,11 @@ ConnectivityManager default-network callback (NetworkMonitor)
         GET api.ipify.org (shared third-party client, no app headers) → store.updateIp
         GET mediaview/api/v1/common/geo-data/{ip} (no geo token, body redacted) → token
         GeoTokenDecoder (Base64 → {"currency", "countryCode", …}) → store.updateGeo(token, info)
-   → shared GeoStore.state (StateFlow) → ApiHeadersInterceptor and AndroidRequestCredentials add x-bearer-token
+   → shared GeoStore.state (StateFlow) → ApiHeadersInterceptor and the SharedGraph add x-bearer-token
 ```
 
 Failures keep the previous valid values; currency defaults to INR. Nothing is persisted (as in the previous app). Explicit refresh: `GeoRestrictionSync.refreshNow()`. The previous app's `KEY_NETWORK_CHANGED` broadcast had no receivers and is not reproduced; observers collect `GeoStore.state`.
 
 ## Dependency injection
 
-Hilt modules sit next to what they provide: `ConfigModule` (AppConfig), `DispatchersModule` (+ `@ApplicationScope`), `DataStoreModule` + `RepositoryModule`, `NetworkModule` + `NetworkBindingsModule`, `GeoApiModule` + `GeoBindingsModule`, `AuthRepositoryModule` (shared `AuthRepository` from `SharedGraph`), `SessionStorageModule` + `SessionRepositoryModule`. All are `SingletonComponent`. `GeoRefreshWorker` reads its dependencies through a Hilt `@EntryPoint`, so WorkManager's default initializer is kept.
+Hilt modules sit next to what they provide: `ConfigModule` (AppConfig), `DispatchersModule` (+ `@ApplicationScope`), `DataStoreModule` + `RepositoryModule`, `NetworkModule` + `NetworkBindingsModule`, `GeoApiModule` + `GeoBindingsModule`, `AuthRepositoryModule` (shared `AuthRepository` from `SharedGraph`), `SessionStorageModule` + `SessionManagerModule` (shared `SessionManager` over `KeystoreSecureStore`). All are `SingletonComponent`. `GeoRefreshWorker` reads its dependencies through a Hilt `@EntryPoint`, so WorkManager's default initializer is kept.

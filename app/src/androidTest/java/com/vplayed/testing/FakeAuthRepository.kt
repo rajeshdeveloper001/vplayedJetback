@@ -28,6 +28,12 @@ class FakeAuthRepository @Inject constructor() : AuthRepository {
     @Volatile
     var signOutResult: SignOutDeviceResult = SignOutDeviceResult.Success
 
+    @Volatile
+    var logoutResult: LogoutResult = LogoutResult.LoggedOut
+
+    @Volatile
+    var logouts = 0
+
     val requestedEmails: MutableList<String> = Collections.synchronizedList(mutableListOf())
     val verifications: MutableList<Pair<String, String>> = Collections.synchronizedList(mutableListOf())
 
@@ -45,10 +51,13 @@ class FakeAuthRepository @Inject constructor() : AuthRepository {
 
     override suspend fun continueAfterDeviceSignOut(email: String): OtpVerificationResult = answer(email)
 
-    // This app has no guest login or logout yet.
+    // This app has no guest login.
     override suspend fun guestLogin(): GuestLoginResult = error("not used by AndroidJP")
 
-    override suspend fun logout(): LogoutResult = error("not used by AndroidJP")
+    override suspend fun logout(): LogoutResult {
+        logouts++
+        return logoutResult
+    }
 
     private fun answer(email: String): OtpVerificationResult =
         verifyResult ?: OtpVerificationResult.Verified(testSession(email.trim()), isNewUser = false, hasMultipleProfiles = false)

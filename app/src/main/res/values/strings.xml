@@ -137,6 +137,9 @@
 
     <!-- Side menu (signed in) -->
     <string name="menu_signed_in_as">Signed in as %1$s</string>
+    <string name="menu_sign_out">Sign out</string>
+    <string name="menu_signing_out">Signing out…</string>
+    <string name="menu_sign_out_failed">We couldn\'t sign you out. Please try again.</string>
 
     <!-- Placeholder tabs -->
     <string name="search_coming_soon_title">Search is on its way</string>

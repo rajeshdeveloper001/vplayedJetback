@@ -1,6 +1,6 @@
 # Vplayed 3.0 — Android (Kotlin + Jetpack Compose)
 
-OTT Android app. Single `:app` module, feature-oriented packages, MVVM + unidirectional data flow, Hilt, centralized design system. Built so far: splash screen, dashboard with bottom navigation (Home — API driven, Search / Promos / Subscription — placeholders) and a side menu, Login (email step, Fragment), app-wide geo-restriction refresh, Appearance settings, design-system reference. **Visual design follows the VPlayed prototype** (mobile Home); the previous app (`VplayedApp`, e.g. `ShocialFragment`) is a reference for logic only.
+OTT Android app. Single `:app` module, feature-oriented packages, MVVM + unidirectional data flow, Hilt, centralized design system. Built so far: splash screen, dashboard with bottom navigation (Home — API driven, Search / Promos / Subscription — placeholders) and a side menu (Login, or the signed-in email and Sign out), Login (email step, Fragment), app-wide geo-restriction refresh, Appearance settings, design-system reference. **Visual design follows the VPlayed prototype** (mobile Home); the previous app (`VplayedApp`, e.g. `ShocialFragment`) is a reference for logic only.
 
 ## Toolchain (do not change casually)
 
@@ -45,10 +45,11 @@ core/network/       OkHttp/Retrofit/Json, ApiHeadersInterceptor (device_id, x-be
                     @WithoutGeoToken / @RedactBody, connectivity/NetworkMonitor
 core/geo/           GeoRestrictionSync, work/GeoRefreshWorker (WorkManager): when to refresh; the shared GeoStore
                     (single source of IP / geo token / currency) and GeoRepository come from ../kmp
-core/session/       UserSession, SessionRepository (encrypted DataStore + Keystore), sent as Authorization / profile_id
+core/session/       KeystoreSecureStore (encrypted DataStore + Keystore cipher) under the shared SessionManager
+                    (../kmp, session/): restore, sign-in, sign-out, 401 → signed out; sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
 core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig;
-                    AndroidRequestCredentials feeds it the session and geo token; SharedAppError texts in core/ui
+                    it reads the SessionManager and GeoStore Hilt provides; SharedAppError texts in core/ui
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /

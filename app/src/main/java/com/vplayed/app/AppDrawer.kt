@@ -29,17 +29,29 @@ object AppDrawerTestTags {
     const val SHEET = "app_drawer"
     const val LOGIN = "app_drawer_login"
     const val SIGNED_IN = "app_drawer_signed_in"
+    const val SIGN_OUT = "app_drawer_sign_out"
 }
 
 /**
  * Side menu content: brand logo and the menu entries. Login while signed out; the signed-in email
- * instead once there is a session (there is nothing else to do with an account yet).
+ * and Sign out once there is a session. Taps on Sign out while [isSigningOut] are ignored.
  */
 @Composable
-fun AppDrawerSheet(onLogin: () -> Unit, modifier: Modifier = Modifier, signedInEmail: String? = null) {
+fun AppDrawerSheet(
+    onLogin: () -> Unit,
+    modifier: Modifier = Modifier,
+    signedInEmail: String? = null,
+    onSignOut: () -> Unit = {},
+    isSigningOut: Boolean = false,
+) {
     val colors = AppDesignSystem.colors
     val spacing = AppDesignSystem.dimens.spacing
     val logo = if (AppDesignSystem.isDark) R.drawable.ic_vplayed_logo_on_dark else R.drawable.ic_vplayed_logo_on_light
+    val itemColors = NavigationDrawerItemDefaults.colors(
+        unselectedContainerColor = colors.surfaceContainerLow,
+        unselectedIconColor = colors.primary,
+        unselectedTextColor = colors.onSurface,
+    )
     ModalDrawerSheet(
         modifier = modifier.testTag(AppDrawerTestTags.SHEET),
         drawerContainerColor = colors.surfaceContainerLow,
@@ -60,11 +72,7 @@ fun AppDrawerSheet(onLogin: () -> Unit, modifier: Modifier = Modifier, signedInE
                 icon = { Icon(painterResource(AppIcons.Login), contentDescription = null) },
                 selected = false,
                 onClick = onLogin,
-                colors = NavigationDrawerItemDefaults.colors(
-                    unselectedContainerColor = colors.surfaceContainerLow,
-                    unselectedIconColor = colors.primary,
-                    unselectedTextColor = colors.onSurface,
-                ),
+                colors = itemColors,
                 modifier = Modifier
                     .padding(NavigationDrawerItemDefaults.ItemPadding)
                     .padding(top = spacing.xs)
@@ -78,6 +86,21 @@ fun AppDrawerSheet(onLogin: () -> Unit, modifier: Modifier = Modifier, signedInE
                 modifier = Modifier
                     .padding(horizontal = spacing.xl, vertical = spacing.md)
                     .testTag(AppDrawerTestTags.SIGNED_IN),
+            )
+            NavigationDrawerItem(
+                label = {
+                    Text(
+                        stringResource(if (isSigningOut) R.string.menu_signing_out else R.string.menu_sign_out),
+                        style = AppDesignSystem.textStyles.subHeader,
+                    )
+                },
+                icon = { Icon(painterResource(AppIcons.Logout), contentDescription = null) },
+                selected = false,
+                onClick = { if (!isSigningOut) onSignOut() },
+                colors = itemColors,
+                modifier = Modifier
+                    .padding(NavigationDrawerItemDefaults.ItemPadding)
+                    .testTag(AppDrawerTestTags.SIGN_OUT),
             )
         }
     }

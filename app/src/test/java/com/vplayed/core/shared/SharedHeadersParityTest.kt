@@ -5,7 +5,6 @@ import com.vplayed.core.common.config.AppEnvironment
 import com.vplayed.core.network.ApiHeadersInterceptor
 import com.vplayed.core.network.DeviceIdProvider
 import com.vplayed.core.network.DeviceNameProvider
-import com.vplayed.core.session.UserSession
 import com.vplayed.shared.PlatformDependencies
 import com.vplayed.shared.SharedGraph
 import com.vplayed.shared.core.crypto.platformCryptoPrimitives
@@ -13,7 +12,8 @@ import com.vplayed.shared.core.network.RequestOptions
 import com.vplayed.shared.core.network.createOkHttpEngine
 import com.vplayed.shared.core.platform.NoOpLogger
 import com.vplayed.shared.geo.GeoStore
-import com.vplayed.testing.FakeSessionRepository
+import com.vplayed.testing.testAuthSession
+import com.vplayed.testing.testSessionManager
 import kotlinx.coroutines.test.runTest
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -36,7 +36,7 @@ class SharedHeadersParityTest {
 
     private val appConfig = AppConfig(AppEnvironment.DEVELOPMENT, "https://api.test/", "https://images.test/", true, true, "2.4")
     private val geoStore = GeoStore()
-    private val sessions = FakeSessionRepository()
+    private val sessions = testSessionManager()
     private val deviceIdProvider = object : DeviceIdProvider {
         override val deviceId: String? = "device-123"
     }
@@ -68,8 +68,9 @@ class SharedHeadersParityTest {
             logger = NoOpLogger,
             engineFactory = { createOkHttpEngine(OkHttpClient.Builder().addInterceptor(capture).build()) },
             cryptoPrimitives = platformCryptoPrimitives(),
-            requestCredentials = AndroidRequestCredentials(sessions, geoStore),
         ),
+        sessions,
+        geoStore,
     )
 
     private suspend fun headersOfBoth(sharedOptions: RequestOptions = RequestOptions.Default): Pair<Headers, Headers> {
@@ -95,9 +96,8 @@ class SharedHeadersParityTest {
 
     @Test
     fun givenSessionAndGeoToken_whenSendingTheSameRequest_thenBothStacksSendTheSameHeaders() = runTest {
-        val session = UserSession(userId = "u1", email = "user@example.com", accessToken = "access-abc", profileId = "profile-1")
-        sessions.save(session)
-        // Both stacks read the same stores (`AndroidRequestCredentials`), so nothing is mirrored.
+        sessions.signIn(testAuthSession.copy(accessToken = "access-abc", profileId = "profile-1"))
+        // Both stacks read the same SessionManager and GeoStore, so nothing is mirrored.
         geoStore.updateGeo("geo-xyz", null)
 
         val (legacy, shared) = headersOfBoth()

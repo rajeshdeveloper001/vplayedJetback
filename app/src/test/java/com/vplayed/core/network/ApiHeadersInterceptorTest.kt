@@ -2,10 +2,10 @@ package com.vplayed.core.network
 
 import com.vplayed.core.common.config.AppConfig
 import com.vplayed.core.common.config.AppEnvironment
-import com.vplayed.core.session.UserSession
 import com.vplayed.shared.geo.GeoInfo
 import com.vplayed.shared.geo.GeoStore
-import com.vplayed.testing.FakeSessionRepository
+import com.vplayed.testing.testAuthSession
+import com.vplayed.testing.testSessionManager
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
@@ -36,7 +36,7 @@ class ApiHeadersInterceptorTest {
     private val config = AppConfig(AppEnvironment.DEVELOPMENT, "https://api.test/", "https://images.test/", true, true, "2.4")
     private val store = GeoStore()
     private var deviceId: String? = "device-123"
-    private val sessions = FakeSessionRepository()
+    private val sessions = testSessionManager()
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(
@@ -128,7 +128,7 @@ class ApiHeadersInterceptorTest {
 
     @Test
     fun givenSession_whenSent_thenCarriesBearerTokenAndProfileId() = kotlinx.coroutines.test.runTest {
-        sessions.save(UserSession("u1", "user@example.com", null, "access-1", "refresh-1", "profile-1"))
+        sessions.signIn(testAuthSession.copy(accessToken = "access-1", profileId = "profile-1"))
 
         val headers = sendPlain()
 
@@ -138,7 +138,7 @@ class ApiHeadersInterceptorTest {
 
     @Test
     fun givenSessionWithoutProfile_whenSent_thenProfileHeaderOmittedNotEmpty() = kotlinx.coroutines.test.runTest {
-        sessions.save(UserSession("u1", "user@example.com", null, "access-1", null, null))
+        sessions.signIn(testAuthSession.copy(accessToken = "access-1", profileId = null))
 
         val headers = sendPlain()
 
@@ -148,7 +148,7 @@ class ApiHeadersInterceptorTest {
 
     @Test
     fun givenSessionWithBlankToken_whenSent_thenNoAuthorizationHeader() = kotlinx.coroutines.test.runTest {
-        sessions.save(UserSession("u1", "user@example.com", null, "  ", null, "profile-1"))
+        sessions.signIn(testAuthSession.copy(accessToken = "  ", profileId = "profile-1"))
 
         val headers = sendPlain()
 

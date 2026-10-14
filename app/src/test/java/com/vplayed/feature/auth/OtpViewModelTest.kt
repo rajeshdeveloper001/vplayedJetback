@@ -1,7 +1,6 @@
 package com.vplayed.feature.auth
 
 import androidx.lifecycle.SavedStateHandle
-import com.vplayed.core.session.UserSession
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
 import com.vplayed.feature.auth.presentation.viewmodel.OtpEvent
 import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
@@ -17,8 +16,9 @@ import com.vplayed.shared.auth.SignOutDeviceResult
 import com.vplayed.shared.auth.SignedInDevice
 import com.vplayed.shared.core.error.AppError
 import com.vplayed.testing.FakeAuthRepository
-import com.vplayed.testing.FakeSessionRepository
 import com.vplayed.testing.MainDispatcherRule
+import com.vplayed.testing.testAuthSession
+import com.vplayed.testing.testSessionManager
 import com.vplayed.testing.verified
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -44,7 +45,7 @@ class OtpViewModelTest {
 
     private val repository = FakeAuthRepository()
     private val handoff = DeviceLimitHandoff()
-    private val sessions = FakeSessionRepository()
+    private val sessions = testSessionManager()
 
     private val laptop = SignedInDevice("Chrome on Linux", DeviceKind.DESKTOP, "Chrome", false, DeviceSignOutKey("u1", "t1"))
     private val phone = SignedInDevice("iPhone 15", DeviceKind.PHONE, null, false, DeviceSignOutKey("u2", "t2"))
@@ -607,7 +608,7 @@ class OtpViewModelTest {
         vm.onVerify()
         runCurrent()
 
-        assertEquals(listOf(UserSession("u-1", "user@example.com", "Sam", "access-1", "refresh-1", "p-1")), sessions.saved)
+        assertEquals(testAuthSession, sessions.session)
         advanceTimeBy(OtpViewModel.SUCCESS_MILLIS + 1)
         runCurrent()
         assertEquals(OtpEvent.Authenticated, vm.nextEvent())
@@ -620,7 +621,7 @@ class OtpViewModelTest {
         vm.typeFullCode()
         vm.onVerify()
         runCurrent()
-        assertTrue(sessions.saved.isEmpty())
+        assertNull(sessions.session)
     }
 
     // endregion

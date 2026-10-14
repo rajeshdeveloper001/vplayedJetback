@@ -3,8 +3,6 @@ package com.vplayed.feature.auth.presentation.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vplayed.core.session.SessionRepository
-import com.vplayed.feature.auth.data.toUserSession
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
 import com.vplayed.shared.auth.AuthFlowConfig
 import com.vplayed.shared.auth.AuthRepository
@@ -12,6 +10,7 @@ import com.vplayed.shared.auth.OtpController
 import com.vplayed.shared.auth.OtpEffect
 import com.vplayed.shared.auth.OtpState
 import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -46,7 +45,7 @@ class OtpViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     repository: AuthRepository,
     deviceLimitHandoff: DeviceLimitHandoff,
-    private val sessions: SessionRepository,
+    private val sessions: SessionManager,
 ) : ViewModel() {
 
     private val email: String = savedStateHandle.get<String>(ARG_EMAIL).orEmpty()
@@ -69,7 +68,7 @@ class OtpViewModel @Inject constructor(
         viewModelScope.launch {
             controller.effects.collect { effect ->
                 when (effect) {
-                    is OtpEffect.SignedIn -> sessions.save(effect.session.toUserSession(email.trim()))
+                    is OtpEffect.SignedIn -> sessions.signIn(effect.session)
                     OtpEffect.Authenticated -> _events.send(OtpEvent.Authenticated)
                     OtpEffect.NavigateBack -> _events.send(OtpEvent.NavigateBack)
                 }

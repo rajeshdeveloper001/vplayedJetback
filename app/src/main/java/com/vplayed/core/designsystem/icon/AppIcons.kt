@@ -27,6 +27,7 @@ object AppIcons {
     // Side menu and login (prototype Material Symbols Rounded).
     @DrawableRes val Menu: Int = R.drawable.ic_menu
     @DrawableRes val Login: Int = R.drawable.ic_login
+    @DrawableRes val Logout: Int = R.drawable.ic_logout
     @DrawableRes val Close: Int = R.drawable.ic_close
     @DrawableRes val ArrowForward: Int = R.drawable.ic_arrow_forward
     @DrawableRes val PersonOutline: Int = R.drawable.ic_person_outline

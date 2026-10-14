@@ -34,8 +34,9 @@ import com.vplayed.shared.auth.DeviceKind
 import com.vplayed.shared.auth.DeviceSignOutKey
 import com.vplayed.shared.auth.OtpStep
 import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.session.InMemorySecureStore
+import com.vplayed.shared.session.SessionManager
 import com.vplayed.testing.FakeAuthRepository
-import com.vplayed.testing.FakeSessionRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -70,7 +71,7 @@ class OtpScreenTest {
                             SavedStateHandle(mapOf(OtpViewModel.ARG_EMAIL to EMAIL, OtpViewModel.ARG_START_WITH_DEVICE_LIMIT to false)),
                             repository,
                             DeviceLimitHandoff(),
-                            FakeSessionRepository(),
+                            SessionManager(InMemorySecureStore()),
                         )
                     }
                     val state by viewModel.uiState.collectAsStateWithLifecycle()

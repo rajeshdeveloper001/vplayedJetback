@@ -277,6 +277,26 @@ class DashboardFlowTest {
     }
 
     @Test
+    fun givenSignedIn_whenUserTapsSignOutInSideMenu_thenServerIsToldAndMenuShowsLogin() {
+        launchApp().use {
+            openLoginFromMenu()
+            submitEmail("user@example.com")
+            waitForTag(OtpTestTags.SCREEN)
+            composeRule.onNodeWithTag(OtpTestTags.CODE_FIELD).performTextInput("123456")
+            composeRule.onNodeWithTag(OtpTestTags.VERIFY).performClick()
+            waitForText(HERO_TITLE, timeoutMillis = 10_000)
+            composeRule.onNodeWithContentDescription("Open menu").performClick()
+            waitForTag(AppDrawerTestTags.SIGN_OUT)
+
+            composeRule.onNodeWithTag(AppDrawerTestTags.SIGN_OUT).performClick()
+
+            waitForTag(AppDrawerTestTags.LOGIN)
+            assertTrue(authData.logouts == 1)
+            assertTrue(composeRule.onAllNodes(hasTestTag(AppDrawerTestTags.SIGNED_IN)).fetchSemanticsNodes().isEmpty())
+        }
+    }
+
+    @Test
     fun givenOtpScreen_whenUserEntersWrongCode_thenStaysOnOtpWithoutSession() {
         authData.verifyResult = OtpVerificationResult.Rejected("OTP is invalid")
         launchApp().use {

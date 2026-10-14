@@ -6,11 +6,10 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.vplayed.core.dispatcher.IoDispatcher
-import com.vplayed.core.session.DataStoreSessionRepository
+import com.vplayed.core.session.KeystoreSecureStore
 import com.vplayed.core.session.KeystoreSessionCipher
 import com.vplayed.core.session.SessionCipher
-import com.vplayed.core.session.SessionRepository
-import dagger.Binds
+import com.vplayed.shared.session.SessionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,10 +43,15 @@ object SessionStorageModule {
     fun provideSessionCipher(cipher: KeystoreSessionCipher): SessionCipher = cipher
 }
 
-/** Replaced by an in-memory fake in instrumented tests (`TestModules.kt`). */
+/**
+ * The shared layer's session (signed-in user, stored with [KeystoreSecureStore]), one per process.
+ * Created here rather than in the `SharedGraph` because `ApiHeadersInterceptor` reads it and the
+ * graph is built on that client. Replaced by an in-memory one in instrumented tests (`TestModules.kt`).
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SessionRepositoryModule {
-    @Binds
-    abstract fun bindSessionRepository(impl: DataStoreSessionRepository): SessionRepository
+object SessionManagerModule {
+    @Provides
+    @Singleton
+    fun provideSessionManager(store: KeystoreSecureStore): SessionManager = SessionManager(store)
 }

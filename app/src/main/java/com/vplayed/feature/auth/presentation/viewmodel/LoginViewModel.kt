@@ -2,19 +2,20 @@ package com.vplayed.feature.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vplayed.core.session.SessionRepository
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
 import com.vplayed.shared.auth.AuthMessage
 import com.vplayed.shared.auth.AuthRepository
 import com.vplayed.shared.auth.EmailLoginController
 import com.vplayed.shared.auth.EmailLoginEffect
 import com.vplayed.shared.auth.EmailLoginState
+import com.vplayed.shared.session.SessionManager
+import com.vplayed.shared.session.SessionStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
@@ -42,7 +43,7 @@ sealed interface LoginEvent {
 class LoginViewModel @Inject constructor(
     repository: AuthRepository,
     private val deviceLimitHandoff: DeviceLimitHandoff,
-    sessions: SessionRepository,
+    sessions: SessionManager,
 ) : ViewModel() {
 
     private val controller = EmailLoginController(repository, viewModelScope, AUTH_FLOW_CONFIG)
@@ -55,7 +56,7 @@ class LoginViewModel @Inject constructor(
     init {
         viewModelScope.launch { controller.effects.collect { effect -> effect.toEvent()?.let { _events.send(it) } } }
         // Once signed in, the typed email has no further use.
-        viewModelScope.launch { sessions.session.filterNotNull().collect { controller.clear() } }
+        viewModelScope.launch { sessions.status.filterIsInstance<SessionStatus.SignedIn>().collect { controller.clear() } }
     }
 
     fun onEmailChange(value: String) = controller.onEmailChange(value)

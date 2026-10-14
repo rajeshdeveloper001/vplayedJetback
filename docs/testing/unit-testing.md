@@ -24,7 +24,8 @@ Unit tests are enabled for **every** build type (`android.onlyEnableUnitTestForT
 | `core/geo/GeoWorkDecisionTest` | Worker success / retry / give-up mapping of the shared refresh outcome (the refresh itself is tested in `../kmp`: `GeoRepositoryTest`, `GeoTokenDecoderTest`) |
 | `feature/auth/LoginViewModelTest` | The ViewModel on the shared `EmailLoginController`: validation (empty, malformed), focus-loss check, OTP opens only for a real "code sent" (200/203) or a 202 with devices (handed over once), Toasts otherwise (unsafe server text → app string), duplicate submits ignored, email cleared on close / sign-in |
 | `feature/auth/OtpViewModelTest` | The ViewModel on the shared `OtpController`: six-digit rule, verify success → session stored → success step → Dashboard after 3 s, wrong / expired code, network failure, duplicate verify, resend, 60 s countdown (virtual time), device step (sign out one / all, continue, back, handoff), no session on a refused code |
-| `core/session/DataStoreSessionRepositoryTest` | Round trip, ciphertext only in storage, corrupt / foreign data → signed out, Keystore unavailable → memory only, masked `toString` |
+| `core/session/KeystoreSecureStoreTest` | The store under the shared `SessionManager`: a session stored by the previous app version is restored (upgrade), round trip, ciphertext only in storage, corrupt / foreign data → signed out and cleared, Keystore unavailable → memory only, sign-out clears storage, masked `toString` |
+| `app/AppShellViewModelTest` | Side menu account: signed-in email; Sign out through the shared `SessionManager.logout` (accepted or 401 → signed out; offline / refusal → stays signed in with a Toast message, the server's text never shown), one request per tap burst |
 | `feature/settings/AppearanceSettingsViewModelTest` | Loading→Ready, actions write to the repository, reset, AppearanceViewModel observes changes |
 
 ## Patterns

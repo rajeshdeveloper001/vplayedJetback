@@ -1,6 +1,5 @@
 package com.vplayed.feature.auth
 
-import com.vplayed.core.session.UserSession
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
 import com.vplayed.feature.auth.presentation.viewmodel.LoginEvent
 import com.vplayed.feature.auth.presentation.viewmodel.LoginViewModel
@@ -14,8 +13,9 @@ import com.vplayed.shared.auth.SignedInDevice
 import com.vplayed.shared.core.error.AppError
 import com.vplayed.shared.validation.EmailValidationResult
 import com.vplayed.testing.FakeAuthRepository
-import com.vplayed.testing.FakeSessionRepository
 import com.vplayed.testing.MainDispatcherRule
+import com.vplayed.testing.testAuthSession
+import com.vplayed.testing.testSessionManager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -34,7 +34,7 @@ class LoginViewModelTest {
 
     private val repository = FakeAuthRepository()
     private val handoff = DeviceLimitHandoff()
-    private val sessions = FakeSessionRepository()
+    private val sessions = testSessionManager()
     private lateinit var viewModel: LoginViewModel
 
     // Created after the dispatcher rule (the ViewModel collects the session in init).
@@ -162,7 +162,7 @@ class LoginViewModelTest {
     @Test
     fun givenTypedEmail_whenSignedIn_thenEmailForgotten() = runTest {
         viewModel.onEmailChange("user@example.com")
-        sessions.save(UserSession("u", "user@example.com", null, "access", null, null))
+        sessions.signIn(testAuthSession)
         assertEquals("", viewModel.uiState.value.email)
     }
 

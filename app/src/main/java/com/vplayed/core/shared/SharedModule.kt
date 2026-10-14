@@ -7,6 +7,7 @@ import com.vplayed.shared.core.crypto.platformCryptoPrimitives
 import com.vplayed.shared.core.network.createOkHttpEngine
 import com.vplayed.shared.core.platform.platformLogger
 import com.vplayed.shared.geo.GeoStore
+import com.vplayed.shared.session.SessionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,7 +18,8 @@ import okhttp3.OkHttpClient
 /**
  * The one [SharedGraph] (Kotlin Multiplatform shared layer, ../kmp) of the process. Features move
  * onto it phase by phase (KMP_PLANNING/KMP_MIGRATION_PLAN.md). Login runs on it since Phase 3
- * (shared `AuthRepository` and controllers); Home and geo restriction since Phase 4.
+ * (shared `AuthRepository` and controllers); Home and geo restriction since Phase 4; the session
+ * since Phase 5 (shared `SessionManager`, provided by `SessionManagerModule`).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,7 +30,7 @@ object SharedModule {
     fun provideSharedGraph(
         config: AppConfig,
         deviceInfo: AndroidSharedDeviceInfo,
-        credentials: AndroidRequestCredentials,
+        sessionManager: SessionManager,
         geoStore: GeoStore,
         okHttpClient: OkHttpClient,
     ): SharedGraph {
@@ -47,8 +49,8 @@ object SharedModule {
                 logger = platformLogger(),
                 engineFactory = { createOkHttpEngine(engineClient) },
                 cryptoPrimitives = platformCryptoPrimitives(),
-                requestCredentials = credentials,
             ),
+            sessionManager = sessionManager,
             geoStore = geoStore,
         )
     }

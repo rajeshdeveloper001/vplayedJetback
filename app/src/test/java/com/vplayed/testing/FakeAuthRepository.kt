@@ -32,11 +32,14 @@ class FakeAuthRepository : AuthRepository {
     var verifyResult: OtpVerificationResult = verified()
     var continueResult: OtpVerificationResult = verified()
     var signOutResult: SignOutDeviceResult = SignOutDeviceResult.Success
+    var logoutResult: LogoutResult = LogoutResult.LoggedOut
 
     /** Holds [requestEmailLogin] until completed. */
     var hold: CompletableDeferred<Unit>? = null
     var verifyHold: CompletableDeferred<Unit>? = null
     var signOutHold: CompletableDeferred<Unit>? = null
+    var logoutHold: CompletableDeferred<Unit>? = null
+    var logouts = 0
 
     val requestedEmails = mutableListOf<String>()
     val verifications = mutableListOf<Pair<String, String>>()
@@ -66,8 +69,12 @@ class FakeAuthRepository : AuthRepository {
         return continueResult
     }
 
-    // This app has no guest login or logout yet.
+    // This app has no guest login.
     override suspend fun guestLogin(): GuestLoginResult = error("not used by AndroidJP")
 
-    override suspend fun logout(): LogoutResult = error("not used by AndroidJP")
+    override suspend fun logout(): LogoutResult {
+        logouts++
+        logoutHold?.await()
+        return logoutResult
+    }
 }
