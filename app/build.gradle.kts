@@ -245,10 +245,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
@@ -260,7 +257,6 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

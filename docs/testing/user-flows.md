@@ -99,9 +99,9 @@ Automated: `DashboardFlowTest` (`…OneRequestIsSentAndOtpScreenOpens`, `…Logi
 
 ## 10. Geo-restriction refresh (IP and geo token)
 
-1. Install a dev build (HTTP logging on) and open it online. Logcat (`okhttp.OkHttpClient`) shows `GET https://api.ipify.org/?format=json` and `GET …/mediaview/api/v1/common/geo-data/<ip>` once; the geo-data body is not logged and `x-bearer-token` is shown as `██`.
+1. Install a dev build (HTTP logging on) and open it online. Logcat (tag `API`) shows the IP lookup and one `GET <redacted> -> 200` (the geo-data request, whose path holds the IP) once. Bodies and headers are never logged.
 2. Later backend calls (Home pages, login) carry `x-bearer-token` and `device_id`.
 3. Turn airplane mode on, then off: one new pair of requests after reconnecting. Toggle Wi-Fi ↔ mobile data: one new pair. Leaving the connection unchanged triggers nothing.
 4. With airplane mode on at launch, the app still opens normally (no crash, Home shows the offline state).
 
-Automated: `GeoRestrictionSyncTest` (start online, offline → online, network switch, repeated status, flapping, single start), `GeoWorkDecisionTest`, `ApiHeadersInterceptorTest` (no null/empty geo header, latest token, `@WithoutGeoToken`, `device_id`), `SharedHeadersParityTest`; in `../kmp`, `GeoRepositoryTest` (success, IP failure, invalid IP, failed geo request keeps state, missing token, 404 not retried, undecodable token, concurrent refreshes never overlap, geo-data path, no app headers to ipify, no old token on geo-data) and `GeoTokenDecoderTest`.
+Automated: `GeoRestrictionSyncTest` (start online, offline → online, network switch, repeated status, flapping, single start), `GeoWorkDecisionTest`, `SharedHeadersTest` (no null/empty geo header, latest token, `@WithoutGeoToken`, `device_id`), `SharedHeadersParityTest`; in `../kmp`, `GeoRepositoryTest` (success, IP failure, invalid IP, failed geo request keeps state, missing token, 404 not retried, undecodable token, concurrent refreshes never overlap, geo-data path, no app headers to ipify, no old token on geo-data) and `GeoTokenDecoderTest`.

@@ -34,20 +34,14 @@ object SharedModule {
         geoStore: GeoStore,
         okHttpClient: OkHttpClient,
     ): SharedGraph {
-        // Shares the app client's connection pool and dispatcher, but none of its interceptors:
-        // the shared layer adds the VPlayed headers and its own redacting log itself.
-        val engineClient = okHttpClient.newBuilder()
-            .apply {
-                interceptors().clear()
-                networkInterceptors().clear()
-            }
-            .build()
+        // The app's client (no interceptors): the shared layer adds the VPlayed headers and its own
+        // redacting log itself.
         return SharedGraph(
             config = config.toSharedConfig(),
             platform = PlatformDependencies(
                 deviceInfo = deviceInfo,
                 logger = platformLogger(),
-                engineFactory = { createOkHttpEngine(engineClient) },
+                engineFactory = { createOkHttpEngine(okHttpClient) },
                 cryptoPrimitives = platformCryptoPrimitives(),
             ),
             sessionManager = sessionManager,

@@ -45,8 +45,8 @@ object SessionStorageModule {
 
 /**
  * The shared layer's session (signed-in user, stored with [KeystoreSecureStore]), one per process.
- * Created here rather than in the `SharedGraph` because `ApiHeadersInterceptor` reads it and the
- * graph is built on that client. Replaced by an in-memory one in instrumented tests (`TestModules.kt`).
+ * Created here and passed to the `SharedGraph` (like the `GeoStore`), so screens and tests can use
+ * it without the graph. Replaced by an in-memory one in instrumented tests (`TestModules.kt`).
  */
 @Module
 @InstallIn(SingletonComponent::class)

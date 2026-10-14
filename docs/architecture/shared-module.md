@@ -21,12 +21,11 @@ in `../KMP_PLANNING/` next to the repositories (`KMP_MIGRATION_PLAN.md`, `KMP_IM
 |---|---|
 | `SharedModule` | Hilt `@Provides @Singleton SharedGraph`, the single shared dependency graph for the process |
 | `SharedConfigMapping` | `AppConfig.toSharedConfig()`: environment, server/image URLs, logging, version, transport key. `AppConfig` stays the only reader of `BuildConfig` |
-| `AndroidSharedDeviceInfo` | `device_id`, `deviceDetail` and `X-Language-Code` from `DeviceIdProvider`, `DeviceNameProvider` and the default locale, the same sources `ApiHeadersInterceptor` uses |
-| (graph arguments) | The shared `SessionManager` (`core/session/di/SessionManagerModule`, over `KeystoreSecureStore`) and `GeoStore` (`GeoModule`). The graph sends their `Authorization`, `profile_id` and `x-bearer-token`; `ApiHeadersInterceptor` reads the same two objects, so nothing is mirrored |
+| `AndroidSharedDeviceInfo` | `device_id`, `deviceDetail` and `X-Language-Code` from `DeviceIdProvider`, `DeviceNameProvider` and the default locale (read per request) |
+| (graph arguments) | The shared `SessionManager` (`core/session/di/SessionManagerModule`, over `KeystoreSecureStore`) and `GeoStore` (`GeoModule`). The graph sends their `Authorization`, `profile_id` and `x-bearer-token` |
 
-The shared HTTP client runs on a copy of the app's `OkHttpClient` **without its interceptors**. It
-shares the connection pool and dispatcher, and the shared layer adds the VPlayed headers and its own
-redacting log itself.
+The shared HTTP client runs on the app's `OkHttpClient` (`core/network/NetworkModule`), which has
+no interceptors: the shared layer adds the VPlayed headers and its own redacting log itself.
 
 ## Current state (Phase 3 done: login · Phase 4 done: Home, geo restriction · Phase 5 done: session)
 
@@ -76,7 +75,7 @@ The rules (decisions in `KMP_PLANNING/KMP_ARCHITECTURE_ANALYSIS.md` §5; contrac
 Tests:
 - The flow rules are tested in the shared module: `EmailLoginControllerTest`, `OtpControllerTest` (ported from this app's `OtpViewModelTest`), `AuthRepositoryTest` and `AuthMessageTest`.
 - Here, `LoginViewModelTest` and `OtpViewModelTest` run the real controllers with a fake repository, including the stored session.
-- `SharedHeadersParityTest` proves the shared client sends the same backend headers as `ApiHeadersInterceptor`.
+- `SharedHeadersTest` checks the headers the app's backend requests carry, built the way the app builds the graph.
 - `SharedConfigMappingTest` runs per build type.
 
 **Home runs on the shared layer (Phase 4).** `HomeRepositoryModule` provides the shared
@@ -107,11 +106,13 @@ The previous Android code was deleted: Retrofit `HomeApi`, `HomeDtos`, `HomeMapp
 `DefaultHomeRepository`, the app-side Home models and repository interface, `GeoRestrictionStore`,
 `GeoRestrictionRepository`, `GeoTokenDecoder` and the Retrofit geo APIs, with their tests and fixtures
 (ported to `../kmp`: `HomeMapperTest`, `HomeRepositoryTest`, `HomeFeedControllerTest`,
-`GeoRepositoryTest`, `GeoTokenDecoderTest`). No Retrofit API is left; the Retrofit/OkHttp setup in
-`core/network` stays until the cleanup phase, since the shared client's engine reuses the app's
-`OkHttpClient`.
+`GeoRepositoryTest`, `GeoTokenDecoderTest`).
 
-The session moves into the shared layer in Phase 5.
+**Cleanup (Phase 7).** The rest of the old network stack is gone: Retrofit and its converter,
+`ApiHeadersInterceptor`, `SelectiveLoggingInterceptor` and the OkHttp logging interceptor,
+`@WithoutGeoToken` / `@RedactBody`, the unused third-party client, the app's own `AppError` /
+`DataResult` (`core/error`), the email-validator alias and their tests. `core/network` keeps the
+`OkHttpClient` the shared engine runs on, the device id / name providers and the network monitor.
 
 ## Rules
 

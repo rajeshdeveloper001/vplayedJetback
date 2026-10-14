@@ -35,14 +35,13 @@ The KMP shared layer (`com.vplayed:shared`) is built from source: the `kmp` repo
 app/            Application (Coil loader, starts GeoRestrictionSync), MainActivity (BaseActivity + SplashScreen API),
                 VPlayedApp (side menu + nav shell + tab bar), AppDrawer
 core/common/    AppConfig, AppEnvironment, ConfigModule, validation/EmailValidator (alias of the shared rule)
-core/error/     AppError, DataResult, resultOf { } (typed failures from the data layer)
 core/designsystem/  color/ typography/ dimension/ shape/ theme/ component/ icon/
 core/ui/        AppScreenScaffold, adaptive/ (AppLayoutInfo, ResponsiveContent), preview/ annotations,
                 base/ (BaseActivity, BaseFragment, AppearanceViewModel)
 core/repository/    interfaces (AppearanceRepository)
 core/datastore/     DataStore implementations + Hilt modules
-core/network/       OkHttp/Retrofit/Json, ApiHeadersInterceptor (device_id, x-bearer-token), SelectiveLoggingInterceptor,
-                    @WithoutGeoToken / @RedactBody, connectivity/NetworkMonitor
+core/network/       the OkHttpClient the shared layer's Ktor engine runs on (no interceptors: headers and the
+                    redacting log are shared), DeviceIdProvider / DeviceNameProvider, connectivity/NetworkMonitor
 core/geo/           GeoRestrictionSync, work/GeoRefreshWorker (WorkManager): when to refresh; the shared GeoStore
                     (single source of IP / geo token / currency) and GeoRepository come from ../kmp
 core/session/       KeystoreSecureStore (encrypted DataStore + Keystore cipher) under the shared SessionManager
@@ -104,7 +103,7 @@ Compose destinations are the default. A screen that must be a Fragment extends `
 
 ## API
 
-Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`. Login, Home and geo requests are made by the KMP shared layer (no Retrofit API is left). Mark Retrofit methods `@RedactBody` when bodies hold credentials or personal data, and `@WithoutGeoToken` when the geo token must not be sent. Data layers return `DataResult` (never throw); map exceptions with `resultOf { }`. Parse with the app `Json` (lenient: unknown keys ignored, `coerceInputValues`). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
+Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`. Backend requests (login, session, Home, geo) are made by the KMP shared layer (`../kmp`); new endpoints go there too, with `RequestOptions(redact = true)` when bodies hold credentials or personal data and `sendGeoToken = false` when the geo token must not be sent. Shared calls return `DataResult` or sealed results (never throw). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
 
 ## Testing
 

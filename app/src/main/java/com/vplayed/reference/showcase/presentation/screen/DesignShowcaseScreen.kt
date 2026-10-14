@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vplayed.R
-import com.vplayed.core.common.validation.EmailValidationResult
 import com.vplayed.core.designsystem.component.AppButton
 import com.vplayed.core.designsystem.component.AppButtonStyle
 import com.vplayed.core.designsystem.component.AppCard
@@ -54,6 +53,7 @@ import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseUiSta
 import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseViewModel
 import com.vplayed.reference.showcase.presentation.viewmodel.EnvironmentInfo
 import com.vplayed.reference.typography.OttTextStylesReference
+import com.vplayed.shared.validation.EmailValidationResult
 
 /** Stateful entry point used by navigation. */
 @Composable

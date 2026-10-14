@@ -15,7 +15,7 @@ OTP code step ── verifyEmailOtp ──► 200 ──► session stored ─�
 OTP device step (started from email-login's 202) ── logout-device ──► Continue ──► email-login ──► code step
 ```
 
-## Common headers (`core/network/ApiHeadersInterceptor`)
+## Common headers (shared `VPlayedHeaders`, `../kmp`)
 
 Every request to the VPlayed backend carries `Accept: application/json`, `X-REQUEST-TYPE: mobile`, `app_version`, `device_type: android`, `X-LANGUAGE-CODE` and:
 
@@ -26,7 +26,7 @@ Every request to the VPlayed backend carries `Accept: application/json`, `X-REQU
 | `Authorization` | `Bearer <access_token>` | When a session is stored |
 | `profile_id` | Default profile id | When a session is stored and it has a profile id |
 
-The previous app sent `x-bearer-token` only together with `Authorization`; this app sends it whenever available (product decision, 2026-10-13). Third-party calls (ipify) use a separate client with none of these headers. `Authorization` and `x-bearer-token` are redacted in HTTP logs.
+The previous app sent `x-bearer-token` only together with `Authorization`; this app sends it whenever available (product decision, 2026-10-13). Third-party calls (ipify) use a separate client with none of these headers. HTTP logs (dev and qa only) hold method, path and status, never headers or bodies.
 
 ## Request encryption
 

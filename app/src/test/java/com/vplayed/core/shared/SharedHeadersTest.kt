@@ -2,7 +2,6 @@ package com.vplayed.core.shared
 
 import com.vplayed.core.common.config.AppConfig
 import com.vplayed.core.common.config.AppEnvironment
-import com.vplayed.core.network.ApiHeadersInterceptor
 import com.vplayed.core.network.DeviceIdProvider
 import com.vplayed.core.network.DeviceNameProvider
 import com.vplayed.shared.PlatformDependencies
@@ -14,6 +13,7 @@ import com.vplayed.shared.core.platform.NoOpLogger
 import com.vplayed.shared.geo.GeoStore
 import com.vplayed.testing.testAuthSession
 import com.vplayed.testing.testSessionManager
+import java.util.Locale
 import kotlinx.coroutines.test.runTest
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -28,11 +28,11 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Until features move to the shared layer, both stacks must send the backend identical headers.
- * The same request goes through `ApiHeadersInterceptor` (Retrofit/OkHttp path) and through the
- * shared Ktor client on the OkHttp engine; a terminal interceptor captures both without network.
+ * The headers this app's backend requests carry, built the way the app builds them: `AppConfig`
+ * mapped by `toSharedConfig`, `AndroidSharedDeviceInfo`, the shared `SessionManager` and `GeoStore`,
+ * on the OkHttp engine. A terminal interceptor captures the request without network.
  */
-class SharedHeadersParityTest {
+class SharedHeadersTest {
 
     private val appConfig = AppConfig(AppEnvironment.DEVELOPMENT, "https://api.test/", "https://images.test/", true, true, "2.4")
     private val geoStore = GeoStore()
@@ -56,11 +56,6 @@ class SharedHeadersParityTest {
             .build()
     }
 
-    private val legacyClient = OkHttpClient.Builder()
-        .addInterceptor(ApiHeadersInterceptor(appConfig, geoStore, deviceIdProvider, sessions))
-        .addInterceptor(capture)
-        .build()
-
     private val graph = SharedGraph(
         appConfig.toSharedConfig(),
         PlatformDependencies(
@@ -73,55 +68,45 @@ class SharedHeadersParityTest {
         geoStore,
     )
 
-    private suspend fun headersOfBoth(sharedOptions: RequestOptions = RequestOptions.Default): Pair<Headers, Headers> {
+    private suspend fun headersOf(options: RequestOptions = RequestOptions.Default): Headers {
         captured.clear()
-        legacyClient.newCall(Request.Builder().url("https://api.test/mediaview/api/v1/home").build()).execute().close()
-        graph.apiCaller.get("mediaview/api/v1/home", options = sharedOptions)
-        check(captured.size == 2) { "expected one request per stack, got ${captured.size}" }
-        return captured[0].headers to captured[1].headers
-    }
-
-    private fun assertSameVPlayedHeaders(legacy: Headers, shared: Headers) {
-        VPLAYED_HEADERS.forEach { name -> assertEquals(name, legacy[name], shared[name]) }
+        graph.apiCaller.get("mediaview/api/v1/home", options = options)
+        return captured.single().headers
     }
 
     @Test
-    fun givenSignedOut_whenSendingTheSameRequest_thenBothStacksSendTheSameHeaders() = runTest {
-        val (legacy, shared) = headersOfBoth()
+    fun givenSignedOut_whenRequesting_thenDeviceHeadersOnly() = runTest {
+        val headers = headersOf()
 
-        assertSameVPlayedHeaders(legacy, shared)
-        assertEquals("device-123", shared["device_id"])
-        assertNull(shared["Authorization"])
+        assertEquals("application/json", headers["Accept"])
+        assertEquals("mobile", headers["X-Request-Type"])
+        assertEquals("android", headers["device_type"])
+        assertEquals("2.4", headers["app_version"])
+        assertEquals(Locale.getDefault().language.ifBlank { "en" }, headers["X-Language-Code"])
+        assertEquals("device-123", headers["device_id"])
+        assertNull(headers["Authorization"])
+        assertNull(headers["profile_id"])
+        assertNull(headers["x-bearer-token"])
     }
 
     @Test
-    fun givenSessionAndGeoToken_whenSendingTheSameRequest_thenBothStacksSendTheSameHeaders() = runTest {
+    fun givenSessionAndGeoToken_whenRequesting_thenBothAreSent() = runTest {
         sessions.signIn(testAuthSession.copy(accessToken = "access-abc", profileId = "profile-1"))
-        // Both stacks read the same SessionManager and GeoStore, so nothing is mirrored.
         geoStore.updateGeo("geo-xyz", null)
 
-        val (legacy, shared) = headersOfBoth()
+        val headers = headersOf()
 
-        assertSameVPlayedHeaders(legacy, shared)
-        assertEquals("Bearer access-abc", shared["Authorization"])
-        assertEquals("profile-1", shared["profile_id"])
-        assertEquals("geo-xyz", shared["x-bearer-token"])
+        assertEquals("Bearer access-abc", headers["Authorization"])
+        assertEquals("profile-1", headers["profile_id"])
+        assertEquals("geo-xyz", headers["x-bearer-token"])
     }
 
     @Test
-    fun givenRequestOptingOutOfGeoToken_whenSent_thenSharedStackOmitsItLikeWithoutGeoToken() = runTest {
+    fun givenRequestOptingOutOfGeoToken_whenSent_thenTheGeoTokenIsLeftOut() = runTest {
         geoStore.updateGeo("geo-xyz", null)
 
-        val (_, shared) = headersOfBoth(RequestOptions(sendGeoToken = false))
+        val headers = headersOf(RequestOptions(sendGeoToken = false))
 
-        assertNull(shared["x-bearer-token"])
-    }
-
-    private companion object {
-        /** Headers the backend reads (names are case-insensitive in OkHttp's Headers). */
-        val VPLAYED_HEADERS = listOf(
-            "Accept", "X-Request-Type", "device_type", "app_version", "X-Language-Code",
-            "device_id", "Authorization", "profile_id", "x-bearer-token",
-        )
+        assertNull(headers["x-bearer-token"])
     }
 }

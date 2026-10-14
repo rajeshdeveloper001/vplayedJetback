@@ -2,8 +2,8 @@ package com.vplayed.reference.showcase.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import com.vplayed.core.common.config.AppConfig
-import com.vplayed.core.common.validation.EmailValidationResult
-import com.vplayed.core.common.validation.EmailValidator
+import com.vplayed.shared.validation.EmailValidationResult
+import com.vplayed.shared.validation.EmailValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow

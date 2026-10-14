@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vplayed.R
-import com.vplayed.core.common.validation.EmailValidationResult
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
@@ -37,6 +36,7 @@ import com.vplayed.feature.auth.presentation.components.LoginPrimaryButton
 import com.vplayed.feature.auth.presentation.components.LoginSocialButton
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.shared.validation.EmailValidationResult
 
 /** Callbacks of the login screen. */
 data class LoginActions(

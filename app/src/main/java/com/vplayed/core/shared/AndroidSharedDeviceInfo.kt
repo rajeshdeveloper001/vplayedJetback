@@ -7,9 +7,9 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * Device facts for the shared layer, from the same providers `ApiHeadersInterceptor` uses, so
- * shared requests send identical `device_id` and `X-Language-Code` values; `deviceDetail` on login
- * is the [DeviceNameProvider] name, as in the previous app.
+ * Device facts for the shared layer: `device_id` from [DeviceIdProvider], `X-Language-Code` from the
+ * device locale (read per request), and `deviceDetail` on login from [DeviceNameProvider], as in
+ * the previous app.
  */
 class AndroidSharedDeviceInfo @Inject constructor(
     private val deviceIdProvider: DeviceIdProvider,
@@ -19,6 +19,6 @@ class AndroidSharedDeviceInfo @Inject constructor(
 
     override val deviceName: String get() = deviceNameProvider.deviceName
 
-    // Read per request, like ApiHeadersInterceptor, so a locale change applies immediately.
+    // Read per request, so a locale change applies immediately.
     override fun languageCode(): String = Locale.getDefault().language
 }
