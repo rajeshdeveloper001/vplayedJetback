@@ -1,0 +1,52 @@
+appId: com.vplayed.dev
+---
+# ==============================================================================
+# VPlayed 3.0 Android — OTP Verification & Lifecycle Flow
+# ==============================================================================
+# Package    : com.vplayed.dev
+# Screen     : OtpScreen (Step 2 of 3)
+# Selectors  : visible text, contentDescription, and placeholder text
+#              — completely ID-independent (no testTag/resourceId selectors)
+# Strings    : from app/src/main/res/values/strings.xml (verified)
+# ==============================================================================
+
+- launchApp:
+    clearState: true
+
+# 1. Wait for Splash → Home
+- assertVisible: "Home"
+
+# 2. Open the side drawer via the hamburger button (contentDescription = "Open menu")
+- tapOn: "Open menu"
+- assertVisible: "Login"
+- tapOn: "Login"
+
+# 3. Enter a valid email and submit to reach the OTP screen
+#    Tap the placeholder text (inside the BasicTextField) — not the "Email ID" label above it.
+- assertVisible: "Email ID"
+- tapOn: "vplayedproduct@gmail.com"
+- inputText: "tester@vplayed.com"
+- tapOn: "Continue"
+
+# 4. Assert OTP screen elements
+#    otp_title    = "Verify it's you"
+#    otp_step_label (uppercased) = "STEP 2 OF 3" — assert the raw string instead
+#    otp_verify   = "Verify & continue"
+#    otp_resend   = "Resend"
+- assertVisible: "Verify it's you"
+- assertVisible: "Step 2 of 3"
+- assertVisible: "Verify & continue"
+- assertVisible: "Resend"
+
+# 5. Type a 6-digit OTP code into the code field
+#    The OtpCodeField has contentDescription "6-digit verification code"
+- inputText: "123456"
+
+# 6. Test 'Change' link returns to Login with email preserved in state
+- tapOn: "Change"
+- assertVisible: "Sign in or create your account"
+- assertVisible: "tester@vplayed.com"
+
+# 7. Close Login and confirm we're back on the dashboard
+- tapOn: "Close"
+- assertVisible: "Home"

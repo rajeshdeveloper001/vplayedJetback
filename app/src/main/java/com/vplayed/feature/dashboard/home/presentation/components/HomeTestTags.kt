@@ -7,6 +7,8 @@ object HomeTestTags {
     const val HERO = "home_hero"
     const val PAGING_LOADING = "home_paging_loading"
     const val PAGING_RETRY = "home_paging_retry"
+    const val MENU = "home_menu_button"
+    const val APPEARANCE = "home_appearance_button"
 
     fun section(id: String) = "home_section_$id"
 

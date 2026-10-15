@@ -21,6 +21,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -105,6 +107,9 @@ fun VPlayedApp(
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = showTabs || drawerState.isOpen,
+        modifier = Modifier.semantics {
+            testTagsAsResourceId = true
+        },
         drawerContent = {
             AppDrawerSheet(
                 signedInEmail = signedInEmail,

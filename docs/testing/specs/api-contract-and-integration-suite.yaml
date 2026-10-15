@@ -1,0 +1,683 @@
+# ==============================================================================
+# VPlayed 3.0 Android — Comprehensive API Contract & Integration Test Suite
+# ==============================================================================
+# Architecture: Clean Architecture + MVVM + Retrofit + OkHttp + Kotlinx Serialization
+# Base Specifications: docs/api/auth-api.md, docs/api/home-api.md, docs/decisions.md
+# ==============================================================================
+
+version: "1.0.0"
+title: "VPlayed 3.0 API Contract & End-to-End Integration Test Suite"
+description: >
+  Complete input-and-output specification and validation assertions for all
+  network endpoints, response envelopes, headers, cryptographic payloads,
+  and error state handling.
+
+# ------------------------------------------------------------------------------
+# 1. Environment Configurations
+# ------------------------------------------------------------------------------
+environments:
+  dev:
+    serverUrl: "https://api-devgs.vplayed.com/"
+    imageBaseUrl: "https://gsvp-dev.s3.ap-south-1.amazonaws.com/"
+    loggingEnabled: true
+    debuggable: true
+    appId: "com.vplayed.dev"
+  qa:
+    serverUrl: "https://api-qags.vplayed.com/"
+    imageBaseUrl: "https://gsvp-qa.s3.ap-south-1.amazonaws.com/"
+    loggingEnabled: true
+    debuggable: true
+    appId: "com.vplayed.qa"
+  stage:
+    serverUrl: "https://api-stagings.vplayed.com/"
+    imageBaseUrl: "https://gsvp-qa.s3.ap-south-1.amazonaws.com/"
+    loggingEnabled: false
+    debuggable: false
+    appId: "com.vplayed.stage"
+  demo:
+    serverUrl: "https://api-demogs.vplayed.com/"
+    imageBaseUrl: "https://gsvp-demo.s3.ap-south-1.amazonaws.com/"
+    loggingEnabled: false
+    debuggable: false
+    appId: "com.vplayed"
+  production:
+    serverUrl: "https://api.example.com/"
+    imageBaseUrl: "https://images.example.com/"
+    loggingEnabled: false
+    debuggable: false
+    appId: "com.vplayed"
+
+# ------------------------------------------------------------------------------
+# 2. Global Headers & Interceptor Contract (`core/network/ApiHeadersInterceptor`)
+# ------------------------------------------------------------------------------
+globalHeadersContract:
+  standard:
+    Accept: "application/json"
+    X-REQUEST-TYPE: "mobile"
+    app_version: "${config.versionName}" # e.g. "1.0"
+    device_type: "android"
+    X-LANGUAGE-CODE: "${Locale.getDefault().language}" # default "en"
+  conditional:
+    device_id:
+      source: "Settings.Secure.ANDROID_ID"
+      rule: "Omitted if null/empty; never sent as blank"
+    x-bearer-token:
+      source: "GeoRestrictionStore.state.value.geoToken"
+      rule: "Sent whenever known, EXCEPT on endpoints annotated with @WithoutGeoToken"
+      redactedInLogs: true
+    Authorization:
+      source: "Bearer ${SessionRepository.session.value.accessToken}"
+      rule: "Sent only when session is active and accessToken is non-blank"
+      redactedInLogs: true
+    profile_id:
+      source: "SessionRepository.session.value.profileId"
+      rule: "Sent only when session is active and profileId is non-blank"
+
+# ------------------------------------------------------------------------------
+# 3. Cryptographic Transport Specification (`core/security/CryptoTransport`)
+# ------------------------------------------------------------------------------
+cryptoTransportContract:
+  algorithm: "AES-256-CBC"
+  keyDerivation: "OpenSSL EVP_BytesToKey (MD5, 1 iteration, 8-byte salt)"
+  saltPrefix: "Salted__" # 8 bytes ASCII [0x53, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x5f, 0x5f]
+  outputEncoding: "Base64( 'Salted__' + 8_byte_salt + ciphertext )"
+  secretKeySource: "secrets.properties (vplayed.saltKey) or VPLAYED_SALT_KEY"
+  requestWrapper:
+    type: "object"
+    required: ["data"]
+    properties:
+      data:
+        type: "string"
+        pattern: "^[A-Za-z0-9+/=]+$"
+        description: "Base64 OpenSSL salted AES-256 ciphertext"
+
+# ------------------------------------------------------------------------------
+# 4. Standard Response Envelope Schema (`ApiEnvelope<T>` / `UserResponseDto`)
+# ------------------------------------------------------------------------------
+responseEnvelopeSchema:
+  type: "object"
+  required: ["statusCode", "status"]
+  properties:
+    statusCode:
+      type: "integer"
+      description: "HTTP-style status code in payload (e.g., 200, 202, 203, 400, 401)"
+    status:
+      type: "string"
+      description: "Status label: 'success', 'error', 'failed', etc."
+    message:
+      type: "string"
+      nullable: true
+      description: "Human-readable server message or error description"
+    error:
+      type: "boolean"
+      nullable: true
+      description: "Explicit error boolean flag"
+    response:
+      type: ["object", "array", "null"]
+      description: "Generic payload body"
+
+# ------------------------------------------------------------------------------
+# 5. Endpoint Contract & Test Suite
+# ------------------------------------------------------------------------------
+endpoints:
+
+  # ============================================================================
+  # 5.1 Public IP Lookup
+  # ============================================================================
+  - id: "GEO_01_PUBLIC_IP"
+    name: "Public IP Address Lookup"
+    method: "GET"
+    url: "https://api.ipify.org/?format=json"
+    annotations:
+      isolatedClient: true
+      sendsAppHeaders: false
+    request:
+      headers:
+        Accept: "application/json"
+      queryParams:
+        format: "json"
+    responses:
+      success:
+        httpStatus: 200
+        schema:
+          type: "object"
+          required: ["ip"]
+          properties:
+            ip:
+              type: "string"
+              pattern: "^(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})$"
+        validationRules:
+          - "Must be a valid IPv4 or IPv6 string format"
+          - "Reject hostnames, HTML error pages, or empty strings"
+      failures:
+        - httpStatus: 500
+          description: "ipify server error"
+          appBehavior: "Keep previous known IP; do not crash"
+        - httpStatus: 0
+          description: "Network timeout / DNS failure"
+          appBehavior: "Fallback to cached or empty; proceed silently"
+
+  # ============================================================================
+  # 5.2 Geo Restriction Access Key
+  # ============================================================================
+  - id: "GEO_02_GEO_DATA"
+    name: "Get Geo Restriction Access Key"
+    method: "GET"
+    path: "mediaview/api/v1/common/geo-data/{ip}"
+    annotations:
+      - "@WithoutGeoToken" # Must NEVER send x-bearer-token to itself
+      - "@RedactBody"      # Body must never be written to logs
+    request:
+      pathVariables:
+        ip:
+          type: "string"
+          example: "203.0.113.10"
+          encoded: true
+      headers:
+        includeStandardAppHeaders: true
+        forbiddenHeaders: ["x-bearer-token"]
+    responses:
+      success:
+        httpStatus: 200
+        schema:
+          type: "object"
+          required: ["response"]
+          properties:
+            error: { type: "boolean" }
+            message: { type: "string" }
+            response:
+              type: "object"
+              required: ["geo_token"]
+              properties:
+                geo_token:
+                  type: "string"
+                  description: "Base64 encoded JSON string"
+        validationRules:
+          - "Extract response.geo_token"
+          - "Decode Base64 to UTF-8 JSON"
+          - "Validate inner JSON schema: {\"currency\": \"USD\"}"
+          - "Store valid geo_token in GeoRestrictionStore"
+          - "If token is missing/malformed, do not clear last valid values"
+      failures:
+        - httpStatus: 404
+          description: "IP not found in geo database"
+          appBehavior: "GeoRestrictionStore retains fallback defaults"
+        - httpStatus: 500
+          description: "Internal geo service failure"
+          appBehavior: "Soft fail; subsequent requests proceed without x-bearer-token"
+
+  # ============================================================================
+  # 5.3 Email Login / Send OTP
+  # ============================================================================
+  - id: "AUTH_01_EMAIL_LOGIN"
+    name: "Email Login / Send & Resend OTP"
+    method: "POST"
+    path: "users/api/v1/auth/email-login"
+    annotations:
+      - "@RedactBody"
+    request:
+      headers:
+        includeStandardAppHeaders: true
+        includeGeoToken: true
+      contentType: "application/json"
+      bodyType: "encrypted"
+      plainPayloadSchema:
+        type: "object"
+        required: ["email"]
+        properties:
+          email:
+            type: "string"
+            format: "email"
+            pattern: "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+      encryptedWrapperSchema:
+        type: "object"
+        required: ["data"]
+        properties:
+          data: { type: "string" }
+    responses:
+      - scenario: "EXISTING_USER_CODE_SENT"
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["statusCode", "status"]
+          properties:
+            error: { type: "boolean", enum: [false] }
+            statusCode: { type: "integer", enum: [200] }
+            status: { type: "string", enum: ["success", "OK"] }
+            message: { type: "string" }
+        assertions:
+          - "statusCode == 200 && error != true"
+          - "App state transitions to: LoginNavigationResult.CodeSent(isNewUser = false)"
+          - "Navigates to OTP Screen (Code Step)"
+          - "Starts 60s resend timer"
+
+      - scenario: "NEW_USER_CODE_SENT"
+        httpStatus: 203
+        bodySchema:
+          type: "object"
+          required: ["statusCode", "status"]
+          properties:
+            statusCode: { type: "integer", enum: [203] }
+            status: { type: "string" }
+            message: { type: "string" }
+        assertions:
+          - "statusCode == 203 (HTTP 203 Non-Authoritative Information)"
+          - "App state transitions to: LoginNavigationResult.CodeSent(isNewUser = true)"
+          - "Navigates to OTP Screen (Code Step)"
+
+      - scenario: "DEVICE_LIMIT_REACHED"
+        httpStatus: 202
+        bodySchema:
+          type: "object"
+          required: ["statusCode", "response"]
+          properties:
+            statusCode: { type: "integer", enum: [202] }
+            status: { type: "string" }
+            message: { type: "string" }
+            response:
+              type: "object"
+              properties:
+                device_limit:
+                  type: ["integer", "string"]
+                get_devices:
+                  type: "array"
+                  minItems: 1
+                  items:
+                    type: "object"
+                    required: ["username", "device_name"]
+                    properties:
+                      username: { type: "string" }
+                      access_token: { type: "string" }
+                      device_name: { type: "string" }
+                      device_type: { type: "string" }
+                      browser_name: { type: "string" }
+                      current_device: { type: ["integer", "string", "boolean"] }
+        assertions:
+          - "statusCode == 202"
+          - "get_devices has 1+ items -> LoginNavigationResult.DeviceLimitReached(devices)"
+          - "Navigates to OTP Screen directly on 'Maximum devices reached' (Device Step)"
+          - "Device credentials passed securely in memory via DeviceLimitHandoff"
+          - "If get_devices is empty -> Show Toast, stay on Login"
+
+      - scenario: "HTTP_200_WITH_LOGICAL_ERROR"
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["error", "message"]
+          properties:
+            error: { type: "boolean", enum: [true] }
+            message: { type: "string" }
+        assertions:
+          - "Treated as failure: LoginNavigationResult.Rejected(message)"
+          - "Display Toast on LoginScreen; DO NOT navigate"
+
+      - scenario: "RATE_LIMITED_OR_VALIDATION_ERROR"
+        httpStatus: 400
+        bodySchema:
+          type: "object"
+          properties:
+            message: { type: "string" }
+        assertions:
+          - "Display backend error message inline/toast"
+          - "Input enabled; button state restored to active"
+
+      - scenario: "NETWORK_OFFLINE_OR_TIMEOUT"
+        httpStatus: 0
+        assertions:
+          - "Display 'You're offline. Check your connection and try again.'"
+          - "No navigation; input preserved"
+
+  # ============================================================================
+  # 5.4 Verify OTP Code
+  # ============================================================================
+  - id: "AUTH_02_VERIFY_EMAIL_OTP"
+    name: "Verify OTP Code"
+    method: "POST"
+    path: "users/api/v1/auth/verifyEmailOtp"
+    annotations:
+      - "@RedactBody"
+    request:
+      headers:
+        includeStandardAppHeaders: true
+        includeGeoToken: true
+      contentType: "application/json"
+      bodyType: "encrypted"
+      plainPayloadSchema:
+        type: "object"
+        required: ["email", "otp", "deviceDetail"]
+        properties:
+          email:
+            type: "string"
+            format: "email"
+          otp:
+            type: "string"
+            pattern: "^[0-9]{6}$"
+            description: "Exactly 6 digits"
+          deviceDetail:
+            type: "string"
+            example: "Google Pixel 8"
+    responses:
+      - scenario: "VERIFY_SUCCESS_SESSION_CREATED"
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["statusCode", "response"]
+          properties:
+            statusCode: { type: "integer", enum: [200] }
+            error: { type: "boolean", enum: [false] }
+            message: { type: "string" }
+            response:
+              type: "object"
+              required: ["_id", "email", "access_token"]
+              properties:
+                _id: { type: "string" }
+                email: { type: "string" }
+                first_name: { type: "string" }
+                access_token: { type: "string" }
+                refresh_token: { type: "string" }
+                default_profile:
+                  type: "object"
+                  properties:
+                    _id: { type: "string" }
+                profile_count: { type: ["integer", "string"] }
+                isNewUsers: { type: "boolean" }
+        assertions:
+          - "access_token is extracted, non-empty"
+          - "Encrypted UserSession stored in DataStore via Android Keystore AES-256-GCM"
+          - "Transitions to Success Step ('You're all set') for 3.0s"
+          - "Navigates to Dashboard; Side Menu displays 'Signed in as <email>'"
+          - "Subsequent requests carry Authorization: Bearer <access_token>"
+
+      - scenario: "DEVICE_LIMIT_ON_VERIFY"
+        httpStatus: 202
+        bodySchema:
+          type: "object"
+          required: ["statusCode", "response"]
+          properties:
+            statusCode: { type: "integer", enum: [202] }
+            response:
+              type: "object"
+              required: ["get_devices"]
+              properties:
+                get_devices:
+                  type: "array"
+                  minItems: 1
+        assertions:
+          - "Switches OTP Screen step to Device Step"
+          - "Lists signed-in devices with sign-out options"
+
+      - scenario: "WRONG_OR_EXPIRED_CODE"
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          properties:
+            error: { type: "boolean", enum: [true] }
+            message: { type: "string" }
+        assertions:
+          - "NO Toast displayed"
+          - "Card executes 0.4s horizontal shake animation"
+          - "All 6 OTP input boxes cleared"
+          - "Focus returns to the first box"
+          - "Inline red error line displayed: backend message or 'Incorrect code. Try again.'"
+
+      - scenario: "HTTP_400_INVALID_CODE"
+        httpStatus: 400
+        bodySchema:
+          type: "object"
+          properties:
+            message: { type: "string" }
+        assertions:
+          - "Inline red error message with server's text"
+          - "Card shakes, boxes cleared, focus reset"
+
+  # ============================================================================
+  # 5.5 Logout Device
+  # ============================================================================
+  - id: "AUTH_03_LOGOUT_DEVICE"
+    name: "Sign Out One or All Remote Devices"
+    method: "POST"
+    path: "users/api/v1/auth/logout-device"
+    annotations:
+      - "@RedactBody"
+    request:
+      contentType: "application/x-www-form-urlencoded"
+      bodyType: "form"
+      fields:
+        username:
+          type: "string"
+          required: true
+        access_token:
+          type: "string"
+          required: false
+          description: "Target device's access token from get_devices"
+        preference:
+          type: "string"
+          required: true
+          enum: ["1", "all"]
+          description: "'1' for single device, 'all' for all devices"
+    responses:
+      success:
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["error"]
+          properties:
+            error: { type: "boolean", enum: [false] }
+            message: { type: "string" }
+        assertions:
+          - "Device removed from UI list"
+          - "If no devices left -> auto-trigger Continue flow"
+      failure:
+        httpStatus: 400
+        assertions:
+          - "Display inline error on device step; device row remains"
+
+  # ============================================================================
+  # 5.6 Verify Email Login (Post-Device Limit Continuation)
+  # ============================================================================
+  - id: "AUTH_04_VERIFY_EMAIL_LOGIN"
+    name: "Complete Login Post-Device Limit Removal"
+    method: "POST"
+    path: "users/api/v1/auth/verifyEmailLogin"
+    annotations:
+      - "@RedactBody"
+    request:
+      contentType: "application/x-www-form-urlencoded"
+      bodyType: "form"
+      fields:
+        is_email_verified: { type: "string", enum: ["1"] }
+        email: { type: "string", format: "email" }
+        deviceDetail: { type: "string" }
+        browsername: { type: "string", default: "" }
+    responses:
+      success:
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["statusCode", "response"]
+          properties:
+            statusCode: { type: "integer", enum: [200] }
+            error: { type: "boolean", enum: [false] }
+            response:
+              type: "object"
+              required: ["access_token"]
+        assertions:
+          - "Store UserSession in Keystore DataStore"
+          - "Display Success Step ('You're all set') -> Dashboard"
+
+  # ============================================================================
+  # 5.7 Home Banners
+  # ============================================================================
+  - id: "HOME_01_BANNERS"
+    name: "Home Hero Banners Carousel"
+    method: "GET"
+    path: "mediaview/api/v1/homebanners"
+    request:
+      headers:
+        includeStandardAppHeaders: true
+        includeGeoToken: true
+    responses:
+      success:
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["response"]
+          properties:
+            statusCode: { type: "integer", enum: [200] }
+            status: { type: "string", enum: ["success"] }
+            response:
+              type: "object"
+              required: ["data"]
+              properties:
+                data:
+                  type: "array"
+                  items:
+                    type: "object"
+                    required: ["_id"]
+                    properties:
+                      _id: { type: "string" }
+                      master_details:
+                        type: "object"
+                        properties:
+                          _id: { type: "string" }
+                          title: { type: "string" }
+                          slug: { type: "string" }
+                          description: { type: "string" }
+                          sho_type: { type: "integer", enum: [1, 2, 6] }
+                          title_image: { type: "string" }
+                          title_images:
+                            type: "object"
+                            properties:
+                              default:
+                                type: "object"
+                                properties:
+                                  mobile: { type: "string" }
+                                  web: { type: "string" }
+                          video_banner_images:
+                            type: "object"
+                            properties:
+                              default:
+                                type: "object"
+                                properties:
+                                  mobile: { type: "string" }
+                                  web: { type: "string" }
+        assertions:
+          - "Banners parsed and mapped to HeroBanner models"
+          - "Image resolution priority: video_banner_images.default.mobile -> web -> thumbnails"
+          - "Title artwork: title_images.default.mobile (PNG) preferred over title_image (AVIF)"
+          - "ShowType chip: 1 -> 'VIDEO', 2 -> 'SERIES', 6 -> 'MICRO SERIES'"
+
+  # ============================================================================
+  # 5.8 Home Rows (Vertical Pagination)
+  # ============================================================================
+  - id: "HOME_02_ROWS"
+    name: "Home Screen Rows Vertical Pagination"
+    method: "GET"
+    path: "mediaview/api/v1/home"
+    request:
+      queryParams:
+        page: { type: "integer", default: 1 }
+        limit: { type: "integer", default: 3 }
+        inside_limit: { type: "integer", default: 10 }
+      headers:
+        includeStandardAppHeaders: true
+        includeGeoToken: true
+    responses:
+      success:
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["response"]
+          properties:
+            statusCode: { type: "integer", enum: [200] }
+            status: { type: "string", enum: ["success"] }
+            response:
+              type: "object"
+              required: ["data", "currentPage", "totalPages"]
+              properties:
+                data:
+                  type: "array"
+                  items:
+                    type: "object"
+                    required: ["_id", "type", "data"]
+                    properties:
+                      _id: { type: "string" }
+                      title: { type: ["string", "object"] }
+                      type: { type: "integer", minimum: 1, maximum: 7 }
+                      is_top_ten: { type: "boolean" }
+                      row_count: { type: "integer", default: 1 }
+                      total: { type: "integer" }
+                      next: { type: ["integer", "null"] }
+                      data:
+                        type: "array"
+                        items:
+                          type: "object"
+                          required: ["_id"]
+                          properties:
+                            _id: { type: "string" }
+                            title: { type: "string" }
+                            name: { type: "string" }
+                            slug: { type: "string" }
+                            sho_type: { type: "integer" }
+                            video_duration: { type: ["string", "number"] }
+                            view_count: { type: ["string", "number"] }
+                            follow_count: { type: ["string", "number"] }
+                            streaming_status: { type: "integer" }
+                            prices:
+                              type: "array"
+                              items:
+                                type: "object"
+                                properties:
+                                  amount: { type: "number" }
+                                  currency_type: { type: "integer" }
+                total: { type: "integer" }
+                currentPage: { type: "integer" }
+                totalPages: { type: "integer" }
+                next: { type: ["integer", "null"] }
+        assertions:
+          - "Rows without items are dropped"
+          - "De-duplicate rows by _id"
+          - "Next page requested when user scrolls within 2 rows of the bottom"
+          - "Section types map to prototype SectionStyle: 1=LANDSCAPE, 2=PROMO, 3=MUSIC, 4=CHANNEL, 5=OFFER, 6=LIVE, 7=PORTRAIT, is_top_ten=TOP_TEN"
+
+  # ============================================================================
+  # 5.9 Row Items (Horizontal Pagination)
+  # ============================================================================
+  - id: "HOME_03_ROW_ITEMS"
+    name: "Home Row Items Horizontal Pagination"
+    method: "GET"
+    path: "mediaview/api/v1/home/all/{sectionId}"
+    request:
+      pathVariables:
+        sectionId: { type: "string" }
+      queryParams:
+        page: { type: "integer", default: 2 }
+        inside_limit: { type: "integer", default: 10 }
+      headers:
+        includeStandardAppHeaders: true
+        includeGeoToken: true
+    responses:
+      success:
+        httpStatus: 200
+        bodySchema:
+          type: "object"
+          required: ["response"]
+          properties:
+            response:
+              type: "object"
+              properties:
+                category:
+                  type: "object"
+                  required: ["_id", "data"]
+                  properties:
+                    _id: { type: "string" }
+                    data:
+                      type: "array"
+                      items:
+                        type: "object"
+                        required: ["_id"]
+                next: { type: ["integer", "null"] }
+        assertions:
+          - "Items appended to existing section"
+          - "De-duplicate items by item._id"
+          - "Horizontal page requested when user scrolls within 3 items of the row end"
