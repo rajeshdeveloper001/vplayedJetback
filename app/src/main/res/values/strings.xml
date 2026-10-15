@@ -64,7 +64,7 @@
     </plurals>
 
     <!-- Side menu -->
-    <string name="menu_open">Open menu</string>
+    <string name="menu_open">Menu</string>
     <string name="menu_login">Login</string>
 
     <!-- Login (prototype "VPlayed Sign Up", email step) -->
@@ -75,7 +75,7 @@
     <string name="login_social_apple">Sign in with Apple</string>
     <string name="login_divider_email">or continue with email</string>
     <string name="login_email_label">Email ID</string>
-    <string name="login_email_placeholder" translatable="false">vplayedproduct@gmail.com</string>
+    <string name="login_email_placeholder" translatable="false">name@example.com</string>
     <string name="login_email_help">We\'ll send a 6-digit code to verify it\'s you.</string>
     <string name="login_email_error_empty">Email is required</string>
     <string name="login_email_error_invalid">Please enter a valid email address</string>

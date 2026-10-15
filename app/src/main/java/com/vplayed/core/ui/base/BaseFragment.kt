@@ -5,10 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -46,7 +51,14 @@ abstract class BaseFragment : Fragment() {
         setContent {
             val uiState by appearanceViewModel.uiState.collectAsStateWithLifecycle()
             val appearance = (uiState as? AppearanceUiState.Ready)?.appearance ?: return@setContent
-            AppTheme(appearance = appearance) { ScreenContent() }
+            AppTheme(appearance = appearance) {
+                // The ComposeView is its own composition, so the shell's testTagsAsResourceId does not
+                // reach it; repeat it here so UI automation (Maestro `id:`) sees test tags as resource ids.
+                Box(
+                    modifier = Modifier.fillMaxSize().semantics { testTagsAsResourceId = true },
+                    propagateMinConstraints = true,
+                ) { ScreenContent() }
+            }
         }
     }
 

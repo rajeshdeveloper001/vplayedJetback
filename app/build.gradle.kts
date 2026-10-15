@@ -109,7 +109,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.vplayed"
+        applicationId = "com.contus.vplayed"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
@@ -262,21 +262,17 @@ dependencies {
     }
 
     // Preview rendering for every debuggable build type.
-    "devImplementation"(libs.androidx.compose.ui.tooling)
-    "qaImplementation"(libs.androidx.compose.ui.tooling)
+    implementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.hilt.android.testing)
-    kspAndroidTest(libs.hilt.compiler)
     androidTestUtil(libs.androidx.test.orchestrator)
     // Hosts ComponentActivity for createComposeRule(); only the instrumented test build type (dev) needs it.
     "devImplementation"(libs.androidx.compose.ui.test.manifest)

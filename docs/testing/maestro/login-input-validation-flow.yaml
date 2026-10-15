@@ -1,15 +1,14 @@
 appId: com.contus.vplayed.dev
 ---
 # ==============================================================================
-# VPlayed 3.0 Android — Login Input Field Validation Flow
+# VPlayed 3.0 Android — Login Input Validation & End-to-End Flow
 # ==============================================================================
-# Package    : com.vplayed.dev
-# Screen     : LoginScreen (Fragment embedded in NavHost)
-# Selectors  : visible text & contentDescription — no id: selectors
-# Strings    : from app/src/main/res/values/strings.xml (verified)
-# Field tap  : Tap the PLACEHOLDER text to focus an empty field.
-#              Tap the TYPED text to re-focus a field that already has content.
-# Clear      : eraseText: 100 deletes up to 100 chars — covers any realistic input.
+# Package    : com.contus.vplayed.dev (dev build type)
+# Screen     : LoginScreen, OtpScreen (Fragments in the NavHost), Dashboard Home
+# Selectors  : visible text, contentDescription, and Compose test tags as `id:`
+#              (login_email_field, otp_code_field — LoginTestTags.kt). Test tags are
+#              exposed as resource ids by testTagsAsResourceId in VPlayedApp and
+#              BaseFragment (the Fragment ComposeView is a separate composition).
 # ==============================================================================
 
 - launchApp:
@@ -19,12 +18,12 @@ appId: com.contus.vplayed.dev
 - assertVisible: "Home"
 - assertVisible: "Watch now"
 
-# 2. Open the side drawer (contentDescription = "Open menu" on the hamburger IconButton)
+# 2. Open the side drawer / menu (accessibility label = "Menu" on HomeToolbar)
 - tapOn: "Menu"
 
-# 3. Drawer is open — navigate to Login
-- assertVisible: "Login"
-- tapOn: "Login"
+# 3. Drawer is open — navigate to Sign in (Login)
+- assertVisible: "Sign in|Login"
+- tapOn: "Sign in|Login"
 
 # 4. Assert Login screen loaded
 - assertVisible: "Sign in or create your account"
@@ -32,26 +31,29 @@ appId: com.contus.vplayed.dev
 - assertVisible: "Continue"
 
 # ---------------------------------------------------------------------------
-# Case 1: Empty submission → "Email is required"
+# Case 1: Empty submission → "Email is required" / "Please enter a valid email address"
 # Field is empty, so just tap Continue. Error appears immediately.
 # ---------------------------------------------------------------------------
 - tapOn: "Continue"
-- assertVisible: "Email is required"
+- assertVisible:
+    text: "Email is required|Please enter a valid email address"
 
 # ---------------------------------------------------------------------------
 # Case 2: Incomplete address "user@" → "Please enter a valid email address"
-# Field is empty → placeholder "vplayedproduct@gmail.com" is visible → tap it.
+# Focus the email field via its unique test tag, then enter text.
 # ---------------------------------------------------------------------------
-- tapOn: "name@example.com"
+- tapOn:
+    id: "login_email_field"
 - inputText: "user@"
 - tapOn: "Continue"
 - assertVisible: "Please enter a valid email address"
 
 # ---------------------------------------------------------------------------
 # Case 3: Missing TLD "user@example" → "Please enter a valid email address"
-# Field now contains "user@" → tap that text to re-focus, erase, retype.
+# Focus the field, erase existing text, and type incomplete address.
 # ---------------------------------------------------------------------------
-- tapOn: "user@"
+- tapOn:
+    id: "login_email_field"
 - eraseText: 100
 - inputText: "user@example"
 - tapOn: "Continue"
@@ -59,9 +61,10 @@ appId: com.contus.vplayed.dev
 
 # ---------------------------------------------------------------------------
 # Case 4: 1-char TLD "user@example.c" → "Please enter a valid email address"
-# Field now contains "user@example" → tap that text to re-focus, erase, retype.
+# Focus the field, erase existing text, and type 1-char TLD address.
 # ---------------------------------------------------------------------------
-- tapOn: "user@example"
+- tapOn:
+    id: "login_email_field"
 - eraseText: 100
 - inputText: "user@example.c"
 - tapOn: "Continue"
@@ -69,15 +72,74 @@ appId: com.contus.vplayed.dev
 
 # ---------------------------------------------------------------------------
 # Case 5: Valid email → error messages must clear
-# Field now contains "user@example.c" → tap it, erase, type valid address.
+# Focus the field, erase existing text, and type valid address.
 # ---------------------------------------------------------------------------
-- tapOn: "user@example.c"
+- tapOn:
+    id: "login_email_field"
 - eraseText: 100
-- inputText: "qa.tester@vplayed.com"
+- inputText: "sreebalaji.k@contus.in"
 
 - assertNotVisible: "Please enter a valid email address"
 - assertNotVisible: "Email is required"
 
-# Close Login and confirm we returned to the dashboard
+# Close keyboard to expose Continue button
+# - hideKeyboard
+- scroll
+- waitForAnimationToEnd
+# ---------------------------------------------------------------------------
+# Step 6: Go to OTP page, enter any OTP (invalid), wait 3 seconds, close OTP page
+# ---------------------------------------------------------------------------
+- tapOn: "Continue"
+
+# Assert OTP screen loaded (Step 2 of 3)
+- assertVisible: "Verify it's you"
+- assertVisible: "Verify & continue"
+
+# Enter any OTP (6 digits)
+- tapOn:
+    id: "otp_code_field"
+- inputText: "123456"
+- tapOn: "Verify & continue"
+
+# Wait 3 seconds for invalid OTP response & animation
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Close the OTP page
 - tapOn: "Close"
 - assertVisible: "Home"
+- assertVisible: "Watch now"
+
+# ---------------------------------------------------------------------------
+# Step 7: Check Home page vertical scroll
+# ---------------------------------------------------------------------------
+- scroll
+- waitForAnimationToEnd
+
+# ---------------------------------------------------------------------------
+# Step 8: Open menu -> go to Movies -> click back
+# ---------------------------------------------------------------------------
+- tapOn: "Menu"
+- assertVisible: "Movies"
+- tapOn: "Movies"
+
+- assertVisible: "Movies"
+- back
+- assertVisible: "Home"
+
+# ---------------------------------------------------------------------------
+# Step 9: Open menu -> Language -> select Arabic -> go to Home -> check Arabic
+# ---------------------------------------------------------------------------
+- tapOn: "Home"
+- tapOn: "Menu"
+- assertVisible: "Language"
+- tapOn: "Language"
+
+- assertVisible: "Language"
+- tapOn:
+    text: "Arabic|العربية"
+- back
+- tapOn: "Home"
+# Check Home page reflects Arabic locale & translations
+- assertVisible: "الرئيسية"
+- assertVisible: "شاهد الآن"
