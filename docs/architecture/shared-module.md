@@ -6,14 +6,56 @@ in `../KMP_PLANNING/` next to the repositories (`KMP_MIGRATION_PLAN.md`, `KMP_IM
 
 ## How it is built
 
-- `settings.gradle.kts` includes `../kmp` as a **composite build** and substitutes
-  `com.vplayed:shared` with its `:shared` project. Gradle builds it from source with this build, and
-  edits in `../kmp` apply on the next build. CI needs both repositories checked out side by side, or a
-  published artifact in place of the composite build.
-- `kmp` uses the same toolchain as this project (Gradle 9.6, AGP 9.4.1, Kotlin 2.4.21, JDK 25). Change
-  both together.
-- The library brings Ktor 3.6.0 on the OkHttp engine (OkHttp 5.5.0, the version this app already uses)
-  and kotlinx coroutines/serialization 1.11.0 (also already used here).
+The shared library can be consumed in two modes:
+1. **Local AAR (Default & Automated):** Built via `./refresh_shared_aar.sh`, which compiles `:shared`, generates Compose Multiplatform resources, and publishes a release `.aar` + `.pom` to `vplayedKMP/repo/localMaven/`. The Android app resolves `com.vplayed:shared:0.1.0` through its configured `KmpLocalMaven` repository.
+2. **Composite Build:** Pass `-Pvplayed.useComposite=true` (or set `vplayed.useComposite=true` in `gradle.properties`) to substitute source directly from `../vplayedKMP` or `../kmp`.
+
+- `kmp` uses the same toolchain as this project (Gradle 9.6, AGP 9.4.1, Kotlin 2.4.21, JDK 25). Change both together.
+- The library brings Ktor 3.6.0 on the OkHttp engine (OkHttp 5.5.0, the version this app already uses) and kotlinx coroutines/serialization 1.11.0 (also already used here).
+
+## Automated AAR Generation & Refresh
+
+Whenever shared code, error messages, or localization resources (`composeResources/`) change in `vplayedKMP`:
+
+```bash
+# From the vplayedUpdate project root:
+./refresh_shared_aar.sh
+```
+
+This script:
+1. Locates `vplayedKMP` and JDK 25.
+2. Runs `:shared:publishAllPublicationsToLocalRepoRepository`, generating the release AAR with compiled resources and POM metadata at `repo/localMaven/`.
+3. Refreshes dependencies and verifies the Android application builds cleanly.
+
+## Local setup (first-time)
+
+Run the setup script **once** after cloning both repositories:
+
+```bash
+# From the vplayedUpdate project root:
+chmod +x setup_kmp.sh
+./setup_kmp.sh                             # auto-discovers vplayedKMP / kmp sibling
+./setup_kmp.sh /path/to/your/vplayedKMP   # or provide the path explicitly
+```
+
+The script:
+1. Finds the KMP repo (checks `../kmp`, `../vplayedKMP`, `../vplayed-kmp`, common macOS paths).
+2. If the repo isn't at a default sibling path, writes `vplayed.kmpDir=/path` to
+   `~/.gradle/gradle.properties` so every Gradle invocation resolves it automatically.
+3. Sets `JAVA_HOME` to the Android Studio JBR (JDK 25 — required by Gradle 9.6).
+4. Updates `local.properties` with the Android SDK path.
+5. Runs `./gradlew help` to verify the composite build resolves with no errors.
+
+**KMP path resolution order** (first directory containing `settings.gradle.kts` wins):
+
+| Priority | Source | Value |
+|---|---|---|
+| 1 | Gradle property | `-Pvplayed.kmpDir=…` or `vplayed.kmpDir=…` in `~/.gradle/gradle.properties` |
+| 2 | Sibling `../kmp` | canonical name, used by CI |
+| 3 | Sibling `../vplayedKMP` | common clone name |
+| 4 | Sibling `../vplayed-kmp` | hyphenated variant |
+
+If none of the above resolves, `settings.gradle.kts` throws a descriptive error with instructions.
 
 ## Bridge (`core/shared`)
 

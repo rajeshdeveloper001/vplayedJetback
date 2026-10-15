@@ -249,7 +249,15 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
-    implementation(libs.vplayed.shared)
+    // Shared business logic: prefers direct local AAR in app/libs/ if present,
+    // otherwise resolves from repository (libs.vplayed.shared)
+    val localAar = file("libs/shared-release.aar")
+    if (localAar.exists()) {
+        implementation(files(localAar))
+        // Direct AARs do not bring transitive dependencies automatically:
+        implementation(libs.ktor.client.core)
+        implementation(libs.ktor.client.okhttp)
+    }
 
     // Preview rendering for every debuggable build type.
     "devImplementation"(libs.androidx.compose.ui.tooling)
