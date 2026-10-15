@@ -1,0 +1,83 @@
+appId: com.vplayed.dev
+---
+# ==============================================================================
+# VPlayed 3.0 Android — Login Input Field Validation Flow
+# ==============================================================================
+# Package    : com.vplayed.dev
+# Screen     : LoginScreen (Fragment embedded in NavHost)
+# Selectors  : visible text & contentDescription — no id: selectors
+# Strings    : from app/src/main/res/values/strings.xml (verified)
+# Field tap  : Tap the PLACEHOLDER text to focus an empty field.
+#              Tap the TYPED text to re-focus a field that already has content.
+# Clear      : eraseText: 100 deletes up to 100 chars — covers any realistic input.
+# ==============================================================================
+
+- launchApp:
+    clearState: true
+
+# 1. Wait for Splash → Home
+- assertVisible: "Home"
+- assertVisible: "Watch now"
+
+# 2. Open the side drawer (contentDescription = "Open menu" on the hamburger IconButton)
+- tapOn: "Open menu"
+
+# 3. Drawer is open — navigate to Login
+- assertVisible: "Login"
+- tapOn: "Login"
+
+# 4. Assert Login screen loaded
+- assertVisible: "Sign in or create your account"
+- assertVisible: "Email ID"
+- assertVisible: "Continue"
+
+# ---------------------------------------------------------------------------
+# Case 1: Empty submission → "Email is required"
+# Field is empty, so just tap Continue. Error appears immediately.
+# ---------------------------------------------------------------------------
+- tapOn: "Continue"
+- assertVisible: "Email is required"
+
+# ---------------------------------------------------------------------------
+# Case 2: Incomplete address "user@" → "Please enter a valid email address"
+# Field is empty → placeholder "vplayedproduct@gmail.com" is visible → tap it.
+# ---------------------------------------------------------------------------
+- tapOn: "vplayedproduct@gmail.com"
+- inputText: "user@"
+- tapOn: "Continue"
+- assertVisible: "Please enter a valid email address"
+
+# ---------------------------------------------------------------------------
+# Case 3: Missing TLD "user@example" → "Please enter a valid email address"
+# Field now contains "user@" → tap that text to re-focus, erase, retype.
+# ---------------------------------------------------------------------------
+- tapOn: "user@"
+- eraseText: 100
+- inputText: "user@example"
+- tapOn: "Continue"
+- assertVisible: "Please enter a valid email address"
+
+# ---------------------------------------------------------------------------
+# Case 4: 1-char TLD "user@example.c" → "Please enter a valid email address"
+# Field now contains "user@example" → tap that text to re-focus, erase, retype.
+# ---------------------------------------------------------------------------
+- tapOn: "user@example"
+- eraseText: 100
+- inputText: "user@example.c"
+- tapOn: "Continue"
+- assertVisible: "Please enter a valid email address"
+
+# ---------------------------------------------------------------------------
+# Case 5: Valid email → error messages must clear
+# Field now contains "user@example.c" → tap it, erase, type valid address.
+# ---------------------------------------------------------------------------
+- tapOn: "user@example.c"
+- eraseText: 100
+- inputText: "qa.tester@vplayed.com"
+
+- assertNotVisible: "Please enter a valid email address"
+- assertNotVisible: "Email is required"
+
+# Close Login and confirm we returned to the dashboard
+- tapOn: "Close"
+- assertVisible: "Home"

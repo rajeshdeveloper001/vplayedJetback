@@ -1,0 +1,116 @@
+appId: com.vplayed.dev
+---
+# ==============================================================================
+# VPlayed 3.0 Android — End-to-End Maestro Test Suite
+# ==============================================================================
+# Package: com.vplayed.dev
+# Documentation: docs/testing/maestro/README.md
+# Selectors: Uses visible text & accessibility labels (100% ID-independent)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Application Launch & Splash Screen
+# ------------------------------------------------------------------------------
+- launchApp:
+    clearState: true
+
+- assertVisible: "Home"
+- assertVisible: "Watch now"
+
+# ------------------------------------------------------------------------------
+# 2. Side Menu Navigation to Login Screen
+# ------------------------------------------------------------------------------
+- tapOn: "Open menu"
+- assertVisible: "Login"
+- tapOn: "Login"
+
+- assertVisible: "Sign in or create your account"
+- assertVisible: "Email ID"
+- assertVisible: "Continue"
+
+# ------------------------------------------------------------------------------
+# 3. Email Input Field Validation
+# ------------------------------------------------------------------------------
+# Test 3.1: Empty submission -> "Email is required"
+- tapOn: "Continue"
+- assertVisible: "Email is required"
+
+# Test 3.2: Incomplete domain ("user@") -> "Please enter a valid email address"
+- tapOn: "Email ID"
+- inputText: "user@"
+- tapOn: "Continue"
+- assertVisible: "Please enter a valid email address"
+
+# Test 3.3: Missing TLD ("user@example") -> "Please enter a valid email address"
+- tapOn: "Email ID"
+- eraseText: 50
+- inputText: "user@example"
+- tapOn: "Continue"
+- assertVisible: "Please enter a valid email address"
+
+# Test 3.4: 1-character TLD ("user@example.c") -> "Please enter a valid email address"
+- tapOn: "Email ID"
+- eraseText: 50
+- inputText: "user@example.c"
+- tapOn: "Continue"
+- assertVisible: "Please enter a valid email address"
+
+# Test 3.5: Valid email entry -> Error clears
+- tapOn: "Email ID"
+- eraseText: 50
+- inputText: "qa.tester@vplayed.com"
+
+- assertNotVisible: "Please enter a valid email address"
+- assertNotVisible: "Email is required"
+
+# ------------------------------------------------------------------------------
+# 4. OTP Verification Screen & Lifecycle
+# ------------------------------------------------------------------------------
+- tapOn: "Continue"
+
+- assertVisible: "Verify it's you"
+- assertVisible: "Step 2 of 3"
+- assertVisible: "Verify & continue"
+- assertVisible: "Resend"
+
+# Input 6 digits
+- inputText: "123456"
+
+# Tap Change to return to Login with email intact
+- tapOn: "Change"
+- assertVisible: "Sign in or create your account"
+- assertVisible: "qa.tester@vplayed.com"
+
+# Close Login modal
+- tapOn: "Close"
+- assertVisible: "Home"
+
+# ------------------------------------------------------------------------------
+# 5. Dashboard Bottom Navigation Tabs
+# ------------------------------------------------------------------------------
+# 5.1 Search Tab
+- tapOn: "Search"
+- assertVisible: "Search"
+
+# 5.2 Promos Tab
+- tapOn: "Promos"
+- assertVisible: "Promos"
+
+# 5.3 Subscription Tab
+- tapOn: "Subscription"
+- assertVisible: "Subscription"
+
+# 5.4 Return to Home Tab
+- tapOn: "Home"
+- assertVisible: "Watch now"
+
+# ------------------------------------------------------------------------------
+# 6. Appearance Preferences & Scrolling
+# ------------------------------------------------------------------------------
+- tapOn: "Appearance settings"
+- assertVisible: "Theme"
+- back
+- assertVisible: "Home"
+
+- scroll
+- waitForAnimationToEnd

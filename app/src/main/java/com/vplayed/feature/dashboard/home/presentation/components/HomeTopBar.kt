@@ -11,6 +11,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.vplayed.R
@@ -40,12 +41,18 @@ internal fun HomeTopBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onOpenMenu) {
+            IconButton(
+                onClick = onOpenMenu,
+                modifier = Modifier.testTag(HomeTestTags.MENU),
+            ) {
                 Icon(painterResource(AppIcons.Menu), contentDescription = stringResource(R.string.menu_open))
             }
         },
         actions = {
-            IconButton(onClick = onOpenAppearance) {
+            IconButton(
+                onClick = onOpenAppearance,
+                modifier = Modifier.testTag(HomeTestTags.APPEARANCE),
+            ) {
                 Icon(painterResource(AppIcons.Tune), contentDescription = stringResource(R.string.home_open_appearance))
             }
         },
