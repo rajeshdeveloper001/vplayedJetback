@@ -257,6 +257,8 @@ dependencies {
         // Direct AARs do not bring transitive dependencies automatically:
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.okhttp)
+    } else {
+        implementation(libs.vplayed.shared)
     }
 
     // Preview rendering for every debuggable build type.
