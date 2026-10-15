@@ -39,8 +39,8 @@ import com.vplayed.R
 import com.vplayed.core.designsystem.component.cssLinearGradient
 import com.vplayed.core.designsystem.component.mixWith
 import com.vplayed.core.designsystem.theme.AppDesignSystem
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ItemDetails
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ItemDetails
 
 // Prototype `.chtile` (mirror of the design system's ChannelCard).
 private const val GRADIENT_ANGLE = 155f
@@ -110,7 +110,9 @@ internal fun ChannelTile(item: ContentItem, modifier: Modifier = Modifier, onFol
                 )
             }
             if (channel != null) {
-                val followers = formatCompact(channel.followers.toLong())
+                // A channel without a count shows 0, as before the shared layer.
+                val followerCount = channel.followers ?: 0
+                val followers = formatCompact(followerCount.toLong())
                 Box(
                     modifier = Modifier
                         .padding(top = LineTop)
@@ -120,7 +122,7 @@ internal fun ChannelTile(item: ContentItem, modifier: Modifier = Modifier, onFol
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = pluralStringResource(R.plurals.home_followers, channel.followers, followers),
+                        text = pluralStringResource(R.plurals.home_followers, followerCount, followers),
                         style = AppDesignSystem.textStyles.cardSubtitle.copy(fontWeight = FontWeight.Medium),
                         color = white,
                         maxLines = 1,

@@ -1,6 +1,6 @@
 package com.vplayed.feature.auth.domain
 
-import com.vplayed.feature.auth.domain.model.DeviceLimit
+import com.vplayed.shared.auth.DeviceLimit
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -15,20 +15,15 @@ Unit tests are enabled for **every** build type (`android.onlyEnableUnitTestForT
 | `core/ui/adaptive/AppLayoutInfoTest` | Window classes, bar vs rail, padding per window size |
 | `feature/home/HomeViewModelTest` | Email validation flow, demo state |
 | `feature/splashscreen/SplashViewModelTest` | 3-second minimum (virtual time), waits for startup work |
-| `feature/dashboard/home/HomeMapperTest` | Card styles per type, image URLs, portrait posters, subtitles, prices, live flag, genre ids, localized titles |
-| `feature/dashboard/home/DefaultHomeRepositoryTest` | Real Retrofit + JSON against MockWebServer: paths/params, paging, 401/500/failed envelope/malformed/offline |
-| `feature/dashboard/home/HomeViewModelTest` | Loading, content, pagination, de-duplication, retry, banners-only failure, empty, row paging, refresh |
-| `core/network/ApiHeadersInterceptorTest` | Mobile app headers, `device_id`, geo token header (never null/empty, latest value, skipped on `@WithoutGeoToken`), `Authorization` / `profile_id` only with a session |
-| `core/common/validation/EmailValidatorTest` | Empty, malformed and valid (trimmed) addresses |
-| `core/security/CryptoTransportTest` | OpenSSL-compatible output (fixed-salt vector), random salt, no empty payload |
-| `core/geo/GeoTokenDecoderTest` | Currency from Base64 JSON; invalid Base64 / malformed JSON / missing currency return null |
-| `core/geo/GeoRestrictionRepositoryTest` | IP → geo token → currency; failures keep the last valid state; serialized refreshes; geo-data path |
+| `feature/dashboard/home/HomeViewModelTest` | The ViewModel on the shared `HomeFeedController`: first load starts on creation, loading state, paging, row paging, retry, refresh. The feed rules, mapping and requests are tested in `../kmp` (`HomeFeedControllerTest`, `HomeMapperTest`, `HomeRepositoryTest`) |
+| `core/shared/SharedConfigMappingTest` | Per build type: the KMP shared layer gets the same environment, URLs, logging, version and transport key as `AppConfig`; key never printed |
+| `core/shared/SharedHeadersTest` | The headers backend requests carry, built as the app builds them (`toSharedConfig`, `AndroidSharedDeviceInfo`, shared `SessionManager` and `GeoStore`, OkHttp engine): signed out, session + profile + geo token, a request opting out of the geo token. The rest of the HTTP contract is tested in `../kmp` (`EndpointContractTest`, `OkHttpEngineTest`) |
 | `core/geo/GeoRestrictionSyncTest` | Refresh on start online, reconnect and network switch; none while unchanged; flapping debounced (virtual time) |
-| `core/geo/GeoWorkDecisionTest` | Worker success / retry / give-up mapping |
-| `feature/auth/DefaultAuthRepositoryTest` | Real Retrofit + JSON + encryption against MockWebServer: email-login and verifyEmailOtp bodies decrypt to the expected JSON, 200/203/202, HTTP 200 with API error, missing token, invalid / expired code, 4xx/5xx, malformed, offline, missing key, session saved only on a real login, device list parsing, logout-device and verifyEmailLogin forms |
-| `feature/auth/LoginViewModelTest` | Validation, focus-loss check, OTP opens only for a real "code sent" (200/203) or a 202 with devices, Toasts otherwise, duplicate submits ignored, email cleared on close / sign-in |
-| `feature/auth/OtpViewModelTest` | Six-digit rule, verify success → success step → Dashboard after 3 s, wrong / expired code, network failure, duplicate verify, resend (success, failure, overlap), 60 s countdown (virtual time), device step (sign out one / all, continue, back, handoff) |
-| `core/session/DataStoreSessionRepositoryTest` | Round trip, ciphertext only in storage, corrupt / foreign data → signed out, Keystore unavailable → memory only, masked `toString` |
+| `core/geo/GeoWorkDecisionTest` | Worker success / retry / give-up mapping of the shared refresh outcome (the refresh itself is tested in `../kmp`: `GeoRepositoryTest`, `GeoTokenDecoderTest`) |
+| `feature/auth/LoginViewModelTest` | The ViewModel on the shared `EmailLoginController`: validation (empty, malformed), focus-loss check, OTP opens only for a real "code sent" (200/203) or a 202 with devices (handed over once), Toasts otherwise (unsafe server text → app string), duplicate submits ignored, email cleared on close / sign-in |
+| `feature/auth/OtpViewModelTest` | The ViewModel on the shared `OtpController`: six-digit rule, verify success → session stored → success step → Dashboard after 3 s, wrong / expired code, network failure, duplicate verify, resend, 60 s countdown (virtual time), device step (sign out one / all, continue, back, handoff), no session on a refused code |
+| `core/session/KeystoreSecureStoreTest` | The store under the shared `SessionManager`: a session stored by the previous app version is restored (upgrade), round trip, ciphertext only in storage, corrupt / foreign data → signed out and cleared, Keystore unavailable → memory only, sign-out clears storage, masked `toString` |
+| `app/AppShellViewModelTest` | Side menu account: signed-in email; Sign out through the shared `SessionManager.logout` (accepted or 401 → signed out; offline / refusal → stays signed in with a Toast message, the server's text never shown), one request per tap burst |
 | `feature/settings/AppearanceSettingsViewModelTest` | Loading→Ready, actions write to the repository, reset, AppearanceViewModel observes changes |
 
 ## Patterns
@@ -62,9 +57,9 @@ private val dataStore = PreferenceDataStoreFactory.create(
 
 **Pure logic** (validators, mappers, layout classification) — plain JUnit, no rules.
 
-**API** — synthetic JSON fixtures in `src/test/resources/home/` parsed with `Fixtures.json` (the app's own `NetworkModule.provideJson()`), served by `MockWebServer` for repository tests. Never commit real API responses.
+**API** — Home and geo requests are made by the shared layer, so their response tests live in `../kmp` (synthetic fixtures in `home/HomeFixtures.kt`, served by a Ktor `MockEngine`). Never commit real API responses.
 
-**Home ViewModel** — `FakeHomeRepository` (test) scripts each page/row result, records calls, and can hold a page (`holdSections`) to assert loading states.
+**Home ViewModel** — `FakeHomeRepository` (test) implements the shared `HomeRepository`: it scripts each page/row result, records calls, and can hold a page (`holdSections`) to assert loading states.
 
 ## Commands
 

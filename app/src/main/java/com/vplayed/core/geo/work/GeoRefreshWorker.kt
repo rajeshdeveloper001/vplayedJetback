@@ -9,8 +9,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.vplayed.core.geo.GeoRefreshOutcome
-import com.vplayed.core.geo.GeoRestrictionRepository
+import com.vplayed.shared.geo.GeoRefreshOutcome
+import com.vplayed.shared.geo.GeoRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -55,8 +55,8 @@ enum class GeoWorkDecision { SUCCESS, RETRY, FAILURE }
 
 /** Retries transient failures up to [GeoRefreshWorker.MAX_ATTEMPTS] attempts in total. */
 fun GeoRefreshOutcome.toWorkDecision(runAttemptCount: Int): GeoWorkDecision = when (this) {
-    GeoRefreshOutcome.Success, GeoRefreshOutcome.InvalidResponse -> GeoWorkDecision.SUCCESS
-    GeoRefreshOutcome.TransientFailure ->
+    GeoRefreshOutcome.SUCCESS, GeoRefreshOutcome.INVALID_RESPONSE -> GeoWorkDecision.SUCCESS
+    GeoRefreshOutcome.TRANSIENT_FAILURE ->
         if (runAttemptCount + 1 < GeoRefreshWorker.MAX_ATTEMPTS) GeoWorkDecision.RETRY else GeoWorkDecision.FAILURE
 }
 
@@ -70,14 +70,14 @@ class GeoRefreshWorker(context: Context, params: WorkerParameters) : CoroutineWo
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface Dependencies {
-        fun geoRestrictionRepository(): GeoRestrictionRepository
+        fun geoRepository(): GeoRepository
     }
 
     override suspend fun doWork(): Result {
         val decision = try {
             val repository = EntryPointAccessors
                 .fromApplication(applicationContext, Dependencies::class.java)
-                .geoRestrictionRepository()
+                .geoRepository()
             repository.refresh().toWorkDecision(runAttemptCount)
         } catch (cancellation: CancellationException) {
             throw cancellation

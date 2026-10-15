@@ -1,6 +1,8 @@
 # Home API
 
-Implemented in `feature/dashboard/home/data`. Base URL = `BuildConfig.SERVER_URL` (per build type). Every request carries the headers from `core/network/ApiHeadersInterceptor` (`Accept`, `X-REQUEST-TYPE: mobile`, `app_version`, `device_type: android`, `X-LANGUAGE-CODE`), matching the previous app's guest requests.
+Implemented in the KMP shared layer (`../kmp`, `home/DefaultHomeRepository`, `HomeMapper`, `HomeFeedController`), used by this app and VPlayed (Phase 4). Base URL = `AppConfig.serverUrl` (per build type). Every request carries the shared client's headers, the same as `core/network/ApiHeadersInterceptor` (`Accept`, `X-REQUEST-TYPE: mobile`, `app_version`, `device_type: android`, `X-LANGUAGE-CODE`, plus `device_id`, `x-bearer-token` and the session when known), matching the previous app's guest requests.
+
+A page is read when the HTTP status is 2xx and the envelope's `statusCode` is 200 (decision D6; `status` is advisory).
 
 ## Endpoints
 

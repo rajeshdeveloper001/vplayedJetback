@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vplayed.R
-import com.vplayed.core.common.validation.EmailValidationResult
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
@@ -37,6 +36,7 @@ import com.vplayed.feature.auth.presentation.components.LoginPrimaryButton
 import com.vplayed.feature.auth.presentation.components.LoginSocialButton
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.shared.validation.EmailValidationResult
 
 /** Callbacks of the login screen. */
 data class LoginActions(
@@ -125,6 +125,7 @@ private fun ColumnScope.LoginForm(
     val errorMessage = when (uiState.emailError) {
         EmailValidationResult.EMPTY -> stringResource(R.string.login_email_error_empty)
         EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.login_email_error_invalid)
+        EmailValidationResult.TOO_LONG -> stringResource(R.string.login_email_error_too_long)
         EmailValidationResult.VALID, null -> null
     }
     LoginEmailField(

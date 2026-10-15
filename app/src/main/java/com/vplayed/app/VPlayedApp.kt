@@ -1,5 +1,6 @@
 package com.vplayed.app
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -11,10 +12,10 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -64,6 +66,11 @@ fun VPlayedApp(
     shellViewModel: AppShellViewModel = hiltViewModel(),
 ) {
     val signedInEmail by shellViewModel.signedInEmail.collectAsStateWithLifecycle()
+    val isSigningOut by shellViewModel.isSigningOut.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(shellViewModel) {
+        shellViewModel.messages.collect { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+    }
     val layoutInfo = rememberAppLayoutInfo()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -106,6 +113,8 @@ fun VPlayedApp(
         drawerContent = {
             AppDrawerSheet(
                 signedInEmail = signedInEmail,
+                onSignOut = shellViewModel::signOut,
+                isSigningOut = isSigningOut,
                 onLogin = {
                     scope.launch { drawerState.close() }
                     navController.navigate(LoginDestination) { launchSingleTop = true }

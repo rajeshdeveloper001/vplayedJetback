@@ -1,22 +1,25 @@
 package com.vplayed.feature.auth
 
 import androidx.lifecycle.SavedStateHandle
-import com.vplayed.R
-import com.vplayed.core.error.AppError
 import com.vplayed.feature.auth.domain.DeviceLimitHandoff
-import com.vplayed.feature.auth.domain.EmailLoginResult
-import com.vplayed.feature.auth.domain.model.DeviceKind
-import com.vplayed.feature.auth.domain.model.DeviceLimit
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.OtpVerificationResult
-import com.vplayed.feature.auth.domain.model.SignOutDeviceResult
-import com.vplayed.feature.auth.domain.model.SignedInDevice
-import com.vplayed.feature.auth.presentation.viewmodel.AuthMessage
 import com.vplayed.feature.auth.presentation.viewmodel.OtpEvent
-import com.vplayed.feature.auth.presentation.viewmodel.OtpStep
 import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
+import com.vplayed.shared.auth.AuthMessage
+import com.vplayed.shared.auth.AuthMessageKey
+import com.vplayed.shared.auth.DeviceKind
+import com.vplayed.shared.auth.DeviceLimit
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.EmailLoginResult
+import com.vplayed.shared.auth.OtpStep
+import com.vplayed.shared.auth.OtpVerificationResult
+import com.vplayed.shared.auth.SignOutDeviceResult
+import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.core.error.AppError
 import com.vplayed.testing.FakeAuthRepository
 import com.vplayed.testing.MainDispatcherRule
+import com.vplayed.testing.testAuthSession
+import com.vplayed.testing.testSessionManager
+import com.vplayed.testing.verified
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -27,6 +30,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -41,6 +45,7 @@ class OtpViewModelTest {
 
     private val repository = FakeAuthRepository()
     private val handoff = DeviceLimitHandoff()
+    private val sessions = testSessionManager()
 
     private val laptop = SignedInDevice("Chrome on Linux", DeviceKind.DESKTOP, "Chrome", false, DeviceSignOutKey("u1", "t1"))
     private val phone = SignedInDevice("iPhone 15", DeviceKind.PHONE, null, false, DeviceSignOutKey("u2", "t2"))
@@ -49,6 +54,7 @@ class OtpViewModelTest {
         SavedStateHandle(mapOf(OtpViewModel.ARG_EMAIL to EMAIL, OtpViewModel.ARG_START_WITH_DEVICE_LIMIT to startWithDeviceLimit)),
         repository,
         handoff,
+        sessions,
     )
 
     private fun TestScope.started(startWithDeviceLimit: Boolean = false): OtpViewModel =
@@ -151,7 +157,7 @@ class OtpViewModelTest {
         vm.typeFullCode()
         vm.onVerify()
         runCurrent()
-        assertEquals(AuthMessage.Resource(R.string.otp_invalid), vm.uiState.value.error)
+        assertEquals(AuthMessage.Localized(AuthMessageKey.OTP_INVALID), vm.uiState.value.error)
     }
 
     @Test
@@ -163,7 +169,7 @@ class OtpViewModelTest {
         vm.onVerify()
         runCurrent()
 
-        assertEquals(AuthMessage.Resource(R.string.error_network), vm.uiState.value.error)
+        assertEquals(AuthMessage.Localized(AuthMessageKey.ERROR_NETWORK), vm.uiState.value.error)
         assertEquals("123456", vm.uiState.value.code)
         assertEquals(0, vm.uiState.value.shakeCount)
         assertFalse(vm.uiState.value.isVerifying)
@@ -177,7 +183,7 @@ class OtpViewModelTest {
         vm.typeFullCode()
         vm.onVerify()
         runCurrent()
-        assertEquals(AuthMessage.Resource(R.string.error_network), vm.uiState.value.error)
+        assertEquals(AuthMessage.Localized(AuthMessageKey.ERROR_NETWORK), vm.uiState.value.error)
 
         repository.verifyHold = CompletableDeferred()
         vm.onVerify()
@@ -209,14 +215,14 @@ class OtpViewModelTest {
 
     @Test
     fun givenNewUser_whenVerified_thenSuccessStepTellsWhatIsComingAndStillContinues() = runTest(mainDispatcherRule.testDispatcher) {
-        repository.verifyResult = OtpVerificationResult.Verified(isNewUser = true, hasMultipleProfiles = true)
+        repository.verifyResult = verified(isNewUser = true, hasMultipleProfiles = true)
         val vm = started()
         vm.typeFullCode()
 
         vm.onVerify()
         runCurrent()
 
-        assertEquals(AuthMessage.Resource(R.string.otp_new_user_pending), vm.uiState.value.notice)
+        assertEquals(AuthMessage.Localized(AuthMessageKey.PROFILE_SETUP_PENDING), vm.uiState.value.notice)
         advanceTimeBy(OtpViewModel.SUCCESS_MILLIS + 1)
         runCurrent()
         assertEquals(OtpEvent.Authenticated, vm.nextEvent())
@@ -224,12 +230,12 @@ class OtpViewModelTest {
 
     @Test
     fun givenSeveralProfiles_whenVerified_thenSuccessStepMentionsProfileChoice() = runTest(mainDispatcherRule.testDispatcher) {
-        repository.verifyResult = OtpVerificationResult.Verified(isNewUser = false, hasMultipleProfiles = true)
+        repository.verifyResult = verified(hasMultipleProfiles = true)
         val vm = started()
         vm.typeFullCode()
         vm.onVerify()
         runCurrent()
-        assertEquals(AuthMessage.Resource(R.string.otp_multi_profile_pending), vm.uiState.value.notice)
+        assertEquals(AuthMessage.Localized(AuthMessageKey.MULTI_PROFILE_PENDING), vm.uiState.value.notice)
     }
 
     @Test
@@ -248,7 +254,7 @@ class OtpViewModelTest {
         vm.typeFullCode()
         vm.onVerify()
         runCurrent()
-        assertEquals(AuthMessage.Resource(R.string.otp_registration_pending), vm.uiState.value.error)
+        assertEquals(AuthMessage.Localized(AuthMessageKey.REGISTRATION_REQUIRED), vm.uiState.value.error)
         assertEquals(OtpStep.Code, vm.uiState.value.step)
     }
 
@@ -587,6 +593,35 @@ class OtpViewModelTest {
     fun givenMissingHandoff_whenOpenedOnDeviceStep_thenFallsBackToCodeStep() = runTest(mainDispatcherRule.testDispatcher) {
         val vm = started(startWithDeviceLimit = true)
         assertEquals(OtpStep.Code, vm.uiState.value.step)
+    }
+
+    // endregion
+
+
+    // region session
+
+    @Test
+    fun givenCorrectCode_whenVerified_thenAppSessionStoredBeforeAuthenticated() = runTest(mainDispatcherRule.testDispatcher) {
+        val vm = started()
+        vm.typeFullCode()
+
+        vm.onVerify()
+        runCurrent()
+
+        assertEquals(testAuthSession, sessions.session)
+        advanceTimeBy(OtpViewModel.SUCCESS_MILLIS + 1)
+        runCurrent()
+        assertEquals(OtpEvent.Authenticated, vm.nextEvent())
+    }
+
+    @Test
+    fun givenRefusedCode_whenVerifying_thenNoSessionStored() = runTest(mainDispatcherRule.testDispatcher) {
+        repository.verifyResult = OtpVerificationResult.Rejected(null)
+        val vm = started()
+        vm.typeFullCode()
+        vm.onVerify()
+        runCurrent()
+        assertNull(sessions.session)
     }
 
     // endregion

@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * Keeps [GeoRestrictionStore] current: requests a refresh when the app starts online, when the
+ * Keeps the shared [com.vplayed.shared.geo.GeoStore] current: requests a refresh when the app starts online, when the
  * device comes back online, and when it switches to another network (the public IP changes).
  * While the connection stays the same nothing is requested.
  */

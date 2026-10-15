@@ -1,6 +1,6 @@
 # Vplayed 3.0 — Android (Kotlin + Jetpack Compose)
 
-OTT Android app. Single `:app` module, feature-oriented packages, MVVM + unidirectional data flow, Hilt, centralized design system. Built so far: splash screen, dashboard with bottom navigation (Home — API driven, Search / Promos / Subscription — placeholders) and a side menu, Login (email step, Fragment), app-wide geo-restriction refresh, Appearance settings, design-system reference. **Visual design follows the VPlayed prototype** (mobile Home); the previous app (`VplayedApp`, e.g. `ShocialFragment`) is a reference for logic only.
+OTT Android app. Single `:app` module, feature-oriented packages, MVVM + unidirectional data flow, Hilt, centralized design system. Built so far: splash screen, dashboard with bottom navigation (Home — API driven, Search / Promos / Subscription — placeholders) and a side menu (Login, or the signed-in email and Sign out), Login (email step, Fragment), app-wide geo-restriction refresh, Appearance settings, design-system reference. **Visual design follows the VPlayed prototype** (mobile Home); the previous app (`VplayedApp`, e.g. `ShocialFragment`) is a reference for logic only.
 
 ## Toolchain (do not change casually)
 
@@ -9,7 +9,9 @@ OTT Android app. Single `:app` module, feature-oriented packages, MVVM + unidire
 - compileSdk/targetSdk 37, minSdk 24, Java 11 bytecode.
 - All versions live in `gradle/libs.versions.toml`. Prefer stable releases; justify any new dependency in `docs/dependencies.md`.
 
-Command-line builds need JDK 25: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`.
+Command-line builds need JDK 25: `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`, and the SDK via `local.properties` (`sdk.dir`) or `ANDROID_HOME`.
+
+The KMP shared layer (`com.vplayed:shared`) is built from source: the `kmp` repository must be checked out next to this one (`../kmp`); `settings.gradle.kts` includes it as a composite build. Its toolchain is kept identical to this project's. Details: `docs/architecture/shared-module.md`.
 
 ## Build types (no product flavors)
 
@@ -32,27 +34,30 @@ Command-line builds need JDK 25: `export JAVA_HOME="/Applications/Android Studio
 ```
 app/            Application (Coil loader, starts GeoRestrictionSync), MainActivity (BaseActivity + SplashScreen API),
                 VPlayedApp (side menu + nav shell + tab bar), AppDrawer
-core/common/    AppConfig, AppEnvironment, ConfigModule, validation/EmailValidator
-core/error/     AppError, DataResult, resultOf { } (typed failures from the data layer)
+core/common/    AppConfig, AppEnvironment, ConfigModule, validation/EmailValidator (alias of the shared rule)
 core/designsystem/  color/ typography/ dimension/ shape/ theme/ component/ icon/
 core/ui/        AppScreenScaffold, adaptive/ (AppLayoutInfo, ResponsiveContent), preview/ annotations,
                 base/ (BaseActivity, BaseFragment, AppearanceViewModel)
 core/repository/    interfaces (AppearanceRepository)
 core/datastore/     DataStore implementations + Hilt modules
-core/network/       OkHttp/Retrofit/Json, ApiHeadersInterceptor (device_id, x-bearer-token), SelectiveLoggingInterceptor,
-                    @WithoutGeoToken / @RedactBody, connectivity/NetworkMonitor
-core/geo/           GeoRestrictionStore (single source of IP / geo token / currency), GeoRestrictionRepository,
-                    GeoRestrictionSync, work/GeoRefreshWorker (WorkManager)
-core/security/      CryptoTransport (backend request encryption)
-core/session/       UserSession, SessionRepository (encrypted DataStore + Keystore), sent as Authorization / profile_id
+core/network/       the OkHttpClient the shared layer's Ktor engine runs on (no interceptors: headers and the
+                    redacting log are shared), DeviceIdProvider / DeviceNameProvider, connectivity/NetworkMonitor
+core/geo/           GeoRestrictionSync, work/GeoRefreshWorker (WorkManager): when to refresh; the shared GeoStore
+                    (single source of IP / geo token / currency) and GeoRepository come from ../kmp
+core/session/       KeystoreSecureStore (encrypted DataStore + Keystore cipher) under the shared SessionManager
+                    (../kmp, session/): restore, sign-in, sign-out, 401 → signed out; sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
+core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig;
+                    it reads the SessionManager and GeoStore Hilt provides; SharedAppError texts in core/ui
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /
-                       OtpScreen (shared AuthLayout), Login/OtpViewModel, DefaultAuthRepository (email-login, verifyEmailOtp,
-                       device limit), DeviceLimitHandoff
+                       OtpScreen (shared AuthLayout), Login/OtpViewModel on the KMP shared EmailLoginController / OtpController
+                       (rules, messages as AuthMessageKey → strings.xml in AuthMessage.kt), DeviceLimitHandoff,
+                       AuthSessionMapping; requests, encryption and models come from the shared layer
 feature/dashboard/     navigation/ (DashboardTab: Home, Search, Promos, Subscription)
-  home/                data/ (HomeApi, DTOs, HomeMapper, DefaultHomeRepository, di) · domain/ · presentation/
+  home/                data/di (provides the shared HomeRepository) · presentation/ (HomeViewModel runs the shared
+                       HomeFeedController; the UI uses the shared models com.vplayed.shared.home.*)
   search|promos|subscription/  placeholder screens until their APIs exist
 feature/settings/      Appearance (theme mode, palette, text size, density)
 reference/          not product UI: typography/OttTextStylesReference, showcase/ (design-system demo)
@@ -98,11 +103,11 @@ Compose destinations are the default. A screen that must be a Fragment extends `
 
 ## API
 
-Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`. Mark Retrofit methods `@RedactBody` when bodies hold credentials or personal data, and `@WithoutGeoToken` when the geo token must not be sent. Data layers return `DataResult` (never throw); map exceptions with `resultOf { }`. Parse with the app `Json` (lenient: unknown keys ignored, `coerceInputValues`). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
+Home endpoints, pagination and response quirks: `docs/api/home-api.md`. Login and geo-restriction contracts (headers, encryption, status codes): `docs/api/auth-api.md`. Backend requests (login, session, Home, geo) are made by the KMP shared layer (`../kmp`); new endpoints go there too, with `RequestOptions(redact = true)` when bodies hold credentials or personal data and `sendGeoToken = false` when the geo token must not be sent. Shared calls return `DataResult` or sealed results (never throw). Use `JsonElement`/`JsonPrimitive` for fields whose JSON type varies.
 
 ## Testing
 
-Test names: `givenX_whenY_thenZ`. See `docs/testing/` — `user-flows.md` lists every user flow with manual steps and its automated test. Instrumented tests run on `HiltTestApplication` (`com.vplayed.testing.HiltTestRunner`); `TestModules.kt` replaces the Home and auth repositories with `FakeHomeRepository` / `FakeAuthRepository` and the splash minimum with 0 ms. `GeoRestrictionSync` starts in `VPlayedApplication`, so it does not run under `HiltTestApplication` (no real network in tests). Unit-test API responses are synthetic fixtures in `src/test/resources/home` — never commit real API responses (they contain personal data).
+Test names: `givenX_whenY_thenZ`. See `docs/testing/` — `user-flows.md` lists every user flow with manual steps and its automated test. Instrumented tests run on `HiltTestApplication` (`com.vplayed.testing.HiltTestRunner`); `TestModules.kt` replaces the Home and auth repositories with `FakeHomeRepository` / `FakeAuthRepository` and the splash minimum with 0 ms. `GeoRestrictionSync` starts in `VPlayedApplication`, so it does not run under `HiltTestApplication` (no real network in tests). API response tests live with the shared code in `../kmp` (synthetic fixtures in `home/HomeFixtures.kt`) — never commit real API responses (they contain personal data).
 
 ```bash
 ./gradlew testDevUnitTest testQaUnitTest testStageUnitTest testDemoUnitTest testReleaseUnitTest   # unit tests, every variant

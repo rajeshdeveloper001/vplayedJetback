@@ -19,15 +19,15 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.vplayed.feature.auth.domain.EmailLoginResult
-import com.vplayed.feature.auth.domain.model.DeviceKind
-import com.vplayed.feature.auth.domain.model.DeviceLimit
-import com.vplayed.feature.auth.domain.model.DeviceSignOutKey
-import com.vplayed.feature.auth.domain.model.OtpVerificationResult
-import com.vplayed.feature.auth.domain.model.SignedInDevice
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.components.OtpTestTags
 import com.vplayed.feature.dashboard.home.presentation.components.HomeTestTags
+import com.vplayed.shared.auth.DeviceKind
+import com.vplayed.shared.auth.DeviceLimit
+import com.vplayed.shared.auth.DeviceSignOutKey
+import com.vplayed.shared.auth.EmailLoginResult
+import com.vplayed.shared.auth.OtpVerificationResult
+import com.vplayed.shared.auth.SignedInDevice
 import com.vplayed.testing.FakeAuthRepository
 import com.vplayed.testing.FakeHomeRepository
 import com.vplayed.testing.FakeHomeRepository.Companion.HERO_TITLE
@@ -273,6 +273,26 @@ class DashboardFlowTest {
             waitForTag(AppDrawerTestTags.SIGNED_IN)
             composeRule.onNodeWithText("Signed in as user@example.com").assertIsDisplayed()
             assertTrue(composeRule.onAllNodes(hasTestTag(AppDrawerTestTags.LOGIN)).fetchSemanticsNodes().isEmpty())
+        }
+    }
+
+    @Test
+    fun givenSignedIn_whenUserTapsSignOutInSideMenu_thenServerIsToldAndMenuShowsLogin() {
+        launchApp().use {
+            openLoginFromMenu()
+            submitEmail("user@example.com")
+            waitForTag(OtpTestTags.SCREEN)
+            composeRule.onNodeWithTag(OtpTestTags.CODE_FIELD).performTextInput("123456")
+            composeRule.onNodeWithTag(OtpTestTags.VERIFY).performClick()
+            waitForText(HERO_TITLE, timeoutMillis = 10_000)
+            composeRule.onNodeWithContentDescription("Open menu").performClick()
+            waitForTag(AppDrawerTestTags.SIGN_OUT)
+
+            composeRule.onNodeWithTag(AppDrawerTestTags.SIGN_OUT).performClick()
+
+            waitForTag(AppDrawerTestTags.LOGIN)
+            assertTrue(authData.logouts == 1)
+            assertTrue(composeRule.onAllNodes(hasTestTag(AppDrawerTestTags.SIGNED_IN)).fetchSemanticsNodes().isEmpty())
         }
     }
 

@@ -2,10 +2,10 @@ package com.vplayed.reference.showcase
 
 import com.vplayed.core.common.config.AppConfig
 import com.vplayed.core.common.config.AppEnvironment
-import com.vplayed.core.common.validation.EmailValidationResult
-import com.vplayed.core.common.validation.EmailValidator
 import com.vplayed.reference.showcase.presentation.viewmodel.DemoContentState
 import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseViewModel
+import com.vplayed.shared.validation.EmailValidationResult
+import com.vplayed.shared.validation.EmailValidator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

@@ -44,16 +44,6 @@ import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ScreenPreviews
 import com.vplayed.core.ui.userMessage
-import com.vplayed.feature.dashboard.home.domain.model.BundleAccent
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.ContentType
-import com.vplayed.feature.dashboard.home.domain.model.HomeBanner
-import com.vplayed.feature.dashboard.home.domain.model.HomeSection
-import com.vplayed.feature.dashboard.home.domain.model.ItemDetails
-import com.vplayed.feature.dashboard.home.domain.model.LiveStatus
-import com.vplayed.feature.dashboard.home.domain.model.Price
-import com.vplayed.feature.dashboard.home.domain.model.SectionStyle
-import com.vplayed.feature.dashboard.home.domain.model.ShowType
 import com.vplayed.feature.dashboard.home.presentation.components.HeroBannerCarousel
 import com.vplayed.feature.dashboard.home.presentation.components.HomeShimmer
 import com.vplayed.feature.dashboard.home.presentation.components.HomeTestTags
@@ -62,7 +52,17 @@ import com.vplayed.feature.dashboard.home.presentation.components.RowShimmer
 import com.vplayed.feature.dashboard.home.presentation.components.SectionRow
 import com.vplayed.feature.dashboard.home.presentation.viewmodel.HomeUiState
 import com.vplayed.feature.dashboard.home.presentation.viewmodel.HomeViewModel
-import com.vplayed.feature.dashboard.home.presentation.viewmodel.PagingStatus
+import com.vplayed.shared.home.BundleAccent
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.ContentType
+import com.vplayed.shared.home.HomeBanner
+import com.vplayed.shared.home.HomeSection
+import com.vplayed.shared.home.ItemDetails
+import com.vplayed.shared.home.LiveStatus
+import com.vplayed.shared.home.PagingStatus
+import com.vplayed.shared.home.Price
+import com.vplayed.shared.home.SectionStyle
+import com.vplayed.shared.home.ShowType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
@@ -119,10 +119,11 @@ fun HomeScreen(uiState: HomeUiState, actions: HomeActions, modifier: Modifier = 
         containerColor = AppDesignSystem.colors.background,
         contentWindowInsets = WindowInsets.safeDrawing,
     ) { padding ->
+        val error = uiState.error
         when {
             uiState.isLoading -> HomeShimmer(cardWidth = cardWidth, modifier = Modifier.padding(padding))
-            uiState.error != null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                AppErrorView(message = uiState.error.userMessage(), onRetry = actions.onRetry)
+            error != null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                AppErrorView(message = error.userMessage(), onRetry = actions.onRetry)
             }
             uiState.isEmpty -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 AppEmptyState(

@@ -24,4 +24,12 @@ dependencyResolutionManagement {
 
 rootProject.name = "Vplayed3.0"
 include(":app")
+
+// Shared business logic (Kotlin Multiplatform library `:shared`), built from source from the kmp
+// repository checked out next to this one (../kmp). See docs/architecture/shared-module.md.
+includeBuild("../kmp") {
+    dependencySubstitution {
+        substitute(module("com.vplayed:shared")).using(project(":shared"))
+    }
+}
  

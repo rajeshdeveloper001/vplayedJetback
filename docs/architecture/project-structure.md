@@ -17,31 +17,30 @@ app/src/main/java/com/vplayed/
 │   ├── ui/base/                     BaseActivity, BaseFragment, AppearanceViewModel (theme for both)
 │   ├── repository/                  repository interfaces shared across features
 │   ├── datastore/                   DataStore-backed implementations + DataStoreModule
-│   ├── network/                     NetworkModule (OkHttp, Retrofit, Json), ApiHeadersInterceptor, DeviceIdProvider,
-│   │                                SelectiveLoggingInterceptor, @WithoutGeoToken/@RedactBody, connectivity/NetworkMonitor
-│   ├── geo/                         GeoRestrictionStore (IP, geo token, currency), GeoRestrictionRepository,
-│   │                                GeoTokenDecoder, GeoRestrictionSync, work/GeoRefreshWorker, data/ (ipify + geo-data APIs)
-│   ├── security/                    CryptoTransport (request-payload encryption expected by the backend)
-│   ├── session/                     UserSession, SessionRepository (DataStore + Keystore cipher), di/
+│   ├── network/                     NetworkModule (the OkHttpClient under the shared Ktor engine), DeviceIdProvider,
+│   │                                DeviceNameProvider, connectivity/NetworkMonitor
+│   ├── geo/                         GeoRestrictionSync, work/GeoRefreshWorker, di/GeoModule (provides the shared
+│   │                                GeoStore and GeoRepository; the refresh itself runs in ../kmp)
+│   ├── session/                     KeystoreSecureStore + KeystoreSessionCipher for the shared SessionManager, di/
+│   ├── shared/                      bridge to the KMP shared layer (../kmp): SharedModule (Hilt, one SharedGraph),
+│   │                                AppConfig.toSharedConfig(), AndroidSharedDeviceInfo — see shared-module.md
 │   └── dispatcher/                  coroutine dispatcher qualifiers, @ApplicationScope
 ├── reference/
 │   └── typography/OttTextStylesReference.kt   reference sheet of OTT text styles (+ phone/tablet previews)
-├── core/error/                      AppError, DataResult, resultOf
 └── feature/
     ├── splashscreen/                start destination (≥ 3 s), startup work; di/SplashModule
-    ├── auth/                        Login + OTP: data/ (AuthApi, DTOs, DefaultAuthRepository, di),
-    │                                domain/ (AuthRepository, EmailLoginResult, model/OtpVerificationResult …, DeviceLimitHandoff),
+    ├── auth/                        Login + OTP on the KMP shared controllers (EmailLoginController, OtpController):
+    │                                data/ (di provides the shared AuthRepository),
+    │                                domain/ (DeviceLimitHandoff; the models are the shared ones),
     │                                presentation/ (LoginFragment, OtpFragment, viewmodel/Login|OtpViewModel,
     │                                screen/Login|OtpScreen, components/ (AuthLayout, OtpCodeField, DeviceLimitStep …),
     │                                navigation/LoginDestination, OtpDestination)
     ├── dashboard/
     │   ├── navigation/              DashboardTab (Home, Search, Promos, Subscription), dashboardGraph
     │   ├── home/
-    │   │   ├── data/remote/         HomeApi (Retrofit), dto/HomeDtos
-    │   │   ├── data/mapper/         HomeMapper (DTO → domain, image URLs, card styles)
-    │   │   ├── data/                DefaultHomeRepository, di/HomeDataModule
-    │   │   ├── domain/              HomeRepository, model/ (HomeBanner, HomeSection, ContentItem …)
-    │   │   └── presentation/        viewmodel/HomeViewModel, screen/HomeScreen,
+    │   │   ├── data/di/             HomeDataModule (provides the shared HomeRepository; endpoints, mapping
+    │   │   │                        and models live in ../kmp `home/`)
+    │   │   └── presentation/        viewmodel/HomeViewModel (runs the shared HomeFeedController), screen/HomeScreen,
     │   │                            components/ (HeroBannerCarousel, SectionRow, ContentCards, HomeShimmer, HomeTopBar)
     │   ├── search/  promos/  subscription/   placeholder screens
     └── settings/                    Appearance (full screen, from the Home top bar)
@@ -69,7 +68,7 @@ ViewModel (@HiltViewModel)
    ↓
 Repository interface (core/repository or feature/x/domain)
    ↓
-Data source (DataStore, Retrofit service, Room DAO later)
+Data source (DataStore here; backend calls through the KMP shared layer, ../kmp)
 ```
 
 - Unidirectional: state flows down, events flow up. UI state is immutable.
@@ -82,7 +81,7 @@ Data source (DataStore, Retrofit service, Room DAO later)
 1. `feature/<name>/presentation/navigation/<Name>Navigation.kt`: `@Serializable data object <Name>Destination` + `NavGraphBuilder.<name>Screen()`.
 2. `presentation/viewmodel/<Name>ViewModel.kt` with a `<Name>UiState` covering Loading/Empty/Error/Content as needed.
 3. `presentation/screen/<Name>Screen.kt`: `<Name>Route` (hiltViewModel) + stateless `<Name>Screen` + `@ScreenPreviews`.
-4. Data: Retrofit service + repository in `feature/<name>/data`, Hilt module beside it.
+4. Data: backend calls go in the shared layer (`../kmp`: repository, models, tests in `commonTest`); the app provides the shared repository from `SharedGraph` in a Hilt module in `feature/<name>/data/di` (see `docs/architecture/shared-module.md`). Device-only data (DataStore) stays in the app.
 5. Register in `VPlayedApp` (and `DashboardTab` if it's a tab).
 6. Unit tests for the ViewModel/domain, Compose tests for the screen.
 
@@ -97,15 +96,15 @@ Data source (DataStore, Retrofit service, Room DAO later)
 ConnectivityManager default-network callback (NetworkMonitor)
    → GeoRestrictionSync: debounce 1 s, distinct; on app start online, offline → online, network switch
    → GeoRefreshScheduler: WorkManager unique work "geo-restriction-refresh" (REPLACE, CONNECTED, backoff)
-   → GeoRefreshWorker → GeoRestrictionRepository.refresh() (serialized by a Mutex)
-        GET api.ipify.org (third-party client) → store.updateIp
-        GET mediaview/api/v1/common/geo-data/{ip} (@WithoutGeoToken) → token
-        GeoTokenDecoder (Base64 → {"currency"}) → store.updateGeo(token, currency)
-   → GeoRestrictionStore.state (StateFlow) → ApiHeadersInterceptor adds x-bearer-token
+   → GeoRefreshWorker → shared GeoRepository.refresh() (../kmp, serialized by a Mutex)
+        GET api.ipify.org (shared third-party client, no app headers) → store.updateIp
+        GET mediaview/api/v1/common/geo-data/{ip} (no geo token, body redacted) → token
+        GeoTokenDecoder (Base64 → {"currency", "countryCode", …}) → store.updateGeo(token, info)
+   → shared GeoStore.state (StateFlow) → the SharedGraph adds x-bearer-token
 ```
 
-Failures keep the previous valid values; currency defaults to INR. Nothing is persisted (as in the previous app). Explicit refresh: `GeoRestrictionSync.refreshNow()`. The previous app's `KEY_NETWORK_CHANGED` broadcast had no receivers and is not reproduced; observers collect `GeoRestrictionStore.state`.
+Failures keep the previous valid values; currency defaults to INR. Nothing is persisted (as in the previous app). Explicit refresh: `GeoRestrictionSync.refreshNow()`. The previous app's `KEY_NETWORK_CHANGED` broadcast had no receivers and is not reproduced; observers collect `GeoStore.state`.
 
 ## Dependency injection
 
-Hilt modules sit next to what they provide: `ConfigModule` (AppConfig), `DispatchersModule` (+ `@ApplicationScope`), `DataStoreModule` + `RepositoryModule`, `NetworkModule` + `NetworkBindingsModule`, `GeoApiModule` + `GeoBindingsModule`, `AuthNetworkModule` + `AuthRepositoryModule`, `SessionStorageModule` + `SessionRepositoryModule`. All are `SingletonComponent`. `GeoRefreshWorker` reads its dependencies through a Hilt `@EntryPoint`, so WorkManager's default initializer is kept.
+Hilt modules sit next to what they provide: `ConfigModule` (AppConfig), `DispatchersModule` (+ `@ApplicationScope`), `DataStoreModule` + `RepositoryModule`, `NetworkModule` + `NetworkBindingsModule`, `GeoModule`, `AuthRepositoryModule` (shared `AuthRepository` from `SharedGraph`), `SessionStorageModule` + `SessionManagerModule` (shared `SessionManager` over `KeystoreSecureStore`). All are `SingletonComponent`. `GeoRefreshWorker` reads its dependencies through a Hilt `@EntryPoint`, so WorkManager's default initializer is kept.

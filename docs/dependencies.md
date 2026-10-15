@@ -31,10 +31,11 @@ Versions: `gradle/libs.versions.toml`. All are stable releases (verified against
 | hilt-android + hilt-compiler | 2.60.1 | Dependency injection |
 | androidx.hilt:hilt-lifecycle-viewmodel-compose | 1.4.0 | `hiltViewModel()` |
 | kotlinx-coroutines-android | 1.11.0 | Coroutines / Flow |
-| kotlinx-serialization-json | 1.11.0 | Navigation routes, JSON for Retrofit |
-| retrofit + converter-kotlinx-serialization | 3.0.0 | REST client (Home API) |
-| okhttp + logging-interceptor | 5.5.0 | HTTP client; body logging only in dev/qa |
+| kotlinx-serialization-json | 1.11.0 | Type-safe navigation routes |
+| okhttp | 5.5.0 | The HTTP engine under the shared layer's Ktor client (no interceptors; logging is the shared layer's, dev/qa only) |
 | io.coil-kt.coil3:coil-compose + coil-network-okhttp | 3.6.3 | Image loading with memory/disk cache (Home artwork) |
+| com.vplayed:shared | 0.1.0 (source) | Kotlin Multiplatform business logic shared with the iOS app; built from `../kmp` by the composite build, not downloaded. See `docs/architecture/shared-module.md` |
+| ↳ io.ktor:ktor-client-core + ktor-client-okhttp | 3.6.0 (transitive) | HTTP client of the shared layer; runs on the app's OkHttp 5.5.0 (same version Ktor 3.6.0 depends on), sharing its connection pool |
 
 ## Testing
 
@@ -46,7 +47,6 @@ Versions: `gradle/libs.versions.toml`. All are stable releases (verified against
 | androidx.test core / runner / ext-junit | 1.7.0 / 1.7.0 / 1.3.0 | Instrumentation |
 | androidx.test.espresso:espresso-core | 3.7.0 | Pinned: Compose ui-test pulls 3.5.0, which crashes on API 35+ |
 | androidx.test:orchestrator | 1.6.1 | Isolated instrumented tests, cleared app data per test |
-| com.squareup.okhttp3:mockwebserver3 | 5.5.0 | Repository tests against a local HTTP server |
 | com.google.dagger:hilt-android-testing | 2.60.1 | User-flow tests with fake data (`@HiltAndroidTest`, `@TestInstallIn`) |
 
 Coverage uses AGP's built-in JaCoCo (`enableUnitTestCoverage` on `dev`), no extra plugin.
@@ -67,3 +67,5 @@ Gson (used by the previous app) is not added: kotlinx.serialization with `@Seria
 | Detekt | Latest stable (1.23.8) is built against Kotlin 2.0 and is not verified with Kotlin 2.4 / JDK 25; 2.0 is still alpha. Android Lint runs instead | Detekt 2.0 is stable, or 1.23.x is verified on this toolchain |
 | material3-adaptive (direct) | Window size is read from `LocalWindowInfo` | List-detail / supporting-pane layouts are needed |
 | Media3 / ExoPlayer | Playback requirements not provided | Player feature work starts |
+
+Removed in Phase 7 (no caller left): Retrofit 3.0.0 + converter-kotlinx-serialization, okhttp logging-interceptor, mockwebserver3.

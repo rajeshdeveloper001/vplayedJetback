@@ -3,8 +3,8 @@ package com.vplayed.feature.splashscreen.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vplayed.core.repository.AppearanceRepository
-import com.vplayed.core.session.SessionRepository
 import com.vplayed.feature.splashscreen.di.SplashConfig
+import com.vplayed.shared.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.async
@@ -32,7 +32,7 @@ sealed interface SplashUiState {
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val appearanceRepository: AppearanceRepository,
-    private val sessionRepository: SessionRepository,
+    private val sessionManager: SessionManager,
     private val config: SplashConfig,
 ) : ViewModel() {
 
@@ -51,7 +51,8 @@ class SplashViewModel @Inject constructor(
     private suspend fun runStartup() {
         // Appearance must be known before the first themed screen is shown.
         appearanceRepository.appearance.first()
-        // The stored session must be read before Home's first request so it carries the auth headers.
-        sessionRepository.awaitLoaded()
+        // Read the stored session now, so the menu shows the right account when the app opens
+        // (backend requests would also wait for it).
+        sessionManager.awaitLoaded()
     }
 }

@@ -39,9 +39,9 @@ import com.vplayed.core.designsystem.dimension.WindowWidthClass
 import com.vplayed.core.designsystem.dimension.currentWindowWidthClass
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
-import com.vplayed.feature.dashboard.home.domain.model.ContentItem
-import com.vplayed.feature.dashboard.home.domain.model.HomeSection
-import com.vplayed.feature.dashboard.home.domain.model.SectionStyle
+import com.vplayed.shared.home.ContentItem
+import com.vplayed.shared.home.HomeSection
+import com.vplayed.shared.home.SectionStyle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 

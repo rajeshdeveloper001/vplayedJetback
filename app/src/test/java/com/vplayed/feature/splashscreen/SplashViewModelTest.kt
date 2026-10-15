@@ -7,8 +7,8 @@ import com.vplayed.feature.splashscreen.di.SplashModule
 import com.vplayed.feature.splashscreen.presentation.viewmodel.SplashUiState
 import com.vplayed.feature.splashscreen.presentation.viewmodel.SplashViewModel
 import com.vplayed.testing.FakeAppearanceRepository
-import com.vplayed.testing.FakeSessionRepository
 import com.vplayed.testing.MainDispatcherRule
+import com.vplayed.testing.testSessionManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,7 +31,7 @@ class SplashViewModelTest {
 
     @Test
     fun givenFastStartup_whenLessThanThreeSecondsPassed_thenStaysOnSplash() = runTest(mainDispatcherRule.testDispatcher) {
-        val viewModel = SplashViewModel(FakeAppearanceRepository(), FakeSessionRepository(), threeSeconds)
+        val viewModel = SplashViewModel(FakeAppearanceRepository(), testSessionManager(), threeSeconds)
 
         advanceTimeBy(SplashModule.MIN_DISPLAY_MILLIS - 1)
         runCurrent()
@@ -41,7 +41,7 @@ class SplashViewModelTest {
 
     @Test
     fun givenFastStartup_whenThreeSecondsPassed_thenBecomesReady() = runTest(mainDispatcherRule.testDispatcher) {
-        val viewModel = SplashViewModel(FakeAppearanceRepository(), FakeSessionRepository(), threeSeconds)
+        val viewModel = SplashViewModel(FakeAppearanceRepository(), testSessionManager(), threeSeconds)
 
         advanceTimeBy(SplashModule.MIN_DISPLAY_MILLIS + 1)
 
@@ -54,7 +54,7 @@ class SplashViewModelTest {
         val repository = object : AppearanceRepository by FakeAppearanceRepository() {
             override val appearance: Flow<AppearanceConfig> = pending
         }
-        val viewModel = SplashViewModel(repository, FakeSessionRepository(), threeSeconds)
+        val viewModel = SplashViewModel(repository, testSessionManager(), threeSeconds)
 
         advanceTimeBy(SplashModule.MIN_DISPLAY_MILLIS + 1)
         assertEquals(SplashUiState.Starting, viewModel.uiState.value)

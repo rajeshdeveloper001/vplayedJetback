@@ -1,42 +1,33 @@
 package com.vplayed.core.geo.di
 
-import com.vplayed.core.geo.data.GeoRestrictionApi
-import com.vplayed.core.geo.data.PublicIpApi
 import com.vplayed.core.geo.work.GeoRefreshScheduler
 import com.vplayed.core.geo.work.WorkManagerGeoRefreshScheduler
-import com.vplayed.core.network.ThirdPartyHttpClient
+import com.vplayed.shared.SharedGraph
+import com.vplayed.shared.geo.GeoRepository
+import com.vplayed.shared.geo.GeoStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
+/**
+ * Geo restriction runs on the shared layer since Phase 4 (../kmp `geo/`): [GeoStore] holds the IP,
+ * geo token and currency, [GeoRepository] refreshes it. This app decides when to refresh
+ * ([com.vplayed.core.geo.GeoRestrictionSync], WorkManager).
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-object GeoApiModule {
+object GeoModule {
 
+    /** Created before the [SharedGraph], because the request headers of both network stacks read it. */
     @Provides
     @Singleton
-    fun providePublicIpApi(@ThirdPartyHttpClient client: OkHttpClient, json: Json): PublicIpApi =
-        Retrofit.Builder()
-            // The endpoint URL is absolute; the base URL only satisfies Retrofit.
-            .baseUrl(PUBLIC_IP_BASE_URL)
-            .client(client)
-            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-            .build()
-            .create(PublicIpApi::class.java)
+    fun provideGeoStore(): GeoStore = GeoStore()
 
     @Provides
-    @Singleton
-    fun provideGeoRestrictionApi(retrofit: Retrofit): GeoRestrictionApi = retrofit.create(GeoRestrictionApi::class.java)
-
-    private const val PUBLIC_IP_BASE_URL = "https://api.ipify.org/"
+    fun provideGeoRepository(graph: SharedGraph): GeoRepository = graph.geoRepository
 }
 
 @Module

@@ -2,7 +2,7 @@
 
 Contracts taken from the previous app (`VplayedApp`: `GudShoServices`, `LoginNewBottomSheet`, `PhoneOTPBaseView`, `LogoutUsersFragment`, `NetworkChangeWorker`, `SessionRequestInterceptor`). The HTML prototype ("VPlayed Sign Up") defines the **screens** only — it contains no network calls. Nothing here was invented; open questions are listed at the end.
 
-All paths are relative to the environment's server URL (`AppConfig.serverUrl`). Every call is a Retrofit method in `feature/auth/data/remote/AuthApi` marked `@RedactBody` (request/response bodies are never logged).
+All paths are relative to the environment's server URL (`AppConfig.serverUrl`). Login calls are made by the KMP shared layer (`../kmp`, `auth/DefaultAuthRepository`) with `RequestOptions.Sensitive` (request/response bodies are never logged); the geo calls are made by the shared `GeoRepository` (`../kmp`, `geo/`): the IP lookup through a client without app headers, `geo-data` without the old geo token and with its body never logged.
 
 ## Flow
 
@@ -15,22 +15,22 @@ OTP code step ── verifyEmailOtp ──► 200 ──► session stored ─�
 OTP device step (started from email-login's 202) ── logout-device ──► Continue ──► email-login ──► code step
 ```
 
-## Common headers (`core/network/ApiHeadersInterceptor`)
+## Common headers (shared `VPlayedHeaders`, `../kmp`)
 
 Every request to the VPlayed backend carries `Accept: application/json`, `X-REQUEST-TYPE: mobile`, `app_version`, `device_type: android`, `X-LANGUAGE-CODE` and:
 
 | Header | Value | When |
 |---|---|---|
 | `device_id` | `Settings.Secure.ANDROID_ID` | Whenever the platform provides it (previous app: always) |
-| `x-bearer-token` | Geo token from `GeoRestrictionStore` | Whenever a token is known, except on requests marked `@WithoutGeoToken` (the geo-data request itself). Never sent empty or null. |
+| `x-bearer-token` | Geo token from the shared `GeoStore` | Whenever a token is known, except on the geo-data request itself. Never sent empty or null. |
 | `Authorization` | `Bearer <access_token>` | When a session is stored |
 | `profile_id` | Default profile id | When a session is stored and it has a profile id |
 
-The previous app sent `x-bearer-token` only together with `Authorization`; this app sends it whenever available (product decision, 2026-10-13). Third-party calls (ipify) use a separate client with none of these headers. `Authorization` and `x-bearer-token` are redacted in HTTP logs.
+The previous app sent `x-bearer-token` only together with `Authorization`; this app sends it whenever available (product decision, 2026-10-13). Third-party calls (ipify) use a separate client with none of these headers. HTTP logs (dev and qa only) hold method, path and status, never headers or bodies.
 
 ## Request encryption
 
-`email-login` and `verifyEmailOtp` bodies are `{"data": "<cipher>"}` where `<cipher>` = `CryptoTransport.encryptForTransport(SALT_KEY, <plain JSON>)`: OpenSSL/CryptoJS passphrase AES (EVP_BytesToKey MD5, AES-256-CBC, `Base64("Salted__" + salt + ciphertext)`), the previous app's legacy `AESEncryption` path, encrypted **once**. `SALT_KEY` comes from `secrets.properties` (`vplayed.saltKey`, git-ignored), `-Pvplayed.saltKey` or `VPLAYED_SALT_KEY`; without it no request is sent and the user sees a generic error. `verifyEmailLogin` and `logout-device` are plain form posts (as in the previous app).
+`email-login` and `verifyEmailOtp` bodies are `{"data": "<cipher>"}` where `<cipher>` = the shared `TransportCipher.encrypt(SALT_KEY, <plain JSON>)`: OpenSSL/CryptoJS passphrase AES (EVP_BytesToKey MD5, AES-256-CBC, `Base64("Salted__" + salt + ciphertext)`), the previous app's legacy `AESEncryption` path, encrypted **once**. `SALT_KEY` comes from `secrets.properties` (`vplayed.saltKey`, git-ignored), `-Pvplayed.saltKey` or `VPLAYED_SALT_KEY`; without it no request is sent and the user sees a generic error. `verifyEmailLogin` and `logout-device` are plain form posts (as in the previous app).
 
 ## Public IP — `GET https://api.ipify.org/?format=json`
 
@@ -38,16 +38,20 @@ Response `{"ip": "203.0.113.10"}`. Accepted only when the value is an IPv4/IPv6 
 
 ## Geo access key — `GET mediaview/api/v1/common/geo-data/{ip}`
 
-`{ip}` is a path segment (encoded = true). Response envelope `{"error", "message", "response": {"geo_token": "…"}}`; only `response.geo_token` is read. The token is Base64 of JSON such as `{"currency": "USD"}`; only `currency` is read. Missing token or bad Base64/JSON never crashes and never clears the last valid values.
+`{ip}` is a path segment (encoded = true). Response envelope `{"error", "message", "response": {"geo_token": "…"}}`; only `response.geo_token` is read. The token is Base64 of JSON such as `{"currency": "USD", "countryCode": "US", …}`; this app uses `currency` (VPlayed also reads the location). Missing token or bad Base64/JSON never crashes and never clears the last valid values.
 
 ## Send / resend the code — `POST users/api/v1/auth/email-login`
 
 Plain JSON `{"email": "<trimmed email>"}`. Resend is the same call. Response envelope (`UserResponse`/`ResponseStatus`): `error: Boolean`, `statusCode: Int`, `status: String`, `message: String`, `response: User` (read only for `get_devices` / `device_limit` on 202).
 
-| HTTP | Meaning (previous app) | This app |
+The status in these tables is the one that decides (decision D1, shared with iOS since the login moved
+to the KMP shared layer): a non-2xx HTTP status always fails; within 2xx the envelope's `statusCode`
+decides when present, else the HTTP status. The previous app read the HTTP status only.
+
+| Status | Meaning (previous app) | This app |
 |---|---|---|
 | 200 | Existing user, code sent | `CodeSent(isNewUser = false)` → OTP screen |
-| 203 | New user, code sent | `CodeSent(isNewUser = true)` → OTP screen |
+| 203 | New user, code sent | `CodeSent(isNewUser = true)` → OTP screen. Backend (2026-10-14): 203 means a new user who must register; registration is out of scope for now, so the current handling stays |
 | 202 | Device limit reached (`response.get_devices`, `response.device_limit`) | `DeviceLimitReached(devices)`: OTP screen on the device step (no devices in the answer → Toast only) |
 | 200 with `error: true` | — | `Rejected` → Toast on Login, no navigation (a 202/203 is decided by its status alone, as in the previous app) |
 | other 2xx, empty or malformed body | — | Failure (never "OTP sent") |
@@ -60,7 +64,7 @@ Plain JSON `{"email": "<trimmed>", "otp": "<6 digits>", "deviceDetail": "<device
 
 | HTTP | This app |
 |---|---|
-| 200 with `error != true` and `response.access_token` | **Signed in**: `UserSession` stored (see below) → success step → Dashboard |
+| 200 with `error != true` and `response.access_token` | **Signed in**: session stored (see below) → success step → Dashboard |
 | 200 / 203 without a usable `access_token` | 200: failure (not a login). 203: `RegistrationRequired` → Toast (registration screen not built) |
 | 203 with `access_token` | Signed in as a new user (assumption: the previous app stored nothing at 203 and went to registration; confirm) |
 | 202 | `DeviceLimitReached` → device step |
@@ -83,13 +87,15 @@ Rows come from `response.get_devices[]` (`device_name`, `device_type`, `browser_
 
 ## Session (`core/session`)
 
-On a verified login the repository stores `UserSession(userId = _id, email, displayName = first_name, accessToken = access_token, refreshToken = refresh_token, profileId = default_profile._id)`:
+On a verified login `OtpViewModel` hands the shared `AuthSession` (`_id`, email, `first_name`, `access_token`, `refresh_token`, `default_profile._id`, …) to the shared `SessionManager`:
 
-- one JSON value, encrypted with an Android Keystore AES-256-GCM key, in its own DataStore file (`session.preferences_pb`), excluded from cloud backup and device transfer;
+- one JSON value (`SessionCodec` format 1; the previous `UserSession` JSON is still read), encrypted with an Android Keystore AES-256-GCM key, in its own DataStore file (`session.preferences_pb`), excluded from cloud backup and device transfer;
 - unreadable or foreign data means "signed out" and is cleared; if the Keystore is unavailable the session lives in memory for that run only (never stored in plain text);
-- read before the first request (the splash waits for it), then sent as `Authorization` / `profile_id`.
+- read before the first request (every shared request waits for it, and so does the splash), then sent as `Authorization` / `profile_id`;
+- a 401 (HTTP or envelope `statusCode`) on a request that carried the session's token ends the session (decision D21; the auth endpoints are exempt). There is no token refresh.
+- **Sign out** (side menu): `POST users/api/v1/auth/logout` with an empty JSON body and the session's token, through the shared `SessionManager.logout`. 200–203 or 401/403 end the session here; other answers keep it and show a Toast (the server's text is not shown).
 
-Not implemented yet (the previous app has them): refreshing an expired token (`POST users/api/v1/auth/refresh-token`, form `refresh_token`), logout (`POST users/api/v1/auth/logout`), registration after a 203, multi-profile selection, FCM device-token registration (`POST mediadetails/api/v1/device-tokens`).
+Not implemented yet (the previous app has them): refreshing an expired token (`POST users/api/v1/auth/refresh-token`, form `refresh_token`), registration after a 203, multi-profile selection, FCM device-token registration (`POST mediadetails/api/v1/device-tokens`).
 
 ## Open questions for the backend
 

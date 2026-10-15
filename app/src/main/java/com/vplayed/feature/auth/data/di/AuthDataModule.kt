@@ -1,29 +1,19 @@
 package com.vplayed.feature.auth.data.di
 
-import com.vplayed.feature.auth.data.DefaultAuthRepository
-import com.vplayed.feature.auth.data.remote.AuthApi
-import com.vplayed.feature.auth.domain.AuthRepository
-import dagger.Binds
+import com.vplayed.shared.SharedGraph
+import com.vplayed.shared.auth.AuthRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
-import retrofit2.Retrofit
-import retrofit2.create
-
+/**
+ * Sign-in requests go through the KMP shared layer (`SharedGraph.authRepository`), used by the
+ * shared controllers behind `LoginViewModel` and `OtpViewModel`. Replaced by a fake in
+ * instrumented tests (`TestModules.kt`).
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-object AuthNetworkModule {
+object AuthRepositoryModule {
     @Provides
-    @Singleton
-    fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create()
-}
-
-/** Replaced by a fake in instrumented tests (`TestModules.kt`). */
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class AuthRepositoryModule {
-    @Binds
-    abstract fun bindAuthRepository(repository: DefaultAuthRepository): AuthRepository
+    fun provideAuthRepository(graph: SharedGraph): AuthRepository = graph.authRepository
 }
