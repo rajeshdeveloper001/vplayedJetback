@@ -1,4 +1,4 @@
-appId: com.vplayed.dev
+appId: com.contus.vplayed.dev
 ---
 # ==============================================================================
 # VPlayed 3.0 Android — Login Input Field Validation Flow
@@ -20,7 +20,7 @@ appId: com.vplayed.dev
 - assertVisible: "Watch now"
 
 # 2. Open the side drawer (contentDescription = "Open menu" on the hamburger IconButton)
-- tapOn: "Open menu"
+- tapOn: "Menu"
 
 # 3. Drawer is open — navigate to Login
 - assertVisible: "Login"
@@ -42,7 +42,7 @@ appId: com.vplayed.dev
 # Case 2: Incomplete address "user@" → "Please enter a valid email address"
 # Field is empty → placeholder "vplayedproduct@gmail.com" is visible → tap it.
 # ---------------------------------------------------------------------------
-- tapOn: "vplayedproduct@gmail.com"
+- tapOn: "name@example.com"
 - inputText: "user@"
 - tapOn: "Continue"
 - assertVisible: "Please enter a valid email address"
