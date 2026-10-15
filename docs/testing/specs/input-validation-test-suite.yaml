@@ -1,0 +1,369 @@
+# ==============================================================================
+# VPlayed 3.0 Android — Input Field Validation & Boundary Test Suite
+# ==============================================================================
+# Architecture: Core Validation Engine + Compose State + Fragment Form Handling
+# Base Specifications: docs/api/auth-api.md, EmailValidator.kt, OtpViewModel.kt
+# ==============================================================================
+
+version: "1.0.0"
+title: "VPlayed 3.0 Input Field Validation Test Specifications"
+description: >
+  Exhaustive test cases, input/output boundary rules, regex patterns, sanitization
+  rules, error messages, and UI state expectations for all input fields across
+  the mobile application.
+
+# ------------------------------------------------------------------------------
+# 1. Email ID Input Validation (`core/common/validation/EmailValidator.kt`)
+# ------------------------------------------------------------------------------
+emailFieldValidation:
+  component: "LoginScreen (Email ID TextField)"
+  preProcessing: "input.trim()"
+  regexPattern: "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+  minLength: 5
+  maxLength: 254 # RFC 5321 limit
+  
+  errorStates:
+    empty:
+      enumResult: "EmailValidationResult.EMPTY"
+      userMessage: "Email is required"
+      triggerCondition: "Trimmed string is empty"
+    invalidFormat:
+      enumResult: "EmailValidationResult.INVALID_FORMAT"
+      userMessage: "Please enter a valid email address"
+      triggerCondition: "Trimmed string does not match regex pattern"
+    valid:
+      enumResult: "EmailValidationResult.VALID"
+      userMessage: null
+      triggerCondition: "Trimmed string matches regex pattern"
+
+  testMatrix:
+    # --------------------------------------------------------------------------
+    # Empty & Whitespace Test Cases
+    # --------------------------------------------------------------------------
+    - id: "EMAIL_VAL_01"
+      input: ""
+      expectedResult: "EMPTY"
+      expectedErrorMessage: "Email is required"
+      submitAllowed: false
+      description: "Direct empty submission"
+
+    - id: "EMAIL_VAL_02"
+      input: "    "
+      expectedResult: "EMPTY"
+      expectedErrorMessage: "Email is required"
+      submitAllowed: false
+      description: "Multiple space characters only"
+
+    - id: "EMAIL_VAL_03"
+      input: "\t\n  \r\n"
+      expectedResult: "EMPTY"
+      expectedErrorMessage: "Email is required"
+      submitAllowed: false
+      description: "Tab and newline whitespace characters"
+
+    # --------------------------------------------------------------------------
+    # Malformed & Invalid Format Test Cases
+    # --------------------------------------------------------------------------
+    - id: "EMAIL_VAL_04"
+      input: "plainaddress"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Missing '@' and domain"
+
+    - id: "EMAIL_VAL_05"
+      input: "user@"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Missing domain after '@'"
+
+    - id: "EMAIL_VAL_06"
+      input: "@example.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Missing local part before '@'"
+
+    - id: "EMAIL_VAL_07"
+      input: "user@example"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Missing top-level domain (TLD)"
+
+    - id: "EMAIL_VAL_08"
+      input: "user@example.c"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "TLD with only 1 character (must be >= 2 characters)"
+
+    - id: "EMAIL_VAL_09"
+      input: "us er@example.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Embedded space inside local part"
+
+    - id: "EMAIL_VAL_10"
+      input: "user@exam ple.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Embedded space inside domain"
+
+    - id: "EMAIL_VAL_11"
+      input: "user@@example.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Duplicate '@' symbol"
+
+    - id: "EMAIL_VAL_12"
+      input: "user@.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "Domain name missing before TLD"
+
+    - id: "EMAIL_VAL_13"
+      input: "<script>alert(1)</script>@example.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "XSS payload with angled brackets"
+
+    - id: "EMAIL_VAL_14"
+      input: "admin' OR '1'='1@example.com"
+      expectedResult: "INVALID_FORMAT"
+      expectedErrorMessage: "Please enter a valid email address"
+      submitAllowed: false
+      description: "SQL Injection payload with quotes and spaces"
+
+    # --------------------------------------------------------------------------
+    # Valid & Edge-Case Format Test Cases
+    # --------------------------------------------------------------------------
+    - id: "EMAIL_VAL_15"
+      input: "user@example.com"
+      expectedResult: "VALID"
+      expectedErrorMessage: null
+      submitAllowed: true
+      description: "Standard standard valid email"
+
+    - id: "EMAIL_VAL_16"
+      input: "  user@example.com  "
+      expectedResult: "VALID"
+      normalizedOutput: "user@example.com"
+      expectedErrorMessage: null
+      submitAllowed: true
+      description: "Valid email with leading and trailing spaces (auto-trimmed)"
+
+    - id: "EMAIL_VAL_17"
+      input: "first.last+tag@sub.example.co.in"
+      expectedResult: "VALID"
+      expectedErrorMessage: null
+      submitAllowed: true
+      description: "Complex email with dots, '+', subdomains, and multi-part TLD"
+
+    - id: "EMAIL_VAL_18"
+      input: "a_b%c-d@example.io"
+      expectedResult: "VALID"
+      expectedErrorMessage: null
+      submitAllowed: true
+      description: "Email with allowable special characters (_, %, -)"
+
+    - id: "EMAIL_VAL_19"
+      input: "USER@DOMAIN.COM"
+      expectedResult: "VALID"
+      expectedErrorMessage: null
+      submitAllowed: true
+      description: "All uppercase email"
+
+# ------------------------------------------------------------------------------
+# 2. OTP Code Input Validation (`feature/auth/presentation/viewmodel/OtpViewModel.kt`)
+# ------------------------------------------------------------------------------
+otpFieldValidation:
+  component: "OtpScreen (6-Digit OTP Field & Custom Box Visualizer)"
+  targetLength: 6
+  allowedCharacters: "0-9"
+  inputMethod: "Numeric Keyboard (IME Action: Done)"
+  
+  behaviorRules:
+    - "One invisible TextField driving 6 styled boxes"
+    - "Backspace deletes the last entered digit"
+    - "Typing beyond 6 digits is strictly prohibited (max 6 characters)"
+    - "Pasting sanitizes: extracts only digits [0-9] and takes the first 6 digits"
+    - "Submit button ('Verify & continue') is disabled until length == 6"
+    - "IME 'Done' triggers verification ONLY when length == 6"
+    - "On backend refusal (wrong/expired code): card shakes (0.4s), boxes cleared, focus reset to box 1"
+
+  testMatrix:
+    # --------------------------------------------------------------------------
+    # Incomplete & Boundary Cases
+    # --------------------------------------------------------------------------
+    - id: "OTP_VAL_01"
+      input: ""
+      boxState: ["", "", "", "", "", ""]
+      focusedBox: 0
+      verifyButtonEnabled: false
+      description: "Initial empty state"
+
+    - id: "OTP_VAL_02"
+      input: "1"
+      boxState: ["1", "", "", "", "", ""]
+      focusedBox: 1
+      verifyButtonEnabled: false
+      description: "Single digit entered"
+
+    - id: "OTP_VAL_03"
+      input: "12345"
+      boxState: ["1", "2", "3", "4", "5", ""]
+      focusedBox: 5
+      verifyButtonEnabled: false
+      description: "5 digits entered (boundary before complete)"
+
+    # --------------------------------------------------------------------------
+    # Complete Valid Case
+    # --------------------------------------------------------------------------
+    - id: "OTP_VAL_04"
+      input: "123456"
+      boxState: ["1", "2", "3", "4", "5", "6"]
+      focusedBox: 5 # or inactive
+      verifyButtonEnabled: true
+      description: "Complete 6-digit code"
+
+    # --------------------------------------------------------------------------
+    # Overflow & Truncation
+    # --------------------------------------------------------------------------
+    - id: "OTP_VAL_05"
+      input: "123456789"
+      sanitizedInput: "123456"
+      boxState: ["1", "2", "3", "4", "5", "6"]
+      verifyButtonEnabled: true
+      description: "Typing/pasting > 6 digits gets truncated to 6"
+
+    # --------------------------------------------------------------------------
+    # Paste Sanitization
+    # --------------------------------------------------------------------------
+    - id: "OTP_VAL_06"
+      pastedString: "12-34 56"
+      sanitizedInput: "123456"
+      boxState: ["1", "2", "3", "4", "5", "6"]
+      verifyButtonEnabled: true
+      description: "Pasted code with dashes and whitespace"
+
+    - id: "OTP_VAL_07"
+      pastedString: "code: 849201 for login"
+      sanitizedInput: "849201"
+      boxState: ["8", "4", "9", "2", "0", "1"]
+      verifyButtonEnabled: true
+      description: "Pasted SMS verification string with alphanumeric words"
+
+    - id: "OTP_VAL_08"
+      pastedString: "abc!@#$%"
+      sanitizedInput: ""
+      boxState: ["", "", "", "", "", ""]
+      verifyButtonEnabled: false
+      description: "Pasted non-digit characters rejected completely"
+
+# ------------------------------------------------------------------------------
+# 3. OTP Resend Timer Validation (`OtpViewModel`)
+# ------------------------------------------------------------------------------
+resendTimerValidation:
+  component: "OtpScreen (Resend Action)"
+  initialCountdownSeconds: 60
+  labelFormat: "Resend  in {m}:{ss}" # e.g. "Resend  in 1:00", "Resend  in 0:59"
+  
+  testMatrix:
+    - id: "RESEND_VAL_01"
+      timerValueSeconds: 60
+      resendClickable: false
+      displayedText: "Resend  in 1:00"
+      description: "Timer start state immediately after screen launch"
+
+    - id: "RESEND_VAL_02"
+      timerValueSeconds: 30
+      resendClickable: false
+      displayedText: "Resend  in 0:30"
+      description: "Mid-countdown state"
+
+    - id: "RESEND_VAL_03"
+      timerValueSeconds: 0
+      resendClickable: true
+      displayedText: "Resend"
+      colorState: "Brand Red (Active)"
+      description: "Timer expiry enables resend action"
+
+    - id: "RESEND_VAL_04"
+      action: "Tap Resend at 0s"
+      outcome:
+        - "Triggers loginWithEmail API call"
+        - "Input boxes emptied"
+        - "Timer resets to 60s countdown"
+      description: "Successful resend cycle"
+
+# ------------------------------------------------------------------------------
+# 4. Device Sign-Out Input Validation (`feature/auth/data/remote/AuthApi`)
+# ------------------------------------------------------------------------------
+deviceSignOutValidation:
+  component: "OtpScreen (Device Limit Step)"
+  
+  testMatrix:
+    - id: "DEV_OUT_01"
+      action: "Sign out single device"
+      payload:
+        username: "user@example.com"
+        access_token: "target_device_token_xyz"
+        preference: "1"
+      validation: "preference must be literal '1'"
+      
+    - id: "DEV_OUT_02"
+      action: "Sign out from all devices"
+      payload:
+        username: "user@example.com"
+        access_token: "first_row_device_token"
+        preference: "all"
+      validation: "preference must be literal 'all'"
+
+# ------------------------------------------------------------------------------
+# 5. Public IP & Geo Location Validation (`core/geo/`)
+# ------------------------------------------------------------------------------
+geoDataValidation:
+  component: "PublicIpApi & GeoRestrictionSync"
+  
+  testMatrix:
+    - id: "GEO_VAL_01"
+      ipAddress: "203.0.113.195"
+      isValid: true
+      type: "IPv4"
+      description: "Valid public IPv4 literal"
+
+    - id: "GEO_VAL_02"
+      ipAddress: "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+      isValid: true
+      type: "IPv6"
+      description: "Valid standard IPv6 literal"
+
+    - id: "GEO_VAL_03"
+      ipAddress: "localhost"
+      isValid: false
+      description: "Non-IP hostname rejected"
+
+    - id: "GEO_VAL_04"
+      ipAddress: "999.999.999.999"
+      isValid: false
+      description: "Out-of-range octet rejected"
+
+    - id: "GEO_VAL_05"
+      rawBase64Token: "eyJjdXJyZW5jeSI6ICJVU0QifQ==" # {"currency": "USD"}
+      decodedCurrency: "USD"
+      isValid: true
+      description: "Valid Base64 encoded geo JSON token"
+
+    - id: "GEO_VAL_06"
+      rawBase64Token: "not_a_valid_base_64!@#"
+      decodedCurrency: null
+      isValid: false
+      errorHandling: "Silently caught; fallback currency retained"
+      description: "Corrupted Base64 geo token does not crash"

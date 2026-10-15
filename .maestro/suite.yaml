@@ -1,0 +1,10 @@
+appId: com.vplayed.dev
+---
+# ==============================================================================
+# Maestro Master Suite: VPlayed 3.0 End-to-End Suite
+# Runs input field validation, OTP flow, and Dashboard navigation
+# ==============================================================================
+
+- runFlow: login-validation-flow.yaml
+- runFlow: otp-validation-flow.yaml
+- runFlow: home-and-navigation-flow.yaml

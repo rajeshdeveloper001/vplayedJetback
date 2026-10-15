@@ -1,0 +1,63 @@
+appId: com.vplayed.dev
+---
+# ==============================================================================
+# VPlayed 3.0 Android — Dashboard Navigation & Home Content Flow
+# ==============================================================================
+# Package    : com.vplayed.dev
+# Target     : DashboardTabs (Home, Search, Promos, Subscription) + Appearance
+# Selectors  : visible text, contentDescription — ID-independent
+# Strings    : from app/src/main/res/values/strings.xml (verified)
+# ==============================================================================
+
+- launchApp:
+    clearState: true
+
+# 1. Wait for Splash → Home
+- assertVisible: "Home"
+- assertVisible: "Watch now"
+
+# 2. Bottom Navigation Tabs
+# 2.1 Search Tab (nav_search = "Search")
+- tapOn:
+    text: "Search"
+- assertVisible:
+    text: "Search"
+
+# 2.2 Promos Tab (nav_promos = "Promos")
+- tapOn:
+    text: "Promos"
+- assertVisible:
+    text: "Promos"
+
+# 2.3 Subscription Tab (nav_subscription = "Subscription")
+- tapOn:
+    text: "Subscription"
+- assertVisible:
+    text: "Subscription"
+
+# 2.4 Return to Home Tab (nav_home = "Home")
+- tapOn:
+    text: "Home"
+- assertVisible:
+    text: "Watch now"
+
+# 3. Appearance Settings
+#    The settings IconButton has contentDescription = "Appearance settings"
+#    (home_open_appearance string). Maestro matches contentDescription as visible text.
+- tapOn:
+    text: "Appearance settings"
+- assertVisible:
+    text: "Appearance"
+
+# 3.1 Verify Theme section header (appearance_section_theme = "Theme")
+- assertVisible:
+    text: "Theme"
+
+# 3.2 Go back to Home
+- back
+- assertVisible:
+    text: "Home"
+
+# 4. Vertical Scroll on Home Screen
+- scroll
+- waitForAnimationToEnd

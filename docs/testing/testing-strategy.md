@@ -46,4 +46,4 @@ Reports: `app/build/reports/tests/`, `app/build/reports/androidTests/connected/d
 
 All variant unit tests, `connectedDevAndroidTest`, `lintDev lintRelease` and the five `assemble*` tasks pass — and the result was actually run, not assumed.
 
-See also: [unit-testing.md](unit-testing.md), [compose-ui-testing.md](compose-ui-testing.md), [build-variant-testing.md](build-variant-testing.md).
+See also: [integration-testing-plan.md](integration-testing-plan.md), [Maestro UI automation](maestro/README.md), [unit-testing.md](unit-testing.md), [compose-ui-testing.md](compose-ui-testing.md), [build-variant-testing.md](build-variant-testing.md).
