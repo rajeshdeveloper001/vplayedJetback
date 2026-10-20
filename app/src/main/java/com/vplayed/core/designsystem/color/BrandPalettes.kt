@@ -3,7 +3,9 @@ package com.vplayed.core.designsystem.color
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import com.vplayed.R
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.palette_monochrome
+import com.vplayed.shared.l10n.palette_vplayed
 
 /**
  * Color values for every bundled brand palette. This is the only file that contains raw color
@@ -67,7 +69,7 @@ object BrandPalettes {
     /** Brand: red actions on black (dark) or white (light). The default palette. */
     val Vplayed = BrandPalette(
         id = "vplayed",
-        nameRes = R.string.palette_vplayed,
+        nameRes = Res.string.palette_vplayed,
         lightScheme = WhiteSurfaces.copy(
             // Red-600 instead of the logo red keeps red text ≥ 4.5:1 on white.
             primary = Color(0xFFE20831),
@@ -106,7 +108,7 @@ object BrandPalettes {
     /** Black and white only: white actions on black (dark) or black actions on white (light). */
     val Monochrome = BrandPalette(
         id = "monochrome",
-        nameRes = R.string.palette_monochrome,
+        nameRes = Res.string.palette_monochrome,
         lightScheme = WhiteSurfaces.copy(
             primary = Color(0xFF0A0A0B),
             onPrimary = Color(0xFFFFFFFF),

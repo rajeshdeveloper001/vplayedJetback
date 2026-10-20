@@ -28,12 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.AppButton
 import com.vplayed.core.designsystem.component.AppButtonStyle
 import com.vplayed.core.designsystem.component.AppEmptyState
@@ -63,8 +61,13 @@ import com.vplayed.shared.home.PagingStatus
 import com.vplayed.shared.home.Price
 import com.vplayed.shared.home.SectionStyle
 import com.vplayed.shared.home.ShowType
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_try_again
+import com.vplayed.shared.l10n.home_empty_message
+import com.vplayed.shared.l10n.home_empty_title
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import org.jetbrains.compose.resources.stringResource
 
 /** Start loading the next page of rows when this many rows remain below the viewport. */
 private const val PAGE_PREFETCH_DISTANCE = 2
@@ -127,8 +130,8 @@ fun HomeScreen(uiState: HomeUiState, actions: HomeActions, modifier: Modifier = 
             }
             uiState.isEmpty -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 AppEmptyState(
-                    title = stringResource(R.string.home_empty_title),
-                    message = stringResource(R.string.home_empty_message),
+                    title = stringResource(Res.string.home_empty_title),
+                    message = stringResource(Res.string.home_empty_message),
                 )
             }
             else -> PullToRefreshBox(
@@ -203,7 +206,7 @@ private fun PagingFooter(paging: PagingStatus, cardWidth: Dp, onRetry: () -> Uni
                 color = AppDesignSystem.colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            AppButton(text = stringResource(R.string.action_retry), onClick = onRetry, style = AppButtonStyle.SECONDARY)
+            AppButton(text = stringResource(Res.string.common_try_again), onClick = onRetry, style = AppButtonStyle.SECONDARY)
         }
         PagingStatus.Idle, PagingStatus.EndReached -> Unit
     }

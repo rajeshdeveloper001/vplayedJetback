@@ -8,8 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import com.vplayed.R
 import com.vplayed.core.ui.base.BaseFragment
+import com.vplayed.core.ui.sharedString
 import com.vplayed.feature.auth.data.GoogleSignInClient
 import com.vplayed.feature.auth.data.GoogleSignInOutcome
 import com.vplayed.feature.auth.presentation.screen.LoginActions
@@ -18,6 +18,8 @@ import com.vplayed.feature.auth.presentation.viewmodel.LoginEvent
 import com.vplayed.feature.auth.presentation.viewmodel.LoginViewModel
 import com.vplayed.feature.auth.presentation.viewmodel.resolve
 import com.vplayed.shared.auth.OtpChannelKind
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.login_signed_in
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -54,7 +56,7 @@ class LoginFragment : BaseFragment() {
                 is LoginEvent.ShowMessage -> showToast(event.message.resolve(requireContext()))
                 is LoginEvent.OpenOtp -> onOpenOtp?.invoke(event.email, event.startWithDeviceLimit, event.channel, event.dialCode)
                 is LoginEvent.Close -> {
-                    if (event.showSignedIn) showToast(getString(R.string.login_signed_in))
+                    if (event.showSignedIn) showToast(sharedString(Res.string.login_signed_in))
                     viewModel.onClosed()
                     onCloseRequested?.invoke()
                 }

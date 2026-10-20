@@ -1,10 +1,10 @@
 package com.vplayed.core.designsystem.color
 
-import androidx.annotation.StringRes
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.vplayed.core.designsystem.component.mixWith
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * A complete brand color definition: the Material 3 [ColorScheme] for light and dark mode plus
@@ -14,7 +14,7 @@ import com.vplayed.core.designsystem.component.mixWith
 @Immutable
 data class BrandPalette(
     val id: String,
-    @param:StringRes val nameRes: Int,
+    val nameRes: StringResource,
     val lightScheme: ColorScheme,
     val darkScheme: ColorScheme,
     val lightStatus: StatusColors = DefaultStatusColors.light,

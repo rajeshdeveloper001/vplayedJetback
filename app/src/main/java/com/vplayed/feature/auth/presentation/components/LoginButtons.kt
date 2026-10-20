@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -35,11 +34,15 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_back
+import com.vplayed.shared.l10n.common_close
+import com.vplayed.shared.l10n.common_loading
+import org.jetbrains.compose.resources.stringResource
 
 // Prototype `.btn-primary`: 15/24 padding, red glow shadow (35%), 2dp spinner ring at 40%.
 private val PrimaryVerticalPadding = 15.dp
@@ -70,7 +73,7 @@ internal fun LoginPrimaryButton(
     val colors = AppDesignSystem.colors
     val dimens = AppDesignSystem.dimens
     val shape = AppDesignSystem.shapes.button
-    val loadingDescription = stringResource(R.string.cd_loading)
+    val loadingDescription = stringResource(Res.string.common_loading)
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -174,7 +177,7 @@ internal fun LoginSocialButton(
 internal fun LoginCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     AuthRoundButton(
         icon = AppIcons.Close,
-        description = stringResource(R.string.login_close),
+        description = stringResource(Res.string.common_close),
         size = AppDesignSystem.dimens.authIconButtonSize,
         onClick = onClick,
         modifier = modifier.testTag(LoginTestTags.CLOSE),
@@ -186,7 +189,7 @@ internal fun LoginCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier
 internal fun AuthBackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     AuthRoundButton(
         icon = AppIcons.ChevronLeft,
-        description = stringResource(R.string.otp_back),
+        description = stringResource(Res.string.common_back),
         size = AppDesignSystem.dimens.authBackButtonSize,
         onClick = onClick,
         modifier = modifier.testTag(OtpTestTags.BACK),

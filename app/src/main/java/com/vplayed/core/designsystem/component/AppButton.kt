@@ -21,16 +21,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_loading
+import org.jetbrains.compose.resources.stringResource
 
 enum class AppButtonStyle { PRIMARY, SECONDARY, TEXT }
 
@@ -88,7 +89,7 @@ fun AppButton(
 private fun RowScope.ButtonContent(text: String, loading: Boolean, @DrawableRes leadingIcon: Int?) {
     val dimens = AppDesignSystem.dimens
     if (loading) {
-        val loadingDescription = stringResource(R.string.cd_loading)
+        val loadingDescription = stringResource(Res.string.common_loading)
         CircularProgressIndicator(
             modifier = Modifier
                 .size(dimens.icon.small)

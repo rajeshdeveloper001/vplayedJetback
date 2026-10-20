@@ -1,20 +1,24 @@
 package com.vplayed.feature.dashboard.navigation
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.feature.dashboard.home.presentation.navigation.HomeDestination
 import com.vplayed.feature.dashboard.home.presentation.screen.HomeRoute
 import com.vplayed.feature.dashboard.promos.presentation.screen.PromosScreen
 import com.vplayed.feature.dashboard.search.presentation.screen.SearchScreen
 import com.vplayed.feature.dashboard.subscription.presentation.screen.SubscriptionScreen
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.nav_home
+import com.vplayed.shared.l10n.nav_promos
+import com.vplayed.shared.l10n.nav_search
+import com.vplayed.shared.l10n.nav_subscription
 import kotlin.reflect.KClass
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.StringResource
 
 @Serializable
 data object SearchDestination
@@ -31,17 +35,17 @@ enum class DashboardTab(
     val routeClass: KClass<*>,
     @param:DrawableRes val selectedIcon: Int,
     @param:DrawableRes val unselectedIcon: Int,
-    @param:StringRes val label: Int,
+    val label: StringResource,
 ) {
-    HOME(HomeDestination, HomeDestination::class, AppIcons.Home, AppIcons.HomeOutlined, R.string.nav_home),
-    SEARCH(SearchDestination, SearchDestination::class, AppIcons.Search, AppIcons.Search, R.string.nav_search),
-    PROMOS(PromosDestination, PromosDestination::class, AppIcons.Promos, AppIcons.PromosOutlined, R.string.nav_promos),
+    HOME(HomeDestination, HomeDestination::class, AppIcons.Home, AppIcons.HomeOutlined, Res.string.nav_home),
+    SEARCH(SearchDestination, SearchDestination::class, AppIcons.Search, AppIcons.Search, Res.string.nav_search),
+    PROMOS(PromosDestination, PromosDestination::class, AppIcons.Promos, AppIcons.PromosOutlined, Res.string.nav_promos),
     SUBSCRIPTION(
         SubscriptionDestination,
         SubscriptionDestination::class,
         AppIcons.Subscription,
         AppIcons.SubscriptionOutlined,
-        R.string.nav_subscription,
+        Res.string.nav_subscription,
     ),
 }
 

@@ -23,8 +23,6 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +32,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.color.PromoAccentColors
 import com.vplayed.core.designsystem.color.PromoAccents
 import com.vplayed.core.designsystem.component.cssLinearGradient
@@ -42,11 +39,19 @@ import com.vplayed.core.designsystem.component.cssRadialGradient
 import com.vplayed.core.designsystem.component.mixWith
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
+import com.vplayed.core.ui.localizedNumber
 import com.vplayed.shared.home.BundleAccent
 import com.vplayed.shared.home.ContentItem
 import com.vplayed.shared.home.ItemDetails
 import com.vplayed.shared.home.Price
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_bundle_days
+import com.vplayed.shared.l10n.home_explore_bundles
+import com.vplayed.shared.l10n.home_save_up_to
+import com.vplayed.shared.l10n.nav_bulk_purchase
 import java.text.NumberFormat
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 // Prototype `.premium-in` (mobile): 24×26 padding, 16dp column gap, 60dp icon tile.
 private val CardPaddingV = 24.dp
@@ -107,7 +112,7 @@ internal fun OfferCard(item: ContentItem, width: Dp, modifier: Modifier = Modifi
             IconTile(accent)
             Spacer(Modifier.height(SectionGap))
             Text(
-                text = (bundle?.label ?: stringResource(R.string.home_bulk_purchase)).uppercase(),
+                text = (bundle?.label ?: stringResource(Res.string.nav_bulk_purchase)).uppercase(),
                 style = AppDesignSystem.textStyles.badge,
                 color = if (isDark) accent.overline else accent.accent,
                 maxLines = 1,
@@ -144,7 +149,7 @@ internal fun OfferCard(item: ContentItem, width: Dp, modifier: Modifier = Modifi
             contentPadding = PaddingValues(horizontal = ButtonPaddingH),
             modifier = Modifier.fillMaxWidth().height(AppDesignSystem.dimens.promoButtonHeight),
         ) {
-            Text(stringResource(R.string.home_explore_bundles), style = AppDesignSystem.textStyles.actionSmall, maxLines = 1)
+            Text(stringResource(Res.string.home_explore_bundles), style = AppDesignSystem.textStyles.actionSmall, maxLines = 1)
         }
     }
 }
@@ -179,8 +184,8 @@ private fun PriceLine(bundle: ItemDetails.Bundle) {
     val discountPercent = bundle.discountPercent
     val days = bundle.days
     val sub = when {
-        discountPercent != null -> stringResource(R.string.home_save_up_to, discountPercent)
-        days != null -> pluralStringResource(R.plurals.home_bundle_days, days, days)
+        discountPercent != null -> stringResource(Res.string.home_save_up_to, localizedNumber(discountPercent))
+        days != null -> pluralStringResource(Res.plurals.home_bundle_days, days, localizedNumber(days))
         else -> null
     }
     val text = buildAnnotatedString {

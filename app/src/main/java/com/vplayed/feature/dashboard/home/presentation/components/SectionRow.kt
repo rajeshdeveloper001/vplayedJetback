@@ -27,14 +27,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import com.vplayed.R
 import com.vplayed.core.designsystem.dimension.WindowWidthClass
 import com.vplayed.core.designsystem.dimension.currentWindowWidthClass
 import com.vplayed.core.designsystem.icon.AppIcons
@@ -42,8 +40,11 @@ import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.shared.home.ContentItem
 import com.vplayed.shared.home.HomeSection
 import com.vplayed.shared.home.SectionStyle
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_shows_all_titles_in
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import org.jetbrains.compose.resources.stringResource
 
 /** Start loading the next items when this many remain unseen. */
 private const val ROW_PREFETCH_DISTANCE = 3
@@ -181,7 +182,7 @@ private fun RowHeader(section: HomeSection, onViewAll: (HomeSection) -> Unit) {
             IconButton(onClick = { onViewAll(section) }, modifier = Modifier.size(dimens.rowHeaderHeight)) {
                 Icon(
                     painterResource(AppIcons.ChevronRight),
-                    contentDescription = stringResource(R.string.home_view_all, section.title),
+                    contentDescription = stringResource(Res.string.home_shows_all_titles_in, section.title),
                     tint = AppDesignSystem.colors.onSurface,
                     modifier = Modifier.size(ChevronSize),
                 )

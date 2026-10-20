@@ -14,8 +14,8 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -25,9 +25,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
+import com.vplayed.core.ui.localizedNumber
 import com.vplayed.core.ui.preview.ScreenPreviews
 import com.vplayed.feature.auth.presentation.components.AuthBackButton
 import com.vplayed.feature.auth.presentation.components.AuthInlineError
@@ -49,7 +49,18 @@ import com.vplayed.shared.auth.RegistrationKind
 import com.vplayed.shared.auth.RegistrationState
 import com.vplayed.shared.auth.RegistrationStep
 import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_change
+import com.vplayed.shared.l10n.login_step
+import com.vplayed.shared.l10n.otp_note
+import com.vplayed.shared.l10n.otp_resend
+import com.vplayed.shared.l10n.otp_resend_in
+import com.vplayed.shared.l10n.otp_resend_prompt
+import com.vplayed.shared.l10n.otp_title
+import com.vplayed.shared.l10n.otp_verify
+import com.vplayed.shared.l10n.register_success_title
 import com.vplayed.shared.phone.CountryDialCodes
+import org.jetbrains.compose.resources.stringResource
 
 /** Callbacks of the OTP screen. */
 data class OtpActions(
@@ -102,7 +113,7 @@ fun OtpScreen(
                 when (registration.step) {
                     RegistrationStep.Form -> RegistrationForm(registration, registrationActions)
                     RegistrationStep.Success -> AuthSuccessStep(
-                        title = stringResource(R.string.register_success_title, registration.name.trim()),
+                        title = stringResource(Res.string.register_success_title, registration.name.trim()),
                     )
                 }
             } else when (uiState.step) {
@@ -127,7 +138,7 @@ private fun ColumnScope.CodeStep(uiState: OtpUiState, error: String?, actions: O
     AuthBackButton(onClick = actions.onBack)
     Spacer(Modifier.height(BackButtonBottomSpacing))
     Text(
-        text = stringResource(R.string.otp_step_label).uppercase(),
+        text = stringResource(Res.string.login_step, localizedNumber(2)).uppercase(),
         style = textStyles.badge,
         color = AppDesignSystem.extendedColors.formAccent,
         // The prototype announces each step ("Step 2 of 3, verify your code").
@@ -135,13 +146,13 @@ private fun ColumnScope.CodeStep(uiState: OtpUiState, error: String?, actions: O
     )
     Spacer(Modifier.height(StepLabelSpacing))
     Text(
-        text = stringResource(R.string.otp_title),
+        text = stringResource(Res.string.otp_title),
         style = textStyles.formTitle,
         color = auth.textStrong,
         modifier = Modifier.semantics { heading() },
     )
     Spacer(Modifier.height(TitleBottomSpacing))
-    val note = stringResource(R.string.otp_note, uiState.email)
+    val note = stringResource(Res.string.otp_note, uiState.email)
     Text(
         text = buildAnnotatedString {
             append(note)
@@ -156,7 +167,7 @@ private fun ColumnScope.CodeStep(uiState: OtpUiState, error: String?, actions: O
     )
     // "Change" sits on its own line with a 48dp touch target, like the prototype's ≤ 900px layout.
     Text(
-        text = stringResource(R.string.otp_change),
+        text = stringResource(Res.string.common_change),
         style = AppDesignSystem.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
         color = AppDesignSystem.colors.primary,
         modifier = Modifier
@@ -195,7 +206,7 @@ private fun ColumnScope.CodeStep(uiState: OtpUiState, error: String?, actions: O
     ResendLine(uiState = uiState, onResend = actions.onResend)
     Spacer(Modifier.height(ResendBottomSpacing))
     LoginPrimaryButton(
-        text = stringResource(R.string.otp_verify),
+        text = stringResource(Res.string.otp_verify),
         loading = uiState.isVerifying,
         enabled = uiState.code.length == OtpViewModel.CODE_LENGTH,
         onClick = actions.onVerify,
@@ -213,22 +224,26 @@ private fun ResendLine(uiState: OtpUiState, onResend: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = stringResource(R.string.otp_resend_prompt), style = style, color = auth.textSecondary)
-        Text(
-            text = stringResource(R.string.otp_resend),
-            style = style.copy(fontWeight = if (uiState.canResend) FontWeight.Bold else FontWeight.SemiBold),
-            color = if (uiState.canResend) AppDesignSystem.colors.primary else auth.textMuted,
-            modifier = Modifier
-                .testTag(OtpTestTags.RESEND)
-                .minimumInteractiveComponentSize()
-                .clickable(enabled = uiState.canResend, role = Role.Button, onClick = onResend),
-        )
+        Text(text = stringResource(Res.string.otp_resend_prompt), style = style, color = auth.textSecondary)
+        // As VPlayed: "Resend in 0:45" while waiting, then the "Resend" action.
         if (uiState.resendSecondsLeft > 0) {
+            val locale = LocalConfiguration.current.locales[0]
+            val countdown = String.format(locale, "%d:%02d", uiState.resendSecondsLeft / 60, uiState.resendSecondsLeft % 60)
             Text(
-                text = stringResource(R.string.otp_resend_in, uiState.resendSecondsLeft / 60, uiState.resendSecondsLeft % 60),
+                text = stringResource(Res.string.otp_resend_in, countdown),
                 style = style,
                 color = auth.textSecondary,
                 modifier = Modifier.testTag(OtpTestTags.RESEND_COUNTDOWN),
+            )
+        } else {
+            Text(
+                text = stringResource(Res.string.otp_resend),
+                style = style.copy(fontWeight = if (uiState.canResend) FontWeight.Bold else FontWeight.SemiBold),
+                color = if (uiState.canResend) AppDesignSystem.colors.primary else auth.textMuted,
+                modifier = Modifier
+                    .testTag(OtpTestTags.RESEND)
+                    .minimumInteractiveComponentSize()
+                    .clickable(enabled = uiState.canResend, role = Role.Button, onClick = onResend),
             )
         }
     }

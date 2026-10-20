@@ -25,15 +25,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
@@ -41,6 +38,14 @@ import com.vplayed.feature.auth.presentation.viewmodel.OtpUiState
 import com.vplayed.shared.auth.DeviceKind
 import com.vplayed.shared.auth.DeviceSignOutKey
 import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_continue
+import com.vplayed.shared.l10n.common_sign_out
+import com.vplayed.shared.l10n.otp_device_this_device
+import com.vplayed.shared.l10n.otp_devices_note
+import com.vplayed.shared.l10n.otp_devices_sign_out_all
+import com.vplayed.shared.l10n.otp_devices_title
+import org.jetbrains.compose.resources.stringResource
 
 // Prototype `.dev-row`: 13/15 padding, 10dp corners, 13dp gaps; `.dev-list` 10dp apart.
 private val RowVerticalPadding = 13.dp
@@ -72,14 +77,14 @@ internal fun ColumnScope.DeviceLimitStep(
     AuthBackButton(onClick = onBack)
     Spacer(Modifier.height(AppDesignSystem.dimens.spacing.xs))
     Text(
-        text = stringResource(R.string.otp_devices_title),
+        text = stringResource(Res.string.otp_devices_title),
         style = AppDesignSystem.textStyles.formTitle,
         color = auth.textStrong,
         modifier = Modifier.semantics { heading() },
     )
     Spacer(Modifier.height(AppDesignSystem.dimens.spacing.sm))
     Text(
-        text = pluralStringResource(R.plurals.otp_devices_note, state.devices.size, state.devices.size),
+        text = stringResource(Res.string.otp_devices_note),
         style = AppDesignSystem.typography.bodyMedium,
         color = auth.textSecondary,
     )
@@ -105,7 +110,7 @@ internal fun ColumnScope.DeviceLimitStep(
         Spacer(Modifier.height(ListBottomSpacing))
     }
     LoginPrimaryButton(
-        text = stringResource(if (state.hasSignedOutDevice) R.string.otp_devices_continue else R.string.otp_devices_sign_out_all),
+        text = stringResource(if (state.hasSignedOutDevice) Res.string.common_continue else Res.string.otp_devices_sign_out_all),
         loading = state.isSigningOut,
         onClick = onPrimary,
         showArrow = state.hasSignedOutDevice,
@@ -149,7 +154,7 @@ private fun DeviceRow(device: SignedInDevice, enabled: Boolean, onSignOut: () ->
                 overflow = TextOverflow.Ellipsis,
             )
             val sub = listOfNotNull(
-                stringResource(R.string.otp_device_this_device).takeIf { device.isCurrent },
+                stringResource(Res.string.otp_device_this_device).takeIf { device.isCurrent },
                 device.detail,
             ).joinToString(" · ")
             if (sub.isNotEmpty()) {
@@ -187,7 +192,7 @@ private fun SignOutButton(enabled: Boolean, onClick: () -> Unit, modifier: Modif
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = stringResource(R.string.otp_device_sign_out),
+                text = stringResource(Res.string.common_sign_out),
                 style = AppDesignSystem.textStyles.actionSmall,
                 color = brand,
             )

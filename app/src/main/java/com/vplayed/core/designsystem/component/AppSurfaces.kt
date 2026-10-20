@@ -17,13 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_back
+import org.jetbrains.compose.resources.stringResource
 
 /** Themed background container. Use as the root of screens and previews. */
 @Composable
@@ -76,7 +77,7 @@ fun AppTopBar(
         navigationIcon = {
             if (onNavigateBack != null) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(painterResource(AppIcons.Back), contentDescription = stringResource(R.string.cd_navigate_back))
+                    Icon(painterResource(AppIcons.Back), contentDescription = stringResource(Res.string.common_back))
                 }
             }
         },

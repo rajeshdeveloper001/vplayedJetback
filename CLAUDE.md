@@ -48,19 +48,20 @@ core/geo/           GeoRestrictionSync, work/GeoRefreshWorker (WorkManager): whe
 core/session/       KeystoreSecureStore (encrypted DataStore + Keystore cipher) under the shared SessionManager
                     (../kmp, session/): restore, sign-in, sign-out, 401 → signed out; sent as Authorization / profile_id
 core/dispatcher/    @IoDispatcher / @DefaultDispatcher / @ApplicationScope
+core/locale/        AppLocaleManager: the chosen app language as the per-app locale (Menu → Language)
 core/shared/        bridge to the KMP shared layer (../kmp): SharedModule provides one SharedGraph from AppConfig;
                     it reads the SessionManager and GeoStore Hilt provides; SharedAppError texts in core/ui
 feature/<name>/     data/ domain/ presentation/{screen,viewmodel,components,navigation}
 feature/splashscreen/  SplashScreen (start destination, ≥ 3 s), SplashViewModel (startup work)
 feature/auth/          Login + OTP: LoginFragment / OtpFragment (BaseFragment, in the NavHost via AndroidFragment), LoginScreen /
                        OtpScreen (shared AuthLayout), Login/OtpViewModel on the KMP shared EmailLoginController / OtpController
-                       (rules, messages as AuthMessageKey → strings.xml in AuthMessage.kt), DeviceLimitHandoff,
+                       (rules, messages as AuthMessageKey → shared string catalog in AuthMessage.kt), DeviceLimitHandoff,
                        AuthSessionMapping; requests, encryption and models come from the shared layer
 feature/dashboard/     navigation/ (DashboardTab: Home, Search, Promos, Subscription)
   home/                data/di (provides the shared HomeRepository) · presentation/ (HomeViewModel runs the shared
                        HomeFeedController; the UI uses the shared models com.vplayed.shared.home.*)
   search|promos|subscription/  placeholder screens until their APIs exist
-feature/settings/      Appearance (theme mode, palette, text size, density)
+feature/settings/      Appearance (theme mode, palette, text size, density), Language (backend list, per-app locale)
 reference/          not product UI: typography/OttTextStylesReference, showcase/ (design-system demo)
 ```
 
@@ -94,7 +95,9 @@ AndroidX SplashScreen (`installSplashScreen()` in `MainActivity`, theme `Theme.V
 - Screens: stateful `XRoute(viewModel = hiltViewModel())` + stateless `XScreen(uiState, callbacks)`. Collect with `collectAsStateWithLifecycle()`.
 - UI state is immutable (`data class` / `sealed interface` with explicit Loading/Empty/Error/Content where relevant). ViewModels expose `StateFlow`, take events as functions.
 - Business rules live in `domain/` (pure Kotlin), not in composables. Add a repository interface only when there is more than one implementation or tests need a fake.
-- Stable `key`s for lazy items. User-visible strings in `res/values/strings.xml`.
+- Stable `key`s for lazy items. User-visible strings come from the shared string catalog in `../kmp`
+  (`com.vplayed.shared.l10n.Res`, same text as VPlayed); `res/values/strings.xml` holds only text that is
+  never translated. Details: `docs/architecture/shared-module.md` (also the Language screen and per-app locale).
 - Type-safe navigation: `@Serializable` route objects in `feature/<x>/presentation/navigation`.
 - Don't suppress warnings or opt into experimental APIs without a comment explaining why.
 

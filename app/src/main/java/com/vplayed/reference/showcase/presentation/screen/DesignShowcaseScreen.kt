@@ -24,13 +24,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.AppButton
 import com.vplayed.core.designsystem.component.AppButtonStyle
 import com.vplayed.core.designsystem.component.AppCard
@@ -53,7 +51,38 @@ import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseUiSta
 import com.vplayed.reference.showcase.presentation.viewmodel.DesignShowcaseViewModel
 import com.vplayed.reference.showcase.presentation.viewmodel.EnvironmentInfo
 import com.vplayed.reference.typography.OttTextStylesReference
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_cancel
+import com.vplayed.shared.l10n.common_ok
+import com.vplayed.shared.l10n.showcase_action_disabled
+import com.vplayed.shared.l10n.showcase_action_show_dialog
+import com.vplayed.shared.l10n.showcase_action_submit
+import com.vplayed.shared.l10n.showcase_dialog_message
+import com.vplayed.shared.l10n.showcase_dialog_title
+import com.vplayed.shared.l10n.showcase_email_accepted
+import com.vplayed.shared.l10n.showcase_email_error_empty
+import com.vplayed.shared.l10n.showcase_email_error_format
+import com.vplayed.shared.l10n.showcase_email_error_too_long
+import com.vplayed.shared.l10n.showcase_email_label
+import com.vplayed.shared.l10n.showcase_environment_value
+import com.vplayed.shared.l10n.showcase_section_colors
+import com.vplayed.shared.l10n.showcase_section_components
+import com.vplayed.shared.l10n.showcase_section_environment
+import com.vplayed.shared.l10n.showcase_section_states
+import com.vplayed.shared.l10n.showcase_section_typography
+import com.vplayed.shared.l10n.showcase_state_content
+import com.vplayed.shared.l10n.showcase_state_content_message
+import com.vplayed.shared.l10n.showcase_state_empty
+import com.vplayed.shared.l10n.showcase_state_empty_message
+import com.vplayed.shared.l10n.showcase_state_empty_title
+import com.vplayed.shared.l10n.showcase_state_error
+import com.vplayed.shared.l10n.showcase_state_error_message
+import com.vplayed.shared.l10n.showcase_state_loading
+import com.vplayed.shared.l10n.showcase_state_loading_message
+import com.vplayed.shared.l10n.showcase_title
 import com.vplayed.shared.validation.EmailValidationResult
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** Stateful entry point used by navigation. */
 @Composable
@@ -83,7 +112,7 @@ fun DesignShowcaseScreen(
 ) {
     val dimens = AppDesignSystem.dimens
     AppScreenScaffold(
-        title = stringResource(R.string.showcase_title),
+        title = stringResource(Res.string.showcase_title),
         modifier = modifier,
         onNavigateBack = onNavigateBack,
     ) { padding ->
@@ -128,9 +157,9 @@ object ShowcaseTestTags {
 @Composable
 private fun EnvironmentCard(info: EnvironmentInfo) {
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.showcase_section_environment))
+        SectionTitle(stringResource(Res.string.showcase_section_environment))
         Text(
-            text = stringResource(R.string.showcase_environment_value, info.environmentId, info.versionName),
+            text = stringResource(Res.string.showcase_environment_value, info.environmentId, info.versionName),
             style = AppDesignSystem.typography.bodyLarge,
         )
         Text(
@@ -146,7 +175,7 @@ private fun ColorsCard() {
     val colors = AppDesignSystem.colors
     val extended = AppDesignSystem.extendedColors
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.showcase_section_colors))
+        SectionTitle(stringResource(Res.string.showcase_section_colors))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(AppDesignSystem.dimens.spacing.xs),
             verticalArrangement = Arrangement.spacedBy(AppDesignSystem.dimens.spacing.xs),
@@ -168,7 +197,7 @@ private fun ColorsCard() {
 @Composable
 private fun TypographyCard() {
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.showcase_section_typography))
+        SectionTitle(stringResource(Res.string.showcase_section_typography))
         OttTextStylesReference()
     }
 }
@@ -184,17 +213,17 @@ private fun ComponentsCard(
     val spacing = AppDesignSystem.dimens.spacing
     var showDialog by rememberSaveable { mutableStateOf(false) }
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.showcase_section_components))
+        SectionTitle(stringResource(Res.string.showcase_section_components))
         Column(verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
             AppTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                label = stringResource(R.string.showcase_email_label),
-                supportingText = if (emailAccepted) stringResource(R.string.showcase_email_accepted) else null,
+                label = stringResource(Res.string.showcase_email_label),
+                supportingText = if (emailAccepted) stringResource(Res.string.showcase_email_accepted) else null,
                 errorMessage = when (emailError) {
-                    EmailValidationResult.EMPTY -> stringResource(R.string.showcase_email_error_empty)
-                    EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.showcase_email_error_format)
-                    EmailValidationResult.TOO_LONG -> stringResource(R.string.showcase_email_error_too_long)
+                    EmailValidationResult.EMPTY -> stringResource(Res.string.showcase_email_error_empty)
+                    EmailValidationResult.INVALID_FORMAT -> stringResource(Res.string.showcase_email_error_format)
+                    EmailValidationResult.TOO_LONG -> stringResource(Res.string.showcase_email_error_too_long)
                     EmailValidationResult.VALID, null -> null
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
@@ -205,27 +234,27 @@ private fun ComponentsCard(
                 verticalArrangement = Arrangement.spacedBy(spacing.xs),
             ) {
                 AppButton(
-                    text = stringResource(R.string.showcase_action_submit),
+                    text = stringResource(Res.string.showcase_action_submit),
                     onClick = onSubmitEmail,
                     leadingIcon = AppIcons.Check,
                 )
                 AppButton(
-                    text = stringResource(R.string.showcase_action_show_dialog),
+                    text = stringResource(Res.string.showcase_action_show_dialog),
                     onClick = { showDialog = true },
                     style = AppButtonStyle.SECONDARY,
                 )
-                AppButton(text = stringResource(R.string.showcase_action_disabled), onClick = {}, enabled = false)
+                AppButton(text = stringResource(Res.string.showcase_action_disabled), onClick = {}, enabled = false)
             }
         }
     }
     if (showDialog) {
         AppDialog(
-            title = stringResource(R.string.showcase_dialog_title),
-            message = stringResource(R.string.showcase_dialog_message),
-            confirmLabel = stringResource(R.string.action_ok),
+            title = stringResource(Res.string.showcase_dialog_title),
+            message = stringResource(Res.string.showcase_dialog_message),
+            confirmLabel = stringResource(Res.string.common_ok),
             onConfirm = { showDialog = false },
             onDismiss = { showDialog = false },
-            dismissLabel = stringResource(R.string.action_cancel),
+            dismissLabel = stringResource(Res.string.common_cancel),
         )
     }
 }
@@ -234,7 +263,7 @@ private fun ComponentsCard(
 private fun StatesCard(selected: DemoContentState, onSelected: (DemoContentState) -> Unit) {
     val states = DemoContentState.entries
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.showcase_section_states))
+        SectionTitle(stringResource(Res.string.showcase_section_states))
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             states.forEachIndexed { index, state ->
                 SegmentedButton(
@@ -253,17 +282,17 @@ private fun StatesCard(selected: DemoContentState, onSelected: (DemoContentState
             contentAlignment = Alignment.Center,
         ) {
             when (selected) {
-                DemoContentState.LOADING -> AppLoadingIndicator(message = stringResource(R.string.showcase_state_loading_message))
+                DemoContentState.LOADING -> AppLoadingIndicator(message = stringResource(Res.string.showcase_state_loading_message))
                 DemoContentState.EMPTY -> AppEmptyState(
-                    title = stringResource(R.string.showcase_state_empty_title),
-                    message = stringResource(R.string.showcase_state_empty_message),
+                    title = stringResource(Res.string.showcase_state_empty_title),
+                    message = stringResource(Res.string.showcase_state_empty_message),
                 )
                 DemoContentState.ERROR -> AppErrorView(
-                    message = stringResource(R.string.showcase_state_error_message),
+                    message = stringResource(Res.string.showcase_state_error_message),
                     onRetry = { onSelected(DemoContentState.CONTENT) },
                 )
                 DemoContentState.CONTENT -> Text(
-                    text = stringResource(R.string.showcase_state_content_message),
+                    text = stringResource(Res.string.showcase_state_content_message),
                     style = AppDesignSystem.typography.bodyLarge,
                 )
             }
@@ -271,12 +300,12 @@ private fun StatesCard(selected: DemoContentState, onSelected: (DemoContentState
     }
 }
 
-private val DemoContentState.labelRes: Int
+private val DemoContentState.labelRes: StringResource
     get() = when (this) {
-        DemoContentState.CONTENT -> R.string.showcase_state_content
-        DemoContentState.LOADING -> R.string.showcase_state_loading
-        DemoContentState.EMPTY -> R.string.showcase_state_empty
-        DemoContentState.ERROR -> R.string.showcase_state_error
+        DemoContentState.CONTENT -> Res.string.showcase_state_content
+        DemoContentState.LOADING -> Res.string.showcase_state_loading
+        DemoContentState.EMPTY -> Res.string.showcase_state_empty
+        DemoContentState.ERROR -> Res.string.showcase_state_error
     }
 
 @ScreenPreviews

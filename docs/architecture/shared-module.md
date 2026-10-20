@@ -96,8 +96,8 @@ The ViewModels keep their public API (`uiState`, `events`, the same functions). 
 - the side menu's **Sign out** (`AppShellViewModel.signOut`) uses the shared `SessionManager.logout`: the session ends when the server confirms or no longer knows the token; other failures keep it and show a Toast.
 
 `LoginUiState` and `OtpUiState` are aliases of the shared `EmailLoginState` and `OtpState`. Messages
-are shared `AuthMessage`s: the server's own words when safe, else an `AuthMessageKey` that
-`AuthMessage.kt` maps to `strings.xml`.
+are shared `AuthMessage`s: the server's own words when safe, else an `AuthMessageKey` whose text
+comes from the shared string catalog (`AuthMessageKey.resource`; `AuthMessage.kt` resolves it).
 
 `AuthRepositoryModule` provides the shared `AuthRepository` (`SharedGraph.authRepository`); the
 `TestModules.kt` fake implements the same interface. `core/common/validation/EmailValidator` is an alias
@@ -160,7 +160,20 @@ The previous Android code was deleted: Retrofit `HomeApi`, `HomeDtos`, `HomeMapp
 
 - No UI in the shared module, and no Android types in its common code. Android-only pieces (Keystore
   storage, WorkManager triggers, connectivity) stay in this app behind interfaces.
-- Shared calls return `DataResult` or sealed results and never throw. Keep the app's own error-to-string
-  mapping (`userMessageRes`) here.
-- User-visible strings stay in `res/values/strings.xml`. The shared layer returns typed results and
-  message keys.
+- Shared calls return `DataResult` or sealed results and never throw. Error and message keys map to
+  catalog strings in the shared layer (`com.vplayed.shared.l10n`: `AppError.messageResource`,
+  `AuthMessageKey.resource`, validation `message` / `signInMessage` / `registrationMessage`);
+  `core/ui/ErrorMessages.kt` and `AuthMessage.kt` only resolve them.
+- **User-visible text comes from the shared string catalog** (`../kmp/shared/src/commonMain/composeResources`,
+  Compose Multiplatform Resources), the same strings and translations VPlayed shows (iOS wording is the
+  reference). Composables use `org.jetbrains.compose.resources.stringResource(Res.string.…)` /
+  `pluralStringResource(Res.plurals.…)` with `com.vplayed.shared.l10n.Res` and the generated accessor
+  imports; code outside composition uses `core/ui/SharedText.kt` (`sharedString`). Catalog placeholders
+  are all `%1$s`: pass numbers through `localizedNumber`, and the brand (`brandName()`) to messages that
+  name it. `res/values/strings.xml` keeps only text that is never translated. To add or change text, edit
+  the catalog in `../kmp` (and run its `scripts/generate-swift-l10n-keys.py` for VPlayed).
+- **Language.** Menu → Language (`feature/settings`, `LanguageScreen`) lists the backend's languages
+  (`SharedGraph.languageRepository`, loaded by `AppLaunchTasks`) and applies the choice as the per-app
+  locale (`core/locale/AppLocaleManager`; Settings → Apps → Language on Android 13+, `locales_config.xml`).
+  The activity is recreated in the new language. A language without translations (Telugu, Hindi) shows
+  English text; server content follows `X-Language-Code`.

@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vplayed.R
 import com.vplayed.core.ui.userMessageRes
 import com.vplayed.feature.auth.data.GoogleSignInClient
 import com.vplayed.shared.auth.AuthRepository
 import com.vplayed.shared.auth.LogoutResult
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.menu_sign_out_failed
 import com.vplayed.shared.session.SessionManager
 import com.vplayed.shared.session.SessionStatus
 import com.vplayed.shared.session.SignOutReason
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 
 /** App-shell state: who is signed in (the side menu shows it instead of Login) and signing out. */
 @HiltViewModel
@@ -66,10 +68,10 @@ class AppShellViewModel @Inject constructor(
     /** A sign-out request is in flight; the menu entry says so and ignores taps. */
     val isSigningOut: StateFlow<Boolean> = _isSigningOut.asStateFlow()
 
-    private val _messages = Channel<Int>(Channel.BUFFERED)
+    private val _messages = Channel<StringResource>(Channel.BUFFERED)
 
-    /** One-time messages (string resources) for a Toast: why signing out failed. */
-    val messages: Flow<Int> = _messages.receiveAsFlow()
+    /** One-time messages (shared catalog strings, formatted with the brand name) for a Toast: why signing out failed. */
+    val messages: Flow<StringResource> = _messages.receiveAsFlow()
 
     /**
      * Logs out through the shared rule (`SessionManager.logout`): the session ends when the server
@@ -88,11 +90,10 @@ class AppShellViewModel @Inject constructor(
         }
     }
 
-    @StringRes
-    private fun failureMessage(result: LogoutResult): Int? = when (result) {
+    private fun failureMessage(result: LogoutResult): StringResource? = when (result) {
         LogoutResult.LoggedOut, LogoutResult.SessionAlreadyEnded -> null
         // The server's own words are not shown: they are not vetted for this screen.
-        is LogoutResult.Rejected -> R.string.menu_sign_out_failed
+        is LogoutResult.Rejected -> Res.string.menu_sign_out_failed
         is LogoutResult.Failure -> result.error.userMessageRes()
     }
 
