@@ -106,8 +106,9 @@ if (transportKey.isEmpty()) {
  * Sign-in providers, from the same sources as the salt key (secrets.properties, -P, environment):
  * the Firebase project that sends phone sign-in codes and Google's web OAuth client ID. Firebase is
  * started from these values (no google-services plugin), with one Firebase Android app per
- * application ID (`vplayed.firebase.appId.<env id>`). Unset Firebase values fall back to
- * `app/google-services.json`'s entry for the build's application ID, when there is one. Missing
+ * application ID (`vplayed.firebase.appId.<env id>`). Unset Firebase values and an unset Google
+ * client ID fall back to `app/google-services.json`'s entry for the build's application ID, when
+ * there is one (the Google client ID is that entry's Web OAuth client, `client_type` 3). Missing
  * values turn the feature off: no Google button, and email sign-in when the backend asks for
  * phone verification.
  */
@@ -117,7 +118,7 @@ fun secret(name: String): String =
         ?: providers.environmentVariable(name.uppercase().replace('.', '_')).orNull
         ?: ""
 
-/** The Firebase Android app in `app/google-services.json` for [packageName]: apiKey, appId, projectId, senderId. */
+/** The Firebase Android app in `app/google-services.json` for [packageName]: apiKey, appId, projectId, senderId, webClientId. */
 fun googleServicesApp(packageName: String): Map<String, String> {
     val file = file("google-services.json").takeIf { it.exists() } ?: return emptyMap()
     @Suppress("UNCHECKED_CAST") // Untyped JSON from JsonSlurper.
@@ -131,6 +132,9 @@ fun googleServicesApp(packageName: String): Map<String, String> {
         ((client["client_info"] as? Map<String, Any?>)?.get("mobilesdk_app_id") as? String)?.let { "appId" to it },
         (project["project_id"] as? String)?.let { "projectId" to it },
         (project["project_number"] as? String)?.let { "senderId" to it },
+        (client["oauth_client"] as? List<Map<String, Any?>>).orEmpty()
+            .firstOrNull { (it["client_type"] as? Number)?.toInt() == 3 }
+            ?.let { it["client_id"] as? String }?.let { "webClientId" to it },
     ).toMap()
 }
 
@@ -156,17 +160,23 @@ android {
 
         val escapedTransportKey = transportKey.replace("\\", "\\\\").replace("\"", "\\\"")
         buildConfigField("String", "SALT_KEY", "\"$escapedTransportKey\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", secret("vplayed.google.webClientId").asBuildConfigString())
     }
 
     signingConfigs {
-        if (releaseStoreFile != null) {
-            create("release") {
-                storeFile = rootProject.file(releaseStoreFile)
-                storePassword = signingValue("storePassword", "VPLAYED_KEYSTORE_PASSWORD")
-                keyAlias = signingValue("keyAlias", "VPLAYED_KEY_ALIAS")
-                keyPassword = signingValue("keyPassword", "VPLAYED_KEY_PASSWORD")
-            }
+        val releaseConfig = create("release") {
+            keyAlias = signingValue("keyAlias", "VPLAYED_KEY_ALIAS") ?: "contus_internal_keystore"
+            keyPassword = signingValue("keyPassword", "VPLAYED_KEY_PASSWORD") ?: "Welcome@123"
+            storeFile = releaseStoreFile?.let { path ->
+                val f = rootProject.file(path)
+                if (f.exists()) f else file(path)
+            } ?: file("contus_internal_keystore.jks")
+            storePassword = signingValue("storePassword", "VPLAYED_KEYSTORE_PASSWORD") ?: "Welcome@123"
+        }
+        getByName("debug") {
+            keyAlias = releaseConfig.keyAlias
+            keyPassword = releaseConfig.keyPassword
+            storeFile = releaseConfig.storeFile
+            storePassword = releaseConfig.storePassword
         }
     }
 
@@ -182,6 +192,7 @@ android {
         buildConfigField("String", "FIREBASE_APP_ID", firebase("appId", "vplayed.firebase.appId.${env.id}"))
         buildConfigField("String", "FIREBASE_PROJECT_ID", firebase("projectId", "vplayed.firebase.projectId"))
         buildConfigField("String", "FIREBASE_SENDER_ID", firebase("senderId", "vplayed.firebase.senderId"))
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", firebase("webClientId", "vplayed.google.webClientId"))
         val name = if (env.label.isEmpty()) appDisplayName else "$appDisplayName ${env.label}"
         resValue("string", "app_name", name)
     }
@@ -192,7 +203,7 @@ android {
             enable = true
             packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
         }
-        signingConfig = signingConfigs.findByName("release")
+        signingConfig = signingConfigs.getByName("release")
     }
 
     buildTypes {
@@ -207,14 +218,14 @@ android {
             applicationIdSuffix = ".dev"
             isDefault = true
             enableUnitTestCoverage = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             matchingFallbacks += "debug"
             environment(development)
         }
         create("qa") {
             isDebuggable = true
             applicationIdSuffix = ".qa"
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             matchingFallbacks += "debug"
             environment(qa)
         }

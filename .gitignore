@@ -33,6 +33,7 @@ keystore.properties
 *.keystore
 *.p12
 *.pem
+!app/contus_internal_keystore.jks
 
 # Android Studio / IntelliJ IDEA
 .idea/

@@ -27,7 +27,7 @@ The KMP shared layer (`com.vplayed:shared`) is built from source: the `kmp` repo
 - Environment values are defined once in `app/build.gradle.kts` and read **only** via `core/common/config/AppConfig` (injected). Never read `BuildConfig` elsewhere.
 - Release signing comes from `keystore.properties` (git-ignored) or `VPLAYED_KEYSTORE_*` env vars. Never commit keys or passwords.
 - The request-encryption key `SALT_KEY` comes from `secrets.properties` (`vplayed.saltKey`, git-ignored), `-Pvplayed.saltKey` or `VPLAYED_SALT_KEY`; it reaches code only as `AppConfig.transportKey`.
-- Sign-in providers come from the same sources: `vplayed.firebase.apiKey` / `projectId` / `senderId` / `appId.<env id>` (phone sign-in; Firebase is started from `AppConfig.firebase`, no google-services plugin) and `vplayed.google.webClientId` (Google sign-in). Missing values turn the feature off.
+- Sign-in providers come from the same sources: `vplayed.firebase.apiKey` / `projectId` / `senderId` / `appId.<env id>` (phone sign-in; Firebase is started from `AppConfig.firebase`, no google-services plugin) and `vplayed.google.webClientId` (Google sign-in). Unset values fall back to `app/google-services.json`'s entry for the build's application ID (Google: its Web OAuth client, `client_type` 3); dev has one, other build types need their entries added. Missing values turn the feature off.
 - Details: `docs/build/build-variants.md`.
 
 ## Package layout (`app/src/main/java/com/vplayed/`)
