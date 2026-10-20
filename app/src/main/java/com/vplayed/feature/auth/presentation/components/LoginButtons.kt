@@ -134,7 +134,7 @@ internal fun LoginSocialButton(
     val auth = AppDesignSystem.extendedColors.auth
     val dimens = AppDesignSystem.dimens
     val shape = AppDesignSystem.shapes.button
-    val loadingDescription = stringResource(R.string.cd_loading)
+    val loadingDescription = stringResource(Res.string.common_loading)
     Row(
         modifier = modifier
             .fillMaxWidth()
