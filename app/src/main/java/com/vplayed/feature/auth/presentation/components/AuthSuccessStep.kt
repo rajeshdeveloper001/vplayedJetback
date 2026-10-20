@@ -51,7 +51,7 @@ private const val CHECK_BACKGROUND_ALPHA = 0.16f
  * same duration). The bar is already full when the user turned animations off.
  */
 @Composable
-internal fun ColumnScope.AuthSuccessStep(notice: String? = null) {
+internal fun ColumnScope.AuthSuccessStep(notice: String? = null, title: String? = null) {
     val auth = AppDesignSystem.extendedColors.auth
     val dimens = AppDesignSystem.dimens
     val success = AppDesignSystem.extendedColors.success
@@ -89,7 +89,7 @@ internal fun ColumnScope.AuthSuccessStep(notice: String? = null) {
         }
         Spacer(Modifier.height(dimens.spacing.xl))
         Text(
-            text = stringResource(R.string.otp_success_title),
+            text = title ?: stringResource(R.string.otp_success_title),
             style = AppDesignSystem.textStyles.formTitle,
             color = auth.textStrong,
             textAlign = TextAlign.Center,
@@ -103,7 +103,7 @@ internal fun ColumnScope.AuthSuccessStep(notice: String? = null) {
             textAlign = TextAlign.Center,
         )
         if (notice != null) {
-            // Not an error: tells the user what is coming next (profile setup / selection are not built yet).
+            // Not an error: an informational line under the title.
             Spacer(Modifier.height(dimens.spacing.sm))
             Text(
                 text = notice,

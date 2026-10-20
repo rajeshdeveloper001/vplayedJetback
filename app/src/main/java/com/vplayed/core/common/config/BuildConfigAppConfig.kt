@@ -11,4 +11,11 @@ fun AppConfig.Companion.fromBuildConfig(): AppConfig = AppConfig(
     isDebuggable = BuildConfig.DEBUG,
     versionName = BuildConfig.VERSION_NAME,
     transportKey = BuildConfig.SALT_KEY,
+    firebase = FirebaseConfig(
+        apiKey = BuildConfig.FIREBASE_API_KEY,
+        applicationId = BuildConfig.FIREBASE_APP_ID,
+        projectId = BuildConfig.FIREBASE_PROJECT_ID,
+        senderId = BuildConfig.FIREBASE_SENDER_ID,
+    ).takeIf { listOf(it.apiKey, it.applicationId, it.projectId, it.senderId).none(String::isBlank) },
+    googleWebClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
 )

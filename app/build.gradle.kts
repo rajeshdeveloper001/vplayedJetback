@@ -102,6 +102,40 @@ if (transportKey.isEmpty()) {
     logger.warn("vplayed.saltKey is not set (secrets.properties / -Pvplayed.saltKey / VPLAYED_SALT_KEY); email login is unavailable in this build.")
 }
 
+/**
+ * Sign-in providers, from the same sources as the salt key (secrets.properties, -P, environment):
+ * the Firebase project that sends phone sign-in codes and Google's web OAuth client ID. Firebase is
+ * started from these values (no google-services plugin), with one Firebase Android app per
+ * application ID (`vplayed.firebase.appId.<env id>`). Unset Firebase values fall back to
+ * `app/google-services.json`'s entry for the build's application ID, when there is one. Missing
+ * values turn the feature off: no Google button, and email sign-in when the backend asks for
+ * phone verification.
+ */
+fun secret(name: String): String =
+    secretProperties.getProperty(name)
+        ?: providers.gradleProperty(name).orNull
+        ?: providers.environmentVariable(name.uppercase().replace('.', '_')).orNull
+        ?: ""
+
+/** The Firebase Android app in `app/google-services.json` for [packageName]: apiKey, appId, projectId, senderId. */
+fun googleServicesApp(packageName: String): Map<String, String> {
+    val file = file("google-services.json").takeIf { it.exists() } ?: return emptyMap()
+    @Suppress("UNCHECKED_CAST") // Untyped JSON from JsonSlurper.
+    val json = groovy.json.JsonSlurper().parse(file) as? Map<String, Any?> ?: return emptyMap()
+    val project = json["project_info"] as? Map<String, Any?> ?: return emptyMap()
+    val client = (json["client"] as? List<Map<String, Any?>>).orEmpty().firstOrNull { client ->
+        ((client["client_info"] as? Map<String, Any?>)?.get("android_client_info") as? Map<String, Any?>)?.get("package_name") == packageName
+    } ?: return emptyMap()
+    return listOfNotNull(
+        ((client["api_key"] as? List<Map<String, Any?>>)?.firstOrNull()?.get("current_key") as? String)?.let { "apiKey" to it },
+        ((client["client_info"] as? Map<String, Any?>)?.get("mobilesdk_app_id") as? String)?.let { "appId" to it },
+        (project["project_id"] as? String)?.let { "projectId" to it },
+        (project["project_number"] as? String)?.let { "senderId" to it },
+    ).toMap()
+}
+
+fun String.asBuildConfigString(): String = "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
 android {
     namespace = "com.vplayed"
     compileSdk {
@@ -122,6 +156,7 @@ android {
 
         val escapedTransportKey = transportKey.replace("\\", "\\\\").replace("\"", "\\\"")
         buildConfigField("String", "SALT_KEY", "\"$escapedTransportKey\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", secret("vplayed.google.webClientId").asBuildConfigString())
     }
 
     signingConfigs {
@@ -140,6 +175,13 @@ android {
         buildConfigField("String", "SERVER_URL", "\"${env.serverUrl()}\"")
         buildConfigField("String", "IMAGE_BASE_URL", "\"${env.imageBaseUrl()}\"")
         buildConfigField("boolean", "LOGGING_ENABLED", env.loggingEnabled.toString())
+        // Set before environment() by each build type; the Firebase app is chosen by application ID.
+        val fromFile = googleServicesApp("com.contus.vplayed" + applicationIdSuffix.orEmpty())
+        fun firebase(key: String, name: String) = secret(name).ifEmpty { fromFile[key].orEmpty() }.asBuildConfigString()
+        buildConfigField("String", "FIREBASE_API_KEY", firebase("apiKey", "vplayed.firebase.apiKey"))
+        buildConfigField("String", "FIREBASE_APP_ID", firebase("appId", "vplayed.firebase.appId.${env.id}"))
+        buildConfigField("String", "FIREBASE_PROJECT_ID", firebase("projectId", "vplayed.firebase.projectId"))
+        buildConfigField("String", "FIREBASE_SENDER_ID", firebase("senderId", "vplayed.firebase.senderId"))
         val name = if (env.label.isEmpty()) appDisplayName else "$appDisplayName ${env.label}"
         resValue("string", "app_name", name)
     }
@@ -248,6 +290,13 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Sign-in providers: phone codes (Firebase Auth) and Google (Credential Manager).
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Shared business logic: prefers direct local AAR in app/libs/ if present,
     // otherwise resolves from repository (libs.vplayed.shared)

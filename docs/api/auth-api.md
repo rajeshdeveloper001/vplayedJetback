@@ -65,7 +65,7 @@ Plain JSON `{"email": "<trimmed>", "otp": "<6 digits>", "deviceDetail": "<device
 | HTTP | This app |
 |---|---|
 | 200 with `error != true` and `response.access_token` | **Signed in**: session stored (see below) → success step → Dashboard |
-| 200 / 203 without a usable `access_token` | 200: failure (not a login). 203: `RegistrationRequired` → Toast (registration screen not built) |
+| 200 / 203 without a usable `access_token` | 200: failure (not a login). 203: `RegistrationRequired` → inline message (phone sign-in: the sign-up form) |
 | 203 with `access_token` | Signed in as a new user (assumption: the previous app stored nothing at 203 and went to registration; confirm) |
 | 202 | `DeviceLimitReached` → device step |
 | 200 with `error: true` | `Rejected(message)` → inline error, shake, boxes emptied (no Toast) |
@@ -74,7 +74,18 @@ Plain JSON `{"email": "<trimmed>", "otp": "<6 digits>", "deviceDetail": "<device
 | 401 without a message | `Unauthorized`; other 4xx/5xx without a message → server error |
 | Network / timeout / malformed JSON | Failure → inline "You're offline…" / generic error; the typed code is kept |
 
-Signed-in flags: `isNewUser` = 203 or `isNewUsers` or empty `first_name`; `hasMultipleProfiles` = `profile_count > 1`. Both only add a Toast ("profile setup / selection is coming soon"): the previous app's registration and profile-selection screens do not exist yet, and the default profile is used.
+Signed-in flags: `isNewUser` = 203 or `isNewUsers` or empty `first_name`; `hasMultipleProfiles` = `profile_count > 1` (informational). `needsRegistration` decides the sign-up form (below): for email sign-in, an account with none of `phone`, `apple_auth_id`, `facebook_auth_id`, `google_auth_id` (the previous app's rule); for phone sign-in, `phone-login` "1" answering 203.
+
+## Sign-up of a new account (OTP screen)
+
+The previous app's `RegisterViewController`, as a step of the OTP screen (shared `RegistrationController`). The verified session is **not stored** until sign-up succeeds; Back leaves the form, returns to Login and shows "Your signup was unsuccessful.". Name: letters, digits and spaces, 2–30 characters.
+
+- **Email account** — name and mobile number (+91 by default): `POST users/api/v1/auth/update-profile` (JSON, the verified session's token): `phone`, `first_name`, `is_phone_verified: "1"`, `country_code`, `country_iso_code`, `referal_code` (always sent, "" when none), `is_new_user: true`. Any 2xx without `error: true` succeeds; the session is stored with the new name and phone.
+- **Phone account** — name and email: `POST users/api/v1/auth/register` (JSON, no `Authorization`): `first_name`, `email`, `phone`, `iso`, `country_code`, `is_phone_verified: 0`, `login_type: "normal"`, `browsername`, `deviceDetail`, and `is_coins_credited` / `push_notification_status` / `email_notification_status` = 1, or 0 when `GET mediadetails/api/v1/plans/check_base_plan` reports `response.count > 0` (the previous app's `isBasePlan`). The answer's session is stored. The previous app appends `?1` to the path (a value with no name); it is left out.
+
+## Profile choice
+
+After every sign-in (email, phone, Google, sign-up) the shared `FirstProfileChooser` asks `GET users/api/v1/muti-profile/list` (the backend's spelling) with the new session's token and uses the first profile in `response.data[]` that has no PIN lock (`is_pin_lock_enable`) as `profile_id`. A failed request, an empty list or only locked profiles keep the login's `default_profile._id`. The previous app's profile picker (several profiles, PIN entry) is not built.
 
 ## Device limit
 
@@ -92,14 +103,32 @@ On a verified login `OtpViewModel` hands the shared `AuthSession` (`_id`, email,
 - one JSON value (`SessionCodec` format 1; the previous `UserSession` JSON is still read), encrypted with an Android Keystore AES-256-GCM key, in its own DataStore file (`session.preferences_pb`), excluded from cloud backup and device transfer;
 - unreadable or foreign data means "signed out" and is cleared; if the Keystore is unavailable the session lives in memory for that run only (never stored in plain text);
 - read before the first request (every shared request waits for it, and so does the splash), then sent as `Authorization` / `profile_id`;
-- a 401 (HTTP or envelope `statusCode`) on a request that carried the session's token ends the session (decision D21; the auth endpoints are exempt). There is no token refresh.
+- a 401 (HTTP or envelope `statusCode`) on a request that carried the session's token first tries one token refresh (`POST users/api/v1/auth/refresh-token`, JSON `{"refresh_token"}`, no `Authorization`; `response.access_token` replaces the access token, the refresh token is kept) and resends the request once; a refused refresh or a second 401 ends the session (decision D21, revised; the auth endpoints are exempt). The app then shows "Session Expired, Please login to continue" and opens Login.
 - **Sign out** (side menu): `POST users/api/v1/auth/logout` with an empty JSON body and the session's token, through the shared `SessionManager.logout`. 200–203 or 401/403 end the session here; other answers keep it and show a Toast (the server's text is not shown).
 
-Not implemented yet (the previous app has them): refreshing an expired token (`POST users/api/v1/auth/refresh-token`, form `refresh_token`), registration after a 203, multi-profile selection, FCM device-token registration (`POST mediadetails/api/v1/device-tokens`).
+## Phone sign-in — `POST users/api/v1/auth/phone-login`
+
+Used instead of email when the common settings' `otp_verfied` is `phone` / `mobile` and the build has Firebase settings (`vplayed.firebase.*` in `secrets.properties`). Plain JSON (not encrypted): `{"phone": <national number>, "is_phone_verified": "0" | "1", "deviceDetail", "browsername": ""}`.
+
+- Step 1 (`"0"`): 200 known account, 203 new account → the OTP screen; 202 → device step. Number rule (shared `PhoneValidator`): +91 needs ten digits starting 6–9 (prototype), other countries 7–15 digits (previous app). Countries: the prototype's six.
+- Firebase texts the code to `+<dial><number>` and checks it; then `"1"` signs in (same answers as `verifyEmailOtp`). After a device sign-out it asks `"1"` again. The backend trusts the client's `"1"`: see the open questions.
+
+## Google sign-in — `POST users/api/v1/auth/login`
+
+Credential Manager's "Sign in with Google" (needs `vplayed.google.webClientId`; the button is hidden without it). JSON body (previous app's `LoginRequestModel`): `login_type: "google"`, `phoneEmail`, `password: ""`, `type: "email"`, `device_type: "android"`, `device_token` (device id), `social_user_id` (`sub`), `id_token` (Google ID token; the iOS app sends the OAuth access token), `first_name`, `profile_picture`, `deviceDetail`, `browsername: ""`. 200/201/203 sign in, 202 opens the device step (Continue signs in again with the same credential). Sign in with Apple is iOS-only.
+
+## Guest
+
+`POST users/api/v1/auth/generate` (`{"uuid": device id}`), from the "Continue as guest" button and automatically: the shared `GuestSessionKeeper` (started by `AppLaunchTasks` with the common settings) keeps a guest session whenever nobody is signed in and `is_guest_user` is true. Guests still see Login in the menu.
+
+Not implemented yet (the previous app has them): the multi-profile picker (and PIN entry), uploading a Google profile picture after sign-up, FCM device-token registration (`POST mediadetails/api/v1/device-tokens`).
 
 ## Open questions for the backend
 
 - Should `x-bearer-token` be sent on public (pre-login) endpoints? The previous app never did.
 - `verifyEmailLogin` signs a user in with only an email and `is_email_verified=1`, after the device-limit step. Does the server verify that an OTP was entered for this email (a server-side session)? If not, anyone knowing an email could skip the code once the account is at its device limit (202 on `email-login`). Recommend the backend require the code or a short-lived token.
+- `phone-login` with `is_phone_verified: "1"` signs in on the client's word that Firebase verified the number. Recommend the backend verify a Firebase ID token instead.
+- Does `auth/login` accept a Google ID token (Android) as well as an access token (iOS) in `id_token`?
+- `auth/register` takes `is_phone_verified: 0` although the number was just verified (the previous app sends 0). Should it be 1, and does the server check it?
 - The `logout-device` responses and the 202 answer include other devices' `access_token`s. Is it intended that a client that has not authenticated receives them?
 - Exact `message` texts for 200/202/203, whether 203 at verify returns tokens, the JSON types of `device_limit` / `profile_count` / `current_device` (read leniently here), the `device_type` values, and the expiry time of a code.

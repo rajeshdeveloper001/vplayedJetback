@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.vplayed.R
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.ui.adaptive.rememberAppLayoutInfo
 import com.vplayed.feature.auth.presentation.navigation.LoginDestination
@@ -70,6 +71,12 @@ fun VPlayedApp(
     val context = LocalContext.current
     LaunchedEffect(shellViewModel) {
         shellViewModel.messages.collect { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+    }
+    LaunchedEffect(shellViewModel, navController) {
+        shellViewModel.sessionExpired.collect {
+            Toast.makeText(context, R.string.session_expired, Toast.LENGTH_LONG).show()
+            navController.navigate(LoginDestination) { launchSingleTop = true }
+        }
     }
     val layoutInfo = rememberAppLayoutInfo()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -172,8 +179,8 @@ fun VPlayedApp(
                 )
                 loginScreen(
                 onClose = { navController.navigateUp() },
-                onOpenOtp = { email, startWithDeviceLimit ->
-                    navController.navigate(OtpDestination(email, startWithDeviceLimit)) { launchSingleTop = true }
+                onOpenOtp = { destination, startWithDeviceLimit, channel, dialCode ->
+                    navController.navigate(OtpDestination(destination, startWithDeviceLimit, channel.name, dialCode)) { launchSingleTop = true }
                 },
             )
             otpScreen(

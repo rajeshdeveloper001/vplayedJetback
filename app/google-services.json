@@ -1,0 +1,135 @@
+{
+  "project_info": {
+    "project_number": "625873615715",
+    "firebase_url": "https://vplayed---debug-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "vplayed---debug",
+    "storage_bucket": "vplayed---debug.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625873615715:android:24ada2473be87abd84f156",
+        "android_client_info": {
+          "package_name": "com.contus.vplayed.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "625873615715-q9loikqtmniqbjkcl53h053pda7blimp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjgSPGiWkSIVHP0Bb70orMi9zs9vqsYao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "625873615715-q9loikqtmniqbjkcl53h053pda7blimp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "625873615715-d5mjf60pj5p3mri6hse0omjjfmo6g507.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.contus.gudshovplayed.dev"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625873615715:android:7f039a585b953fb384f156",
+        "android_client_info": {
+          "package_name": "com.contus.vplayedtv.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "625873615715-5kg23a3nakdui0ilqb6g60jabe4365ce.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.contus.vplayedtv.debug",
+            "certificate_hash": "84f74124f1a889ff3664d0ae47cb666322a93e83"
+          }
+        },
+        {
+          "client_id": "625873615715-q9loikqtmniqbjkcl53h053pda7blimp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjgSPGiWkSIVHP0Bb70orMi9zs9vqsYao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "625873615715-q9loikqtmniqbjkcl53h053pda7blimp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "625873615715-d5mjf60pj5p3mri6hse0omjjfmo6g507.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.contus.gudshovplayed.dev"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625873615715:android:cadd4434ed212a5484f156",
+        "android_client_info": {
+          "package_name": "com.vplayed.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "625873615715-i488qbj8ccc1p1bgnla3hskc231iihk4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vplayed.debug",
+            "certificate_hash": "84f74124f1a889ff3664d0ae47cb666322a93e83"
+          }
+        },
+        {
+          "client_id": "625873615715-q9loikqtmniqbjkcl53h053pda7blimp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjgSPGiWkSIVHP0Bb70orMi9zs9vqsYao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "625873615715-q9loikqtmniqbjkcl53h053pda7blimp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "625873615715-d5mjf60pj5p3mri6hse0omjjfmo6g507.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.contus.gudshovplayed.dev"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

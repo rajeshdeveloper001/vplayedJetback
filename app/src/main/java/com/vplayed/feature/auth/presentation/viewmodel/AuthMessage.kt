@@ -21,9 +21,18 @@ fun AuthMessageKey.stringRes(): Int = when (this) {
     AuthMessageKey.GUEST_LOGIN_FAILED -> R.string.login_failed
     AuthMessageKey.OTP_INVALID -> R.string.otp_invalid
     AuthMessageKey.REGISTRATION_REQUIRED -> R.string.otp_registration_pending
+    AuthMessageKey.REGISTRATION_FAILED -> R.string.register_failed
+    AuthMessageKey.REGISTRATION_CANCELLED -> R.string.register_cancelled
     AuthMessageKey.DEVICE_SIGN_OUT_FAILED -> R.string.otp_device_sign_out_failed
     AuthMessageKey.PROFILE_SETUP_PENDING -> R.string.otp_new_user_pending
     AuthMessageKey.MULTI_PROFILE_PENDING -> R.string.otp_multi_profile_pending
+    AuthMessageKey.PHONE_CODE_SENT -> R.string.otp_phone_code_sent
+    AuthMessageKey.PHONE_CODE_SEND_FAILED -> R.string.otp_phone_code_send_failed
+    AuthMessageKey.PHONE_LOGIN_UNAVAILABLE -> R.string.login_phone_unavailable
+    AuthMessageKey.PHONE_INVALID -> R.string.login_phone_error_invalid
+    AuthMessageKey.SOCIAL_LOGIN_FAILED -> R.string.login_social_failed
+    // Only iOS offers Sign in with Apple; kept for completeness.
+    AuthMessageKey.APPLE_EMAIL_REQUIRED -> R.string.login_social_failed
     // The app explains timeouts with its connection message, as for every other request.
     AuthMessageKey.ERROR_NETWORK, AuthMessageKey.ERROR_TIMEOUT -> R.string.error_network
     AuthMessageKey.ERROR_UNAUTHORIZED -> R.string.error_unauthorized

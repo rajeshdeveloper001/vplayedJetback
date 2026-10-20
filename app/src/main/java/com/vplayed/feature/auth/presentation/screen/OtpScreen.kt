@@ -45,7 +45,11 @@ import com.vplayed.shared.auth.AuthMessage
 import com.vplayed.shared.auth.DeviceKind
 import com.vplayed.shared.auth.DeviceSignOutKey
 import com.vplayed.shared.auth.OtpStep
+import com.vplayed.shared.auth.RegistrationKind
+import com.vplayed.shared.auth.RegistrationState
+import com.vplayed.shared.auth.RegistrationStep
 import com.vplayed.shared.auth.SignedInDevice
+import com.vplayed.shared.phone.CountryDialCodes
 
 /** Callbacks of the OTP screen. */
 data class OtpActions(
@@ -72,16 +76,19 @@ private val ErrorTopSpacing = 10.dp
 
 /**
  * Verification steps of email login (prototype "VPlayed Sign Up" steps 2–3 and the device-limit
- * step) in the shared sign-in layout. System Back is handled by the ViewModel, so Back on the
- * device step returns to the code step like the prototype's Back control.
+ * step) in the shared sign-in layout, then a new account's sign-up form when [registration] is set.
+ * System Back is handled by the ViewModel, so Back on the device step returns to the code step like
+ * the prototype's Back control.
  */
 @Composable
 fun OtpScreen(
     uiState: OtpUiState,
     actions: OtpActions,
     modifier: Modifier = Modifier,
+    registration: RegistrationState? = null,
+    registrationActions: RegistrationActions = RegistrationActions(),
 ) {
-    BackHandler(onBack = actions.onBack)
+    BackHandler(onBack = if (registration != null) registrationActions.onBack else actions.onBack)
     AuthLayout(
         onClose = actions.onClose,
         screenTag = OtpTestTags.SCREEN,
@@ -91,7 +98,14 @@ fun OtpScreen(
         // A refused code shakes the card once (prototype `.wpm-card.shake`).
         Column(modifier = Modifier.fillMaxWidth().shakeOnChange(uiState.shakeCount)) {
             val error = uiState.error?.let { AuthMessage.textOf(it) }
-            when (uiState.step) {
+            if (registration != null) {
+                when (registration.step) {
+                    RegistrationStep.Form -> RegistrationForm(registration, registrationActions)
+                    RegistrationStep.Success -> AuthSuccessStep(
+                        title = stringResource(R.string.register_success_title, registration.name.trim()),
+                    )
+                }
+            } else when (uiState.step) {
                 OtpStep.Code -> CodeStep(uiState, error, actions)
                 OtpStep.Devices -> DeviceLimitStep(
                     state = uiState,
@@ -159,10 +173,21 @@ private fun ColumnScope.CodeStep(uiState: OtpUiState, error: String?, actions: O
         onCodeChange = actions.onCodeChange,
         onDone = actions.onVerify,
     )
+    val info = uiState.info
     if (error != null) {
         // Prototype `.wpm-err`: 10dp under the boxes; the gap to the next line shrinks by the same amount.
         Spacer(Modifier.height(ErrorTopSpacing))
         AuthInlineError(text = error)
+        Spacer(Modifier.height(BoxesBottomSpacing - ErrorTopSpacing))
+    } else if (info != null) {
+        // A neutral line ("code sent to your phone"), in the error's place and spacing.
+        Spacer(Modifier.height(ErrorTopSpacing))
+        Text(
+            text = AuthMessage.textOf(info),
+            style = textStyles.formSupporting,
+            color = auth.textSecondary,
+            modifier = Modifier.testTag(OtpTestTags.INFO).semantics { liveRegion = LiveRegionMode.Polite },
+        )
         Spacer(Modifier.height(BoxesBottomSpacing - ErrorTopSpacing))
     } else {
         Spacer(Modifier.height(BoxesBottomSpacing))
@@ -230,4 +255,16 @@ private fun OtpScreenDevicesPreview() {
 @Composable
 private fun OtpScreenSuccessPreview() {
     AppTheme { OtpScreen(OtpUiState(email = "user@example.com", step = OtpStep.Success), OtpActions()) }
+}
+
+@ScreenPreviews
+@Composable
+private fun OtpScreenRegistrationPreview() {
+    AppTheme {
+        OtpScreen(
+            uiState = OtpUiState(email = "user@example.com"),
+            actions = OtpActions(),
+            registration = RegistrationState(kind = RegistrationKind.EMAIL_ACCOUNT, email = "user@example.com", country = CountryDialCodes.INDIA),
+        )
+    }
 }

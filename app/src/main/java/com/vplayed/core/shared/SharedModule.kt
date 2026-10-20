@@ -8,6 +8,7 @@ import com.vplayed.shared.core.network.createOkHttpEngine
 import com.vplayed.shared.core.platform.platformLogger
 import com.vplayed.shared.geo.GeoStore
 import com.vplayed.shared.session.SessionManager
+import com.vplayed.shared.settings.CommonSettingsStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,4 +49,8 @@ object SharedModule {
             geoStore = geoStore,
         )
     }
+
+    /** The last loaded common settings (login method, guest access), loaded by `AppLaunchTasks`. */
+    @Provides
+    fun provideCommonSettingsStore(graph: SharedGraph): CommonSettingsStore = graph.commonSettingsStore
 }

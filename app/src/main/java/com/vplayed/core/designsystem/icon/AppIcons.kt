@@ -39,6 +39,7 @@ object AppIcons {
     @DrawableRes val DesktopWindows: Int = R.drawable.ic_desktop_windows
     @DrawableRes val PhoneIphone: Int = R.drawable.ic_phone_iphone
     @DrawableRes val Tv: Int = R.drawable.ic_tv
+    @DrawableRes val ExpandMore: Int = R.drawable.ic_expand_more
 
     /** Third-party sign-in marks: Google keeps its own colors (draw untinted), Apple is tinted. */
     @DrawableRes val Google: Int = R.drawable.ic_google

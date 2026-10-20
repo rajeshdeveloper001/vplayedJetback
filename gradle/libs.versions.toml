@@ -31,6 +31,11 @@ ktor = "3.6.0"
 # Images
 coil = "3.6.3"
 
+# Sign-in providers: phone codes (Firebase Auth) and Google (Credential Manager)
+firebaseBom = "35.0.2"
+credentials = "1.6.0"
+googleid = "1.2.1"
+
 # Shared KMP library (../kmp, substituted by the composite build in settings.gradle.kts)
 vplayedShared = "0.1.0"
 
@@ -84,6 +89,13 @@ ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.r
 # Images
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+# Sign-in providers
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
 
 # Shared business logic (Kotlin Multiplatform)
 vplayed-shared = { group = "com.vplayed", name = "shared", version.ref = "vplayedShared" }

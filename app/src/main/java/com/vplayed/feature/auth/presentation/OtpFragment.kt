@@ -2,6 +2,7 @@ package com.vplayed.feature.auth.presentation
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -10,12 +11,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vplayed.core.ui.base.BaseFragment
 import com.vplayed.feature.auth.presentation.screen.OtpActions
 import com.vplayed.feature.auth.presentation.screen.OtpScreen
+import com.vplayed.feature.auth.presentation.screen.RegistrationActions
 import com.vplayed.feature.auth.presentation.viewmodel.OtpEvent
 import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
+import com.vplayed.feature.auth.presentation.viewmodel.resolve
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Email login, verification steps (code, device limit, success). A Fragment hosting the Compose
+ * Email login, verification steps (code, device limit, sign-up of a new account, success). A Fragment hosting the Compose
  * [OtpScreen]; it is placed in the Compose NavHost with `AndroidFragment` (see `OtpNavigation`) and
  * receives the email as a fragment argument. The host decides where Back, Close and a successful
  * sign-in lead.
@@ -40,6 +43,10 @@ class OtpFragment : BaseFragment() {
             when (event) {
                 OtpEvent.NavigateBack -> onBackRequested?.invoke()
                 OtpEvent.Authenticated -> onAuthenticated?.invoke()
+                is OtpEvent.LeftSignUp -> {
+                    Toast.makeText(requireContext(), event.message.resolve(requireContext()), Toast.LENGTH_LONG).show()
+                    onBackRequested?.invoke()
+                }
             }
         }
     }
@@ -47,6 +54,7 @@ class OtpFragment : BaseFragment() {
     @Composable
     override fun ScreenContent() {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        val registration by viewModel.registrationState.collectAsStateWithLifecycle()
         val actions = remember(viewModel) {
             OtpActions(
                 onCodeChange = viewModel::onCodeChange,
@@ -59,7 +67,19 @@ class OtpFragment : BaseFragment() {
                 onClose = { onCloseRequested?.invoke() },
             )
         }
-        OtpScreen(uiState = uiState, actions = actions)
+        val registrationActions = remember(viewModel) {
+            RegistrationActions(
+                onNameChange = viewModel::onNameChange,
+                onEmailChange = viewModel::onRegistrationEmailChange,
+                onCountryChange = viewModel::onRegistrationCountryChange,
+                onNumberChange = viewModel::onRegistrationNumberChange,
+                onShowReferral = viewModel::onShowReferral,
+                onReferralChange = viewModel::onReferralChange,
+                onSubmit = viewModel::onSubmitRegistration,
+                onBack = viewModel::onRegistrationBack,
+            )
+        }
+        OtpScreen(uiState = uiState, actions = actions, registration = registration, registrationActions = registrationActions)
     }
 
     override fun onDestroy() {

@@ -35,6 +35,9 @@ Versions: `gradle/libs.versions.toml`. All are stable releases (verified against
 | okhttp | 5.5.0 | The HTTP engine under the shared layer's Ktor client (no interceptors; logging is the shared layer's, dev/qa only) |
 | io.coil-kt.coil3:coil-compose + coil-network-okhttp | 3.6.3 | Image loading with memory/disk cache (Home artwork) |
 | com.vplayed:shared | 0.1.0 (source) | Kotlin Multiplatform business logic shared with the iOS app; built from `../kmp` by the composite build, not downloaded. See `docs/architecture/shared-module.md` |
+| com.google.firebase:firebase-bom + firebase-auth | 35.0.2 | Phone sign-in: Firebase texts and checks the login code, as in the previous apps (the backend never sees it). Started from `AppConfig.firebase` (secrets), no google-services plugin |
+| androidx.credentials:credentials + credentials-play-services-auth | 1.6.0 | Google sign-in sheet (Credential Manager) |
+| com.google.android.libraries.identity.googleid:googleid | 1.2.1 | "Sign in with Google" option and ID-token credential for Credential Manager |
 | ↳ io.ktor:ktor-client-core + ktor-client-okhttp | 3.6.0 (transitive) | HTTP client of the shared layer; runs on the app's OkHttp 5.5.0 (same version Ktor 3.6.0 depends on), sharing its connection pool |
 
 ## Testing

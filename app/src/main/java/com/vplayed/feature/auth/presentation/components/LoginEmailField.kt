@@ -58,6 +58,42 @@ internal fun LoginEmailField(
     onImeAction: () -> Unit,
     onFocusLost: () -> Unit,
     modifier: Modifier = Modifier,
+) = AuthTextField(
+    value = value,
+    onValueChange = onValueChange,
+    label = label,
+    placeholder = placeholder,
+    helpText = helpText,
+    errorMessage = errorMessage,
+    readOnly = readOnly,
+    onImeAction = onImeAction,
+    onFocusLost = onFocusLost,
+    modifier = modifier,
+)
+
+/**
+ * The prototype's text field (`.field`) for any value: [LoginEmailField] and the sign-up form's
+ * fields. [helpText] (when not null) shows below until [errorMessage] replaces it; [fieldTag] /
+ * [errorTag] are the test tags.
+ */
+@Composable
+internal fun AuthTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    helpText: String?,
+    errorMessage: String?,
+    readOnly: Boolean,
+    onImeAction: () -> Unit,
+    onFocusLost: () -> Unit,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Email,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
+    imeAction: ImeAction = ImeAction.Done,
+    autofillType: ContentType? = ContentType.EmailAddress,
+    fieldTag: String = LoginTestTags.EMAIL_FIELD,
+    errorTag: String = LoginTestTags.EMAIL_ERROR,
 ) {
     val auth = AppDesignSystem.extendedColors.auth
     val dimens = AppDesignSystem.dimens
@@ -80,21 +116,21 @@ internal fun LoginEmailField(
             textStyle = textStyles.formInput.copy(color = auth.textStrong),
             cursorBrush = SolidColor(auth.textStrong),
             keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.None,
+                capitalization = capitalization,
                 autoCorrectEnabled = false,
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Done,
+                keyboardType = keyboardType,
+                imeAction = imeAction,
             ),
-            keyboardActions = KeyboardActions(onDone = { onImeAction() }),
+            keyboardActions = KeyboardActions(onDone = { onImeAction() }, onNext = { onImeAction() }),
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(LoginTestTags.EMAIL_FIELD)
+                .testTag(fieldTag)
                 .onFocusChanged { state ->
                     if (focused && !state.isFocused) onFocusLost()
                     focused = state.isFocused
                 }
                 .semantics {
-                    contentType = ContentType.EmailAddress
+                    autofillType?.let { contentType = it }
                     if (errorMessage != null) error(errorMessage)
                 },
             decorationBox = { innerTextField ->
@@ -125,10 +161,10 @@ internal fun LoginEmailField(
                 style = textStyles.formSupporting.copy(fontWeight = FontWeight.SemiBold),
                 color = AppDesignSystem.extendedColors.formAccent,
                 modifier = Modifier
-                    .testTag(LoginTestTags.EMAIL_ERROR)
+                    .testTag(errorTag)
                     .semantics { liveRegion = LiveRegionMode.Polite },
             )
-        } else {
+        } else if (helpText != null) {
             Text(text = helpText, style = textStyles.formSupporting, color = auth.textSecondary)
         }
     }

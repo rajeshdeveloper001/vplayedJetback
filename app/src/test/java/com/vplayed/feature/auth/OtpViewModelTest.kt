@@ -214,7 +214,7 @@ class OtpViewModelTest {
     }
 
     @Test
-    fun givenNewUser_whenVerified_thenSuccessStepTellsWhatIsComingAndStillContinues() = runTest(mainDispatcherRule.testDispatcher) {
+    fun givenNewUser_whenVerified_thenSuccessStepHasNoNoticeAndStillContinues() = runTest(mainDispatcherRule.testDispatcher) {
         repository.verifyResult = verified(isNewUser = true, hasMultipleProfiles = true)
         val vm = started()
         vm.typeFullCode()
@@ -222,20 +222,22 @@ class OtpViewModelTest {
         vm.onVerify()
         runCurrent()
 
-        assertEquals(AuthMessage.Localized(AuthMessageKey.PROFILE_SETUP_PENDING), vm.uiState.value.notice)
+        // Sign-up and the first-profile choice exist now: no "coming soon" notice.
+        assertNull(vm.uiState.value.notice)
         advanceTimeBy(OtpViewModel.SUCCESS_MILLIS + 1)
         runCurrent()
         assertEquals(OtpEvent.Authenticated, vm.nextEvent())
     }
 
     @Test
-    fun givenSeveralProfiles_whenVerified_thenSuccessStepMentionsProfileChoice() = runTest(mainDispatcherRule.testDispatcher) {
+    fun givenSeveralProfiles_whenVerified_thenSuccessStepHasNoNotice() = runTest(mainDispatcherRule.testDispatcher) {
         repository.verifyResult = verified(hasMultipleProfiles = true)
         val vm = started()
         vm.typeFullCode()
         vm.onVerify()
         runCurrent()
-        assertEquals(AuthMessage.Localized(AuthMessageKey.MULTI_PROFILE_PENDING), vm.uiState.value.notice)
+        // The first profile is used without a picker, so nothing is announced.
+        assertNull(vm.uiState.value.notice)
     }
 
     @Test

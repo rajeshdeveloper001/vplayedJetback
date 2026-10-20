@@ -32,18 +32,29 @@ import com.vplayed.core.ui.preview.ScreenPreviews
 import com.vplayed.feature.auth.presentation.components.AuthLayout
 import com.vplayed.feature.auth.presentation.components.AuthLayoutMode
 import com.vplayed.feature.auth.presentation.components.LoginEmailField
+import com.vplayed.feature.auth.presentation.components.LoginPhoneField
 import com.vplayed.feature.auth.presentation.components.LoginPrimaryButton
 import com.vplayed.feature.auth.presentation.components.LoginSocialButton
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
+import com.vplayed.feature.auth.presentation.viewmodel.LoginOptions
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.shared.phone.CountryDialCode
+import com.vplayed.shared.phone.CountryDialCodes
 import com.vplayed.shared.validation.EmailValidationResult
+import com.vplayed.shared.validation.PhoneValidationResult
 
 /** Callbacks of the login screen. */
 data class LoginActions(
     val onEmailChange: (String) -> Unit = {},
     val onEmailFocusLost: () -> Unit = {},
+    val onPhoneChange: (String) -> Unit = {},
+    val onPhoneFocusLost: () -> Unit = {},
+    val onCountryChange: (CountryDialCode) -> Unit = {},
     val onSubmit: () -> Unit = {},
-    /** Close button and "Continue as guest": back to the dashboard. */
+    val onGoogle: () -> Unit = {},
+    /** "Continue as guest": a guest session, then back to the dashboard. */
+    val onGuest: () -> Unit = {},
+    /** Close button: back to the dashboard. */
     val onClose: () -> Unit = {},
 )
 
@@ -59,15 +70,18 @@ private val ActionTopSpacing = 6.dp
 private val SignInLineTopSpacing = 18.dp
 
 /**
- * Sign-in, email step (prototype "VPlayed Sign Up"): a centered glass card on phones, foldables
- * and landscape phones; a two-column modal with the marketing column on wide windows (see
- * [AuthLayout]). Scrolls when the window (or the space left by the keyboard) is shorter than the content.
+ * Sign-in, step 1 (prototype "VPlayed Sign Up"): Google, then the email field — or the mobile
+ * number field when [LoginOptions.usesPhone] — and guest access when the server allows it. A
+ * centered glass card on phones, foldables and landscape phones; a two-column modal with the
+ * marketing column on wide windows (see [AuthLayout]). Scrolls when the window (or the space left by
+ * the keyboard) is shorter than the content.
  */
 @Composable
 fun LoginScreen(
     uiState: LoginUiState,
     actions: LoginActions,
     modifier: Modifier = Modifier,
+    options: LoginOptions = LoginOptions(),
 ) {
     AuthLayout(
         onClose = actions.onClose,
@@ -75,13 +89,14 @@ fun LoginScreen(
         cardTag = LoginTestTags.CARD,
         modifier = modifier,
     ) { mode ->
-        LoginForm(uiState, actions, compactFooter = mode == AuthLayoutMode.SingleCard)
+        LoginForm(uiState, options, actions, compactFooter = mode == AuthLayoutMode.SingleCard)
     }
 }
 
 @Composable
 private fun ColumnScope.LoginForm(
     uiState: LoginUiState,
+    options: LoginOptions,
     actions: LoginActions,
     compactFooter: Boolean,
 ) {
@@ -103,14 +118,19 @@ private fun ColumnScope.LoginForm(
     )
     Spacer(Modifier.height(TitleBottomSpacing))
 
+    val busy = uiState.isSubmitting || options.phone.isSubmitting || uiState.isJoiningAsGuest || options.socialInFlight != null
     Column(verticalArrangement = Arrangement.spacedBy(SocialGap)) {
-        LoginSocialButton(
-            text = stringResource(R.string.login_social_google),
-            icon = AppIcons.Google,
-            iconTint = null,
-            enabled = false,
-            onClick = {},
-        )
+        if (options.googleAvailable) {
+            LoginSocialButton(
+                text = stringResource(R.string.login_social_google),
+                icon = AppIcons.Google,
+                iconTint = null,
+                enabled = !busy,
+                onClick = actions.onGoogle,
+                modifier = Modifier.testTag(LoginTestTags.GOOGLE),
+            )
+        }
+        // Sign in with Apple has no native Android flow (the previous apps offer it on iOS only).
         LoginSocialButton(
             text = stringResource(R.string.login_social_apple),
             icon = AppIcons.Apple,
@@ -119,35 +139,70 @@ private fun ColumnScope.LoginForm(
         )
     }
     Spacer(Modifier.height(SocialBottomSpacing + DividerTopSpacing))
-    OrDivider(text = stringResource(R.string.login_divider_email))
+    OrDivider(text = stringResource(if (options.usesPhone) R.string.login_divider_phone else R.string.login_divider_email))
     Spacer(Modifier.height(dimens.spacing.lg))
 
-    val errorMessage = when (uiState.emailError) {
-        EmailValidationResult.EMPTY -> stringResource(R.string.login_email_error_empty)
-        EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.login_email_error_invalid)
-        EmailValidationResult.TOO_LONG -> stringResource(R.string.login_email_error_too_long)
-        EmailValidationResult.VALID, null -> null
+    if (options.usesPhone) {
+        val phoneError = when (options.phone.numberError) {
+            null, PhoneValidationResult.VALID -> null
+            // The prototype's message for India's ten-digit numbers; the previous app's for the others.
+            else -> stringResource(
+                if (options.phone.country.dialCode == CountryDialCodes.INDIA.dialCode) R.string.login_phone_error_india else R.string.login_phone_error_invalid,
+            )
+        }
+        LoginPhoneField(
+            value = options.phone.formattedNumber,
+            onValueChange = actions.onPhoneChange,
+            country = options.phone.country,
+            countries = CountryDialCodes.all,
+            onCountryChange = actions.onCountryChange,
+            label = stringResource(R.string.login_phone_label),
+            countryLabel = stringResource(R.string.login_phone_country),
+            helpText = stringResource(R.string.login_phone_help),
+            errorMessage = phoneError,
+            readOnly = options.phone.isSubmitting,
+            onImeAction = actions.onSubmit,
+            onFocusLost = actions.onPhoneFocusLost,
+        )
+    } else {
+        val errorMessage = when (uiState.emailError) {
+            EmailValidationResult.EMPTY -> stringResource(R.string.login_email_error_empty)
+            EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.login_email_error_invalid)
+            EmailValidationResult.TOO_LONG -> stringResource(R.string.login_email_error_too_long)
+            EmailValidationResult.VALID, null -> null
+        }
+        LoginEmailField(
+            value = uiState.email,
+            onValueChange = actions.onEmailChange,
+            label = stringResource(R.string.login_email_label),
+            placeholder = stringResource(R.string.login_email_placeholder),
+            helpText = stringResource(R.string.login_email_help),
+            errorMessage = errorMessage,
+            readOnly = uiState.isSubmitting,
+            onImeAction = actions.onSubmit,
+            onFocusLost = actions.onEmailFocusLost,
+        )
     }
-    LoginEmailField(
-        value = uiState.email,
-        onValueChange = actions.onEmailChange,
-        label = stringResource(R.string.login_email_label),
-        placeholder = stringResource(R.string.login_email_placeholder),
-        helpText = stringResource(R.string.login_email_help),
-        errorMessage = errorMessage,
-        readOnly = uiState.isSubmitting,
-        onImeAction = actions.onSubmit,
-        onFocusLost = actions.onEmailFocusLost,
-    )
     Spacer(Modifier.height(FormGap + ActionTopSpacing))
     LoginPrimaryButton(
         text = stringResource(R.string.login_continue),
-        loading = uiState.isSubmitting,
+        loading = uiState.isSubmitting || options.phone.isSubmitting,
         onClick = actions.onSubmit,
         modifier = Modifier.testTag(LoginTestTags.SUBMIT),
     )
     Spacer(Modifier.height(FormGap + ActionTopSpacing))
     Text(text = termsText(colors.primary), style = textStyles.formSupporting, color = auth.textPrimary)
+
+    if (options.guestAllowed) {
+        Spacer(Modifier.height(FormGap + ActionTopSpacing))
+        LoginSocialButton(
+            text = stringResource(R.string.login_continue_as_guest),
+            icon = AppIcons.PersonOutline,
+            enabled = !busy,
+            onClick = actions.onGuest,
+            modifier = Modifier.testTag(LoginTestTags.GUEST),
+        )
+    }
 
     if (compactFooter) {
         Spacer(Modifier.height(SignInLineTopSpacing))
@@ -158,14 +213,6 @@ private fun ColumnScope.LoginForm(
             color = auth.textPrimary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
-        )
-    } else {
-        Spacer(Modifier.height(ActionTopSpacing))
-        LoginSocialButton(
-            text = stringResource(R.string.login_continue_as_guest),
-            icon = AppIcons.PersonOutline,
-            onClick = actions.onClose,
-            modifier = Modifier.testTag(LoginTestTags.GUEST),
         )
     }
 }
@@ -206,6 +253,18 @@ private fun highlighted(text: String, parts: List<String>, color: Color, weight:
 @Composable
 private fun LoginScreenPreview() {
     AppTheme { LoginScreen(uiState = LoginUiState(), actions = LoginActions()) }
+}
+
+@ScreenPreviews
+@Composable
+private fun LoginScreenPhonePreview() {
+    AppTheme {
+        LoginScreen(
+            uiState = LoginUiState(),
+            actions = LoginActions(),
+            options = LoginOptions(usesPhone = true, googleAvailable = true, guestAllowed = true),
+        )
+    }
 }
 
 @ScreenPreviews

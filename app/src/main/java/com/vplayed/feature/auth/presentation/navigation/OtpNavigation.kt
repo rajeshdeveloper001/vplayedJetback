@@ -15,12 +15,19 @@ import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
 import kotlinx.serialization.Serializable
 
 /**
- * Verification of an email login. [startWithDeviceLimit] opens the device-limit step directly (the
- * email-login request already answered "device limit"); the device list itself travels through
- * `DeviceLimitHandoff`, never through navigation arguments.
+ * Verification of a login. [email] is the email, or the national number of a phone login with
+ * [dialCode]; [channel] is an `OtpChannelKind` name (EMAIL, PHONE, or SOCIAL for a Google sign-in at
+ * its device limit). [startWithDeviceLimit] opens the device-limit step directly (the login request
+ * already answered "device limit"); the device list and Google's credential travel through
+ * `DeviceLimitHandoff` / `SocialLoginHandoff`, never through navigation arguments.
  */
 @Serializable
-data class OtpDestination(val email: String, val startWithDeviceLimit: Boolean = false)
+data class OtpDestination(
+    val email: String,
+    val startWithDeviceLimit: Boolean = false,
+    val channel: String = "EMAIL",
+    val dialCode: String? = null,
+)
 
 /** OTP destination: [OtpFragment] embedded with `AndroidFragment`, like Login. */
 fun NavGraphBuilder.otpScreen(onBack: () -> Unit, onClose: () -> Unit, onAuthenticated: () -> Unit) {
@@ -30,6 +37,8 @@ fun NavGraphBuilder.otpScreen(onBack: () -> Unit, onClose: () -> Unit, onAuthent
             bundleOf(
                 OtpViewModel.ARG_EMAIL to route.email,
                 OtpViewModel.ARG_START_WITH_DEVICE_LIMIT to route.startWithDeviceLimit,
+                OtpViewModel.ARG_CHANNEL to route.channel,
+                OtpViewModel.ARG_DIAL_CODE to route.dialCode,
             )
         }
         val currentOnBack by rememberUpdatedState(onBack)

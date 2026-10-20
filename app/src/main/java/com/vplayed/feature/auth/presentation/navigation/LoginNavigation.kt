@@ -8,6 +8,7 @@ import androidx.fragment.compose.AndroidFragment
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.vplayed.feature.auth.presentation.LoginFragment
+import com.vplayed.shared.auth.OtpChannelKind
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -17,7 +18,10 @@ data object LoginDestination
  * Login destination. The screen is a Fragment ([LoginFragment]) embedded with `AndroidFragment`,
  * so Navigation Compose stays the app's only navigation framework.
  */
-fun NavGraphBuilder.loginScreen(onClose: () -> Unit, onOpenOtp: (email: String, startWithDeviceLimit: Boolean) -> Unit) {
+fun NavGraphBuilder.loginScreen(
+    onClose: () -> Unit,
+    onOpenOtp: (destination: String, startWithDeviceLimit: Boolean, channel: OtpChannelKind, dialCode: String?) -> Unit,
+) {
     composable<LoginDestination> {
         val currentOnClose by rememberUpdatedState(onClose)
         val currentOnOpenOtp by rememberUpdatedState(onOpenOtp)
@@ -25,7 +29,7 @@ fun NavGraphBuilder.loginScreen(onClose: () -> Unit, onOpenOtp: (email: String, 
             modifier = Modifier.fillMaxSize(),
             onUpdate = { fragment ->
                 fragment.onCloseRequested = { currentOnClose() }
-                fragment.onOpenOtp = { email, devices -> currentOnOpenOtp(email, devices) }
+                fragment.onOpenOtp = { destination, devices, channel, dialCode -> currentOnOpenOtp(destination, devices, channel, dialCode) }
             },
         )
     }
