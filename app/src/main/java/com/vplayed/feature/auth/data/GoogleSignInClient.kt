@@ -43,6 +43,7 @@ class GoogleSignInClient @Inject constructor(private val config: AppConfig) {
         return try {
             val credential = CredentialManager.create(activity).getCredential(activity, request).credential
             if (credential !is CustomCredential || credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                android.util.Log.e("GoogleSignIn", "Unexpected credential type: ${credential::class.java.name}")
                 return GoogleSignInOutcome.Failed
             }
             val google = GoogleIdTokenCredential.createFrom(credential.data)
@@ -61,9 +62,14 @@ class GoogleSignInClient @Inject constructor(private val config: AppConfig) {
             )
         } catch (_: GetCredentialCancellationException) {
             GoogleSignInOutcome.Cancelled
-        } catch (_: GetCredentialException) {
+        } catch (e: GetCredentialException) {
+            android.util.Log.e("GoogleSignIn", "GetCredentialException: [${e.type}] ${e.message}", e)
             GoogleSignInOutcome.Failed
-        } catch (_: GoogleIdTokenParsingException) {
+        } catch (e: GoogleIdTokenParsingException) {
+            android.util.Log.e("GoogleSignIn", "GoogleIdTokenParsingException: ${e.message}", e)
+            GoogleSignInOutcome.Failed
+        } catch (e: Exception) {
+            android.util.Log.e("GoogleSignIn", "Unexpected exception during Google sign-in: ${e.message}", e)
             GoogleSignInOutcome.Failed
         }
     }
