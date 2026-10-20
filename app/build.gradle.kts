@@ -118,20 +118,26 @@ fun secret(name: String): String =
         ?: providers.environmentVariable(name.uppercase().replace('.', '_')).orNull
         ?: ""
 
-/** The Firebase Android app in `app/google-services.json` for [packageName]: apiKey, appId, projectId, senderId, webClientId. */
-fun googleServicesApp(packageName: String): Map<String, String> {
-    val file = file("google-services.json").takeIf { it.exists() } ?: return emptyMap()
+/** The Firebase Android app in `app/google-services.json` or `app/src/<variant>/google-services.json` for [packageName]: apiKey, appId, projectId, senderId, webClientId. */
+fun googleServicesApp(packageName: String, buildType: String = ""): Map<String, String> {
+    val file = listOfNotNull(
+        buildType.takeIf { it.isNotEmpty() }?.let { file("src/$it/google-services.json") },
+        file("google-services.json"),
+    ).firstOrNull { it.exists() } ?: return emptyMap()
     @Suppress("UNCHECKED_CAST") // Untyped JSON from JsonSlurper.
     val json = groovy.json.JsonSlurper().parse(file) as? Map<String, Any?> ?: return emptyMap()
-    val project = json["project_info"] as? Map<String, Any?> ?: return emptyMap()
-    val client = (json["client"] as? List<Map<String, Any?>>).orEmpty().firstOrNull { client ->
+    val projectInfo = json["project_info"] as? Map<String, Any?> ?: return emptyMap()
+    val clients = (json["client"] as? List<Map<String, Any?>>).orEmpty()
+    val client = clients.firstOrNull { client ->
         ((client["client_info"] as? Map<String, Any?>)?.get("android_client_info") as? Map<String, Any?>)?.get("package_name") == packageName
-    } ?: return emptyMap()
+    } ?: clients.firstOrNull { client ->
+        ((client["client_info"] as? Map<String, Any?>)?.get("android_client_info") as? Map<String, Any?>)?.get("package_name") == "com.contus.vplayed.dev"
+    } ?: clients.firstOrNull() ?: return emptyMap()
     return listOfNotNull(
         ((client["api_key"] as? List<Map<String, Any?>>)?.firstOrNull()?.get("current_key") as? String)?.let { "apiKey" to it },
         ((client["client_info"] as? Map<String, Any?>)?.get("mobilesdk_app_id") as? String)?.let { "appId" to it },
-        (project["project_id"] as? String)?.let { "projectId" to it },
-        (project["project_number"] as? String)?.let { "senderId" to it },
+        (projectInfo["project_id"] as? String)?.let { "projectId" to it },
+        (projectInfo["project_number"] as? String)?.let { "senderId" to it },
         (client["oauth_client"] as? List<Map<String, Any?>>).orEmpty()
             .firstOrNull { (it["client_type"] as? Number)?.toInt() == 3 }
             ?.let { it["client_id"] as? String }?.let { "webClientId" to it },
@@ -186,7 +192,7 @@ android {
         buildConfigField("String", "IMAGE_BASE_URL", "\"${env.imageBaseUrl()}\"")
         buildConfigField("boolean", "LOGGING_ENABLED", env.loggingEnabled.toString())
         // Set before environment() by each build type; the Firebase app is chosen by application ID.
-        val fromFile = googleServicesApp("com.contus.vplayed" + applicationIdSuffix.orEmpty())
+        val fromFile = googleServicesApp("com.contus.vplayed" + applicationIdSuffix.orEmpty(), this.name)
         fun firebase(key: String, name: String) = secret(name).ifEmpty { fromFile[key].orEmpty() }.asBuildConfigString()
         buildConfigField("String", "FIREBASE_API_KEY", firebase("apiKey", "vplayed.firebase.apiKey"))
         buildConfigField("String", "FIREBASE_APP_ID", firebase("appId", "vplayed.firebase.appId.${env.id}"))
