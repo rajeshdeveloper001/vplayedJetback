@@ -126,11 +126,14 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch { controller.effects.collect { effect -> effect.toEvent()?.let { _events.send(it) } } }
         viewModelScope.launch { (phoneController?.effects ?: flowOf()).collect { _events.send(it.toEvent()) } }
         viewModelScope.launch { (socialController?.effects ?: flowOf()).collect { effect -> effect.toEvent()?.let { _events.send(it) } } }
-        // Once signed in, the typed email or number has no further use.
+        // Once signed in or signed out, clean up any previous input or controller state.
         viewModelScope.launch {
-            sessions.status.filterIsInstance<SessionStatus.SignedIn>().collect {
-                controller.clear()
-                phoneController?.clear()
+            sessions.status.collect { status ->
+                if (status is SessionStatus.SignedIn || status is SessionStatus.SignedOut) {
+                    controller.clear()
+                    phoneController?.clear()
+                    socialController?.clear()
+                }
             }
         }
     }
@@ -156,6 +159,7 @@ class LoginViewModel @Inject constructor(
     fun onClosed() {
         controller.onClosed()
         phoneController?.onClosed()
+        socialController?.clear()
     }
 
     fun onSubmit() {
@@ -174,7 +178,12 @@ class LoginViewModel @Inject constructor(
     /** The Google sheet is about to open; false when another sign-in is running. */
     fun onGoogleStarted(): Boolean {
         val social = socialController ?: return false
-        if (!social.canStart || uiState.value.isSubmitting || uiState.value.isJoiningAsGuest) return false
+        if (social.state.value.inFlight != null || uiState.value.isSubmitting || uiState.value.isJoiningAsGuest) {
+            return false
+        }
+        if (!social.canStart) {
+            social.clear()
+        }
         social.onProviderStarted(SocialProvider.GOOGLE)
         return true
     }

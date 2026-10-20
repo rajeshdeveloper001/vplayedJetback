@@ -1,16 +1,19 @@
 package com.vplayed.app
 
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vplayed.R
 import com.vplayed.core.ui.userMessageRes
+import com.vplayed.feature.auth.data.GoogleSignInClient
 import com.vplayed.shared.auth.AuthRepository
 import com.vplayed.shared.auth.LogoutResult
 import com.vplayed.shared.session.SessionManager
 import com.vplayed.shared.session.SessionStatus
 import com.vplayed.shared.session.SignOutReason
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +34,8 @@ import kotlinx.coroutines.launch
 class AppShellViewModel @Inject constructor(
     private val sessions: SessionManager,
     private val authRepository: AuthRepository,
+    private val googleSignIn: GoogleSignInClient,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     /**
      * How the menu names the signed-in account (email, else phone number, else first name), or null
@@ -75,6 +80,7 @@ class AppShellViewModel @Inject constructor(
         _isSigningOut.value = true
         viewModelScope.launch {
             try {
+                googleSignIn.clearSession(context)
                 failureMessage(sessions.logout(authRepository))?.let { _messages.send(it) }
             } finally {
                 _isSigningOut.value = false

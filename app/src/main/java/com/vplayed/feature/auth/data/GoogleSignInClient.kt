@@ -1,6 +1,8 @@
 package com.vplayed.feature.auth.data
 
 import android.app.Activity
+import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -71,6 +73,17 @@ class GoogleSignInClient @Inject constructor(private val config: AppConfig) {
         } catch (e: Exception) {
             android.util.Log.e("GoogleSignIn", "Unexpected exception during Google sign-in: ${e.message}", e)
             GoogleSignInOutcome.Failed
+        }
+    }
+
+    /**
+     * Clears credential state so that subsequent sign-in flows present account choices afresh.
+     */
+    suspend fun clearSession(context: Context) {
+        try {
+            CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
+        } catch (e: Exception) {
+            android.util.Log.w("GoogleSignIn", "Failed to clear credential state: ${e.message}")
         }
     }
 }

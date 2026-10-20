@@ -48,6 +48,7 @@ class LoginFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.onClosed()
         viewModel.events.collectOnViewLifecycle { event ->
             when (event) {
                 is LoginEvent.ShowMessage -> showToast(event.message.resolve(requireContext()))

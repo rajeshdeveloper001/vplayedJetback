@@ -38,6 +38,7 @@ import com.vplayed.feature.auth.presentation.components.LoginSocialButton
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.viewmodel.LoginOptions
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.shared.auth.SocialProvider
 import com.vplayed.shared.phone.CountryDialCode
 import com.vplayed.shared.phone.CountryDialCodes
 import com.vplayed.shared.validation.EmailValidationResult
@@ -119,13 +120,16 @@ private fun ColumnScope.LoginForm(
     Spacer(Modifier.height(TitleBottomSpacing))
 
     val busy = uiState.isSubmitting || options.phone.isSubmitting || uiState.isJoiningAsGuest || options.socialInFlight != null
+    val isGoogleLoading = options.socialInFlight == SocialProvider.GOOGLE
+    val isGuestLoading = uiState.isJoiningAsGuest
     Column(verticalArrangement = Arrangement.spacedBy(SocialGap)) {
         if (options.googleAvailable) {
             LoginSocialButton(
                 text = stringResource(R.string.login_social_google),
                 icon = AppIcons.Google,
                 iconTint = null,
-                enabled = !busy,
+                loading = isGoogleLoading,
+                enabled = !busy || isGoogleLoading,
                 onClick = actions.onGoogle,
                 modifier = Modifier.testTag(LoginTestTags.GOOGLE),
             )
@@ -198,7 +202,8 @@ private fun ColumnScope.LoginForm(
         LoginSocialButton(
             text = stringResource(R.string.login_continue_as_guest),
             icon = AppIcons.PersonOutline,
-            enabled = !busy,
+            loading = isGuestLoading,
+            enabled = !busy || isGuestLoading,
             onClick = actions.onGuest,
             modifier = Modifier.testTag(LoginTestTags.GUEST),
         )

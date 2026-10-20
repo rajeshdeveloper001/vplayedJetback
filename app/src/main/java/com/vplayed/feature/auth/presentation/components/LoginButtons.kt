@@ -75,7 +75,7 @@ internal fun LoginPrimaryButton(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = dimens.formActionMinHeight)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .alpha(if (enabled && !loading) 1f else if (loading) 0.85f else DISABLED_ALPHA)
             .shadow(
                 elevation = PrimaryShadowElevation,
                 shape = shape,
@@ -89,27 +89,26 @@ internal fun LoginPrimaryButton(
             .padding(horizontal = dimens.spacing.xl, vertical = PrimaryVerticalPadding),
         contentAlignment = Alignment.Center,
     ) {
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(SpinnerSize),
-                color = colors.onPrimary,
-                trackColor = colors.onPrimary.copy(alpha = SPINNER_TRACK_ALPHA),
-                strokeWidth = SpinnerStroke,
-            )
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(dimens.spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(text = text, style = AppDesignSystem.textStyles.formAction, color = colors.onPrimary)
-                if (showArrow) {
-                    Icon(
-                        painter = painterResource(AppIcons.ArrowForward),
-                        contentDescription = null,
-                        tint = colors.onPrimary,
-                        modifier = Modifier.size(ActionIconSize),
-                    )
-                }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(dimens.spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(SpinnerSize),
+                    color = colors.onPrimary,
+                    trackColor = colors.onPrimary.copy(alpha = SPINNER_TRACK_ALPHA),
+                    strokeWidth = SpinnerStroke,
+                )
+            }
+            Text(text = text, style = AppDesignSystem.textStyles.formAction, color = colors.onPrimary)
+            if (!loading && showArrow) {
+                Icon(
+                    painter = painterResource(AppIcons.ArrowForward),
+                    contentDescription = null,
+                    tint = colors.onPrimary,
+                    modifier = Modifier.size(ActionIconSize),
+                )
             }
         }
     }
@@ -126,29 +125,40 @@ internal fun LoginSocialButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    loading: Boolean = false,
     iconTint: Color? = AppDesignSystem.extendedColors.auth.textStrong,
 ) {
     val auth = AppDesignSystem.extendedColors.auth
     val dimens = AppDesignSystem.dimens
     val shape = AppDesignSystem.shapes.button
+    val loadingDescription = stringResource(R.string.cd_loading)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = dimens.socialButtonMinHeight)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .alpha(if (enabled && !loading) 1f else if (loading) 0.85f else DISABLED_ALPHA)
             .clip(shape)
             .background(auth.socialFill)
             .border(dimens.borderThin, auth.socialBorder, shape)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled && !loading, role = Role.Button, onClick = onClick)
+            .semantics { if (loading) stateDescription = loadingDescription }
             .padding(horizontal = dimens.spacing.md, vertical = SocialVerticalPadding),
         horizontalArrangement = Arrangement.spacedBy(dimens.spacing.sm, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val painter = painterResource(icon)
-        if (iconTint == null) {
-            Image(painter, contentDescription = null, modifier = Modifier.size(SocialIconSize))
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(SocialIconSize),
+                color = auth.textStrong,
+                strokeWidth = SpinnerStroke,
+            )
         } else {
-            Icon(painter, contentDescription = null, tint = iconTint, modifier = Modifier.size(SocialIconSize))
+            val painter = painterResource(icon)
+            if (iconTint == null) {
+                Image(painter, contentDescription = null, modifier = Modifier.size(SocialIconSize))
+            } else {
+                Icon(painter, contentDescription = null, tint = iconTint, modifier = Modifier.size(SocialIconSize))
+            }
         }
         Text(
             text = text,
