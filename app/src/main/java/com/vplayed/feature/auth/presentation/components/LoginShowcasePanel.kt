@@ -1,7 +1,6 @@
 package com.vplayed.feature.auth.presentation.components
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -48,6 +47,18 @@ import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
 import com.vplayed.core.ui.rememberReducedMotion
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.login_feature_4k
+import com.vplayed.shared.l10n.login_feature_coins
+import com.vplayed.shared.l10n.login_feature_devices
+import com.vplayed.shared.l10n.login_feature_download
+import com.vplayed.shared.l10n.login_feature_subscribe
+import com.vplayed.shared.l10n.login_platforms_title
+import com.vplayed.shared.l10n.login_showcase_subtitle
+import com.vplayed.shared.l10n.login_showcase_title_line1
+import com.vplayed.shared.l10n.login_showcase_title_line2
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** Width / height of the logo vector (viewport 500 × 95). */
 private const val LOGO_ASPECT_RATIO = 500f / 95f
@@ -66,14 +77,14 @@ private const val SWEEP_START = 2f
 private const val SWEEP_END = -1f
 private const val SWEEP_STATIC = 0.5f
 
-private data class Feature(@DrawableRes val icon: Int, @StringRes val text: Int)
+private data class Feature(@DrawableRes val icon: Int, val text: StringResource)
 
 private val features = listOf(
-    Feature(AppIcons.Devices, R.string.login_feature_devices),
-    Feature(AppIcons.Views, R.string.login_feature_subscribe),
-    Feature(AppIcons.Download, R.string.login_feature_download),
-    Feature(AppIcons.FourK, R.string.login_feature_4k),
-    Feature(AppIcons.Redeem, R.string.login_feature_coins),
+    Feature(AppIcons.Devices, Res.string.login_feature_devices),
+    Feature(AppIcons.Views, Res.string.login_feature_subscribe),
+    Feature(AppIcons.Download, Res.string.login_feature_download),
+    Feature(AppIcons.FourK, Res.string.login_feature_4k),
+    Feature(AppIcons.Redeem, Res.string.login_feature_coins),
 )
 
 private val platforms = listOf(
@@ -108,13 +119,13 @@ internal fun LoginShowcasePanel(modifier: Modifier = Modifier) {
                 .aspectRatio(LOGO_ASPECT_RATIO),
         )
         Column {
-            Text(text = stringResource(R.string.login_showcase_title_line1), style = textStyles.promoTitle, color = auth.textStrong)
+            Text(text = stringResource(Res.string.login_showcase_title_line1), style = textStyles.promoTitle, color = auth.textStrong)
             Text(
-                text = stringResource(R.string.login_showcase_title_line2),
+                text = stringResource(Res.string.login_showcase_title_line2),
                 style = textStyles.promoTitle.copy(brush = rememberSweepBrush()),
             )
             Text(
-                text = stringResource(R.string.login_showcase_subtitle),
+                text = stringResource(Res.string.login_showcase_subtitle),
                 style = textStyles.promoBody,
                 color = auth.textSecondary,
                 modifier = Modifier
@@ -128,7 +139,7 @@ internal fun LoginShowcasePanel(modifier: Modifier = Modifier) {
         Column {
             HorizontalDivider(color = auth.iconTileFill, thickness = AppDesignSystem.dimens.dividerThickness)
             Text(
-                text = stringResource(R.string.login_platforms_title).uppercase(),
+                text = stringResource(Res.string.login_platforms_title).uppercase(),
                 style = textStyles.badge,
                 color = auth.textSecondary,
                 modifier = Modifier.padding(top = PlatformsTopPadding, bottom = PlatformsLabelSpacing),

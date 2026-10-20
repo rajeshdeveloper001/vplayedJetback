@@ -31,21 +31,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.shared.home.ContentItem
 import com.vplayed.shared.home.ItemDetails
 import com.vplayed.shared.home.LiveStatus
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_badge_live
+import com.vplayed.shared.l10n.home_badge_upcoming
+import com.vplayed.shared.l10n.home_live_started
+import com.vplayed.shared.l10n.home_live_starts
+import com.vplayed.shared.l10n.home_live_streamed
+import com.vplayed.shared.l10n.home_live_tomorrow
+import com.vplayed.shared.l10n.home_set_reminder
+import com.vplayed.shared.l10n.home_watch_live
+import com.vplayed.shared.l10n.home_watch_now
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import org.jetbrains.compose.resources.stringResource
 
 // Prototype `.lcard` measurements (427dp phone).
 private val BadgeInset = 14.dp
@@ -204,9 +213,9 @@ private fun LiveAction(status: LiveStatus, onClick: () -> Unit) {
     val container = if (upcoming) extended.onImageScrim else colors.primary
     val content = if (upcoming) extended.artworkScrim else colors.onPrimary
     val label = when (status) {
-        LiveStatus.LIVE -> R.string.home_watch_live
-        LiveStatus.UPCOMING -> R.string.home_set_reminder
-        LiveStatus.ENDED -> R.string.home_watch_now
+        LiveStatus.LIVE -> Res.string.home_watch_live
+        LiveStatus.UPCOMING -> Res.string.home_set_reminder
+        LiveStatus.ENDED -> Res.string.home_watch_now
     }
     Button(
         onClick = onClick,
@@ -241,7 +250,7 @@ internal fun LiveBadge(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(BadgeGap),
     ) {
         Box(Modifier.size(BadgeDot).background(onPrimary, CircleShape))
-        Text(text = stringResource(R.string.home_badge_live), style = AppDesignSystem.textStyles.tag, color = onPrimary)
+        Text(text = stringResource(Res.string.home_badge_live), style = AppDesignSystem.textStyles.tag, color = onPrimary)
     }
 }
 
@@ -251,7 +260,7 @@ private fun UpcomingBadge(modifier: Modifier = Modifier) {
     val extended = AppDesignSystem.extendedColors
     val shape = AppDesignSystem.shapes.card
     Text(
-        text = stringResource(R.string.home_badge_upcoming),
+        text = stringResource(Res.string.home_badge_upcoming),
         style = AppDesignSystem.textStyles.tag,
         color = extended.onImageScrim,
         modifier = modifier
@@ -270,13 +279,13 @@ private fun scheduleText(live: ItemDetails.Live): String? {
     val dayOffset = daysFromToday(millis)
     val dateAndTime = if (dayOffset == 0) time else "${shortDate(context, millis)} · $time"
     return when (live.status) {
-        LiveStatus.LIVE -> stringResource(R.string.home_live_started, dateAndTime)
+        LiveStatus.LIVE -> stringResource(Res.string.home_live_started, dateAndTime)
         LiveStatus.UPCOMING -> if (dayOffset == 1) {
-            stringResource(R.string.home_live_tomorrow, time)
+            stringResource(Res.string.home_live_tomorrow, time)
         } else {
-            stringResource(R.string.home_live_starts, dateAndTime)
+            stringResource(Res.string.home_live_starts, dateAndTime)
         }
-        LiveStatus.ENDED -> stringResource(R.string.home_live_streamed, shortDate(context, millis))
+        LiveStatus.ENDED -> stringResource(Res.string.home_live_streamed, shortDate(context, millis))
     }
 }
 

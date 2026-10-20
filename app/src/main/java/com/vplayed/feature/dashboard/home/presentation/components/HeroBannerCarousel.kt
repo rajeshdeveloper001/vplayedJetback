@@ -51,7 +51,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,16 +61,21 @@ import androidx.compose.ui.unit.em
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.size.Size as CoilSize
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.cssLinearGradient
 import com.vplayed.core.designsystem.component.skeleton
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
+import com.vplayed.core.ui.localizedNumber
 import com.vplayed.core.ui.rememberReducedMotion
 import com.vplayed.shared.home.HomeBanner
-import com.vplayed.shared.home.ShowType
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_add_to_watchlist
+import com.vplayed.shared.l10n.home_slide_position
+import com.vplayed.shared.l10n.home_watch_now
+import com.vplayed.shared.l10n.labelResource
 import kotlin.math.max
 import kotlin.math.min
+import org.jetbrains.compose.resources.stringResource
 
 private const val AUTO_ADVANCE_MILLIS = 6_000
 
@@ -167,7 +171,7 @@ internal fun HeroBannerCarousel(
             pagerState.animateScrollToPage((pagerState.settledPage + 1) % banners.size)
         }
     }
-    val position = stringResource(R.string.home_banner_position, pagerState.currentPage + 1, banners.size)
+    val position = stringResource(Res.string.home_slide_position, localizedNumber(pagerState.currentPage + 1), localizedNumber(banners.size))
     val window = LocalWindowInfo.current.containerSize
     val windowHeight = with(LocalDensity.current) { window.height.toDp() }
     val landscape = window.width > window.height
@@ -222,7 +226,7 @@ private fun BannerPage(banner: HomeBanner, width: Dp, onWatchNow: (HomeBanner) -
                 .padding(start = InnerPaddingH, end = InnerPaddingH, bottom = InnerPaddingBottom),
         ) {
             banner.showType?.let {
-                HeroChip(stringResource(it.labelRes()))
+                HeroChip(stringResource(it.labelResource))
                 Spacer(Modifier.height(ChipBottom))
             }
             HeroTitle(banner, width)
@@ -239,6 +243,7 @@ private fun BannerPage(banner: HomeBanner, width: Dp, onWatchNow: (HomeBanner) -
             }
             HeroActions(
                 width = width - InnerPaddingH * 2,
+                title = banner.title,
                 onWatchNow = { onWatchNow(banner) },
                 onAddToList = { onAddToList(banner) },
             )
@@ -357,7 +362,7 @@ private fun HeroChip(text: String) {
 
 /** `.hero-actions`: red "Watch now" and a glass "+" sharing the row, the primary 48dp wider. */
 @Composable
-private fun HeroActions(width: Dp, onWatchNow: () -> Unit, onAddToList: () -> Unit) {
+private fun HeroActions(width: Dp, title: String, onWatchNow: () -> Unit, onAddToList: () -> Unit) {
     val dimens = AppDesignSystem.dimens
     val colors = AppDesignSystem.colors
     val extended = AppDesignSystem.extendedColors
@@ -376,7 +381,7 @@ private fun HeroActions(width: Dp, onWatchNow: () -> Unit, onAddToList: () -> Un
         ) {
             Icon(painterResource(AppIcons.Play), contentDescription = null, modifier = Modifier.size(ButtonIconSize))
             Text(
-                text = stringResource(R.string.home_watch_now),
+                text = stringResource(Res.string.home_watch_now),
                 style = AppDesignSystem.textStyles.action,
                 maxLines = 1,
                 modifier = Modifier.padding(start = PrimaryIconGap),
@@ -390,7 +395,7 @@ private fun HeroActions(width: Dp, onWatchNow: () -> Unit, onAddToList: () -> Un
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.width(glassWidth).height(dimens.heroButtonHeight),
         ) {
-            Icon(painterResource(AppIcons.Add), contentDescription = stringResource(R.string.home_add_to_list))
+            Icon(painterResource(AppIcons.Add), contentDescription = stringResource(Res.string.home_add_to_watchlist, title))
         }
     }
 }
@@ -430,10 +435,4 @@ private fun PagerDashes(count: Int, selected: Int, fill: () -> Float, modifier: 
             }
         }
     }
-}
-
-private fun ShowType.labelRes(): Int = when (this) {
-    ShowType.VIDEO -> R.string.home_show_type_video
-    ShowType.SERIES -> R.string.home_show_type_series
-    ShowType.MICRO_SERIES -> R.string.home_show_type_micro_series
 }

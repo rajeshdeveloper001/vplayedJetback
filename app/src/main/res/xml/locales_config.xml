@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Languages offered in the system's per-app language setting (Android 13+). Keep in step with the
+    backend's language list (mediaview/api/v1/language), which the in-app Language screen shows.
+    App text comes from the shared catalog (../kmp); a language without translations shows English.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ta" />
+    <locale android:name="te" />
+    <locale android:name="hi" />
+    <locale android:name="pt" />
+    <locale android:name="ar" />
+</locale-config>

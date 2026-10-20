@@ -20,6 +20,13 @@ import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_sign_in
+import com.vplayed.shared.l10n.common_sign_out
+import com.vplayed.shared.l10n.menu_signed_in_as
+import com.vplayed.shared.l10n.menu_signing_out
+import com.vplayed.shared.l10n.nav_language
+import org.jetbrains.compose.resources.stringResource
 
 /** Width / height of the logo vector (viewport 500 × 95). */
 private const val LOGO_ASPECT_RATIO = 500f / 95f
@@ -30,16 +37,19 @@ object AppDrawerTestTags {
     const val LOGIN = "app_drawer_login"
     const val SIGNED_IN = "app_drawer_signed_in"
     const val SIGN_OUT = "app_drawer_sign_out"
+    const val LANGUAGE = "app_drawer_language"
 }
 
 /**
  * Side menu content: brand logo and the menu entries. Login while signed out; the signed-in email
- * and Sign out once there is a session. Taps on Sign out while [isSigningOut] are ignored.
+ * and Sign out once there is a session. Taps on Sign out while [isSigningOut] are ignored. Language
+ * (as in VPlayed's menu) opens the language picker.
  */
 @Composable
 fun AppDrawerSheet(
     onLogin: () -> Unit,
     modifier: Modifier = Modifier,
+    onLanguage: () -> Unit = {},
     signedInEmail: String? = null,
     onSignOut: () -> Unit = {},
     isSigningOut: Boolean = false,
@@ -68,7 +78,7 @@ fun AppDrawerSheet(
         HorizontalDivider(color = AppDesignSystem.extendedColors.hairline)
         if (signedInEmail == null) {
             NavigationDrawerItem(
-                label = { Text(stringResource(R.string.menu_login), style = AppDesignSystem.textStyles.subHeader) },
+                label = { Text(stringResource(Res.string.common_sign_in), style = AppDesignSystem.textStyles.subHeader) },
                 icon = { Icon(painterResource(AppIcons.Login), contentDescription = null) },
                 selected = false,
                 onClick = onLogin,
@@ -80,7 +90,7 @@ fun AppDrawerSheet(
             )
         } else {
             Text(
-                text = stringResource(R.string.menu_signed_in_as, signedInEmail),
+                text = stringResource(Res.string.menu_signed_in_as, signedInEmail),
                 style = AppDesignSystem.typography.bodyMedium,
                 color = AppDesignSystem.extendedColors.textSoft,
                 modifier = Modifier
@@ -90,7 +100,7 @@ fun AppDrawerSheet(
             NavigationDrawerItem(
                 label = {
                     Text(
-                        stringResource(if (isSigningOut) R.string.menu_signing_out else R.string.menu_sign_out),
+                        stringResource(if (isSigningOut) Res.string.menu_signing_out else Res.string.common_sign_out),
                         style = AppDesignSystem.textStyles.subHeader,
                     )
                 },
@@ -103,6 +113,16 @@ fun AppDrawerSheet(
                     .testTag(AppDrawerTestTags.SIGN_OUT),
             )
         }
+        NavigationDrawerItem(
+            label = { Text(stringResource(Res.string.nav_language), style = AppDesignSystem.textStyles.subHeader) },
+            icon = { Icon(painterResource(AppIcons.Language), contentDescription = null) },
+            selected = false,
+            onClick = onLanguage,
+            colors = itemColors,
+            modifier = Modifier
+                .padding(NavigationDrawerItemDefaults.ItemPadding)
+                .testTag(AppDrawerTestTags.LANGUAGE),
+        )
     }
 }
 

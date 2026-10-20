@@ -1,231 +1,24 @@
 <resources>
-    <!-- app_name is generated per build type in app/build.gradle.kts (resValue). -->
+    <!--
+        User-facing text lives in the shared string catalog (../kmp, shared/src/commonMain/composeResources;
+        `com.vplayed.shared.l10n.Res`), the same strings VPlayed shows, with their translations.
+        Only text that is never translated stays here. app_name is generated per build type in
+        app/build.gradle.kts (resValue).
+    -->
 
-    <!-- Common -->
-    <string name="action_retry">Retry</string>
-    <string name="action_ok">OK</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="error_generic_title">Something went wrong</string>
-    <string name="cd_loading">Loading</string>
-    <string name="cd_navigate_back">Navigate back</string>
+    <!-- Brand name: fills %1$s in shared messages that name it. -->
+    <string name="brand_name" translatable="false">VPlayed</string>
 
     <!-- Splash screen -->
     <string name="splash_logo_description" translatable="false">Vplayed</string>
 
-    <!-- Errors -->
-    <string name="error_network">You\'re offline. Check your connection and try again.</string>
-    <string name="error_server">Something went wrong on our side. Please try again.</string>
-    <string name="error_unauthorized">Your session has expired. Please sign in again.</string>
-    <string name="error_parsing">We couldn\'t read the latest content. Please try again.</string>
-    <string name="error_unknown">Something went wrong. Please try again.</string>
-
-    <!-- Dashboard navigation -->
-    <string name="nav_home">Home</string>
-    <string name="nav_search">Search</string>
-    <string name="nav_promos">Promos</string>
-    <string name="nav_subscription">Subscription</string>
-
-    <!-- Home -->
-    <string name="home_open_appearance">Appearance settings</string>
-    <string name="home_banner_position">Banner %1$d of %2$d</string>
-    <string name="home_empty_title">Nothing to watch yet</string>
-    <string name="home_empty_message">New titles will appear here soon.</string>
-    <string name="home_badge_live">LIVE</string>
-    <string name="home_watch_now">Watch now</string>
-    <string name="home_add_to_list">Add to list</string>
-    <string name="home_rank_title">%1$d. %2$s</string>
-    <string name="home_show_type_video">Video</string>
-    <string name="home_show_type_series">Series</string>
-    <string name="home_show_type_micro_series">Micro Series</string>
-    <string name="home_view_all">View all %1$s</string>
-    <string name="home_badge_upcoming">UPCOMING</string>
-    <string name="home_live_started">Started %1$s</string>
-    <string name="home_live_starts">Starts %1$s</string>
-    <string name="home_live_tomorrow">Tomorrow · %1$s</string>
-    <string name="home_live_streamed">Streamed %1$s</string>
-    <string name="home_watch_live">Watch Live</string>
-    <string name="home_set_reminder">Set reminder</string>
-    <string name="home_follow">Follow</string>
-    <string name="home_bulk_purchase">Bulk purchase</string>
-    <string name="home_explore_bundles">Explore bundles</string>
-    <string name="home_save_up_to">Save up to %1$d%%</string>
-    <string name="home_promo_stats">%1$s views, %2$s likes</string>
-    <plurals name="home_episodes">
-        <item quantity="one">%1$d Episode</item>
-        <item quantity="other">%1$d Episodes</item>
-    </plurals>
-    <plurals name="home_followers">
-        <item quantity="one">%1$s Follower</item>
-        <item quantity="other">%1$s Followers</item>
-    </plurals>
-    <plurals name="home_bundle_days">
-        <item quantity="one">Valid for %1$d day</item>
-        <item quantity="other">Valid for %1$d days</item>
-    </plurals>
-
-    <!-- Side menu -->
-    <string name="menu_open">Menu</string>
-    <string name="menu_login">Login</string>
-
-    <!-- Login (prototype "VPlayed Sign Up", email step) -->
-    <string name="login_close">Close</string>
-    <string name="login_step_label">Step 1 of 3</string>
-    <string name="login_title">Sign in or create your account</string>
-    <string name="login_social_google">Sign in with Google</string>
-    <string name="login_social_apple">Sign in with Apple</string>
-    <string name="login_divider_email">or continue with email</string>
-    <string name="login_email_label">Email ID</string>
-    <string name="login_email_placeholder" translatable="false">name@example.com</string>
-    <string name="login_email_help">We\'ll send a 6-digit code to verify it\'s you.</string>
-    <string name="login_email_error_empty">Email is required</string>
-    <string name="login_email_error_invalid">Please enter a valid email address</string>
-    <string name="login_email_error_too_long">Email must be at most 50 characters</string>
-    <string name="login_divider_phone">or continue with mobile number</string>
-    <string name="login_phone_label">Mobile number</string>
-    <string name="login_phone_country">Country code</string>
-    <string name="login_phone_help">We\'ll text a 6-digit code to verify it\'s you.</string>
-    <string name="login_phone_error_india">Enter a valid 10-digit mobile number</string>
-    <string name="login_phone_error_invalid">Invalid Mobile Number</string>
-    <string name="login_phone_unavailable">Phone sign-in isn\'t available right now.</string>
-    <string name="login_social_failed">Login failed. Please try again.</string>
-    <string name="login_signed_in">Good! You have logged in successfully</string>
-    <string name="otp_phone_code_sent">OTP has been sent to registered mobile number</string>
-    <string name="otp_phone_code_send_failed">We couldn\'t send the code. Please try again.</string>
-    <string name="session_expired">Session Expired, Please login to continue</string>
-    <string name="login_continue">Continue</string>
-    <string name="login_terms">I am above 18 years of age and by proceeding I agree to the %1$s and %2$s.</string>
-    <string name="login_terms_of_use">Terms of use</string>
-    <string name="login_privacy_policy">privacy policy</string>
-    <string name="login_continue_as_guest">Continue as guest</string>
-    <string name="login_have_account">Already have an account? %1$s</string>
-    <string name="login_sign_in">Sign in</string>
-    <string name="login_showcase_title_line1">Enjoy the Ultimate</string>
-    <string name="login_showcase_title_line2">Streaming Experience</string>
-    <string name="login_showcase_subtitle">Premium OTT content across every screen — built for broadcasters, loved by viewers worldwide.</string>
-    <string name="login_feature_devices">Watch on TV, Desktop, Mobile, Tablet</string>
-    <string name="login_feature_subscribe">Subscribe for exclusive features and benefits</string>
-    <string name="login_feature_download">Download and watch anytime, anywhere</string>
-    <string name="login_feature_4k">4K HDR streaming with Dolby Atmos sound</string>
-    <string name="login_feature_coins">Collect and redeem coins for unlimited content</string>
-    <string name="login_platforms_title">Also available on</string>
+    <!-- Login -->
     <string name="login_platform_android_tv" translatable="false">Android TV</string>
     <string name="login_platform_apple_tv" translatable="false">Apple TV</string>
     <string name="login_platform_samsung" translatable="false">Samsung Smart TV</string>
     <string name="login_platform_fire_tv" translatable="false">Fire TV Stick</string>
     <string name="login_platform_lg" translatable="false">LG webOS</string>
-    <!-- Fallbacks when the server gives no displayable message. -->
-    <string name="login_device_limit">Maximum devices reached. Sign out from another device to continue.</string>
-    <string name="login_failed">We couldn\'t sign you in. Please try again.</string>
-
-    <!-- OTP (prototype "VPlayed Sign Up", steps 2-3 and the device-limit step) -->
-    <string name="otp_back">Back</string>
-    <string name="otp_step_label">Step 2 of 3</string>
-    <string name="otp_title">Verify it\'s you</string>
-    <string name="otp_note">Enter the 6-digit code we sent to %1$s</string>
-    <string name="otp_change">Change</string>
-    <string name="otp_code_description">6-digit verification code</string>
-    <string name="otp_resend_prompt">Didn\'t get the code?</string>
-    <string name="otp_resend">Resend</string>
-    <string name="otp_resend_in">in %1$d:%2$02d</string>
-    <string name="otp_verify">Verify &amp; continue</string>
-    <string name="otp_invalid">Incorrect code. Try again.</string>
-    <string name="otp_registration_pending">This email isn\'t registered yet. Account setup is coming soon.</string>
-    <string name="otp_new_user_pending">Welcome! Setting up your profile is coming soon.</string>
-    <string name="otp_multi_profile_pending">Choosing a profile is coming soon; your default profile is used.</string>
-    <string name="otp_devices_title">Maximum devices reached</string>
-    <plurals name="otp_devices_note">
-        <item quantity="one">You\'re already signed in on %1$d device. Sign out from it to continue.</item>
-        <item quantity="other">You\'re already signed in on %1$d devices. Sign out from one to continue, or sign out from all of them at once.</item>
-    </plurals>
-    <string name="otp_device_this_device">This device</string>
-    <string name="otp_device_sign_out">Sign out</string>
-    <string name="otp_devices_sign_out_all">Sign out from all devices</string>
-    <string name="otp_devices_continue">Continue</string>
-    <string name="otp_device_sign_out_failed">We couldn\'t sign that device out. Please try again.</string>
-    <string name="otp_success_title">You\'re all set</string>
-    <string name="otp_success_note">Your VPlayed account is ready. Dive into thousands of titles in 4K.</string>
-    <string name="otp_success_progress">Taking you in…</string>
-    <string name="otp_step_3_label">Step 3 of 3</string>
-
-    <!-- Sign-up form of a new account (UIKit RegisterViewController; prototype "Complete your profile") -->
-    <string name="register_title">Tell us about you</string>
-    <string name="register_note">Complete your profile to finish creating your VPlayed account.</string>
-    <string name="register_name_label">Full name</string>
-    <string name="register_name_placeholder">Enter your name</string>
-    <string name="register_name_error_empty">Enter your name.</string>
-    <string name="register_name_error_short">Name must be at least 2 characters.</string>
-    <string name="register_email_error_empty">Email Id is Required</string>
-    <string name="register_phone_error_empty">Mobile Number is Required</string>
-    <string name="register_referral_toggle">Have a referral code?</string>
-    <string name="register_referral_label">Referral code</string>
-    <string name="register_referral_placeholder">Enter referral code</string>
-    <string name="register_submit">Finish setup</string>
-    <string name="register_success_title">You\'re all set, %1$s</string>
-    <string name="register_failed">We couldn\'t complete your sign-up. Please try again.</string>
-    <string name="register_cancelled">Your signup was unsuccessful.</string>
-
-    <!-- Side menu (signed in) -->
-    <string name="menu_signed_in_as">Signed in as %1$s</string>
-    <string name="menu_sign_out">Sign out</string>
-    <string name="menu_signing_out">Signing out…</string>
-    <string name="menu_sign_out_failed">We couldn\'t sign you out. Please try again.</string>
-
-    <!-- Placeholder tabs -->
-    <string name="search_coming_soon_title">Search is on its way</string>
-    <string name="search_coming_soon_message">Soon you\'ll be able to find movies, series, channels and more.</string>
-    <string name="promos_coming_soon_title">Promos are on their way</string>
-    <string name="promos_coming_soon_message">Trailers and promotions will appear here.</string>
-    <string name="subscription_coming_soon_title">Plans are on their way</string>
-    <string name="subscription_coming_soon_message">Subscription plans will be available here soon.</string>
 
     <!-- Design system -->
-    <string name="palette_vplayed">Vplayed</string>
-    <string name="palette_monochrome">Black &amp; white</string>
     <string name="font_inter" translatable="false">Inter</string>
-    <string name="theme_mode_system">System</string>
-    <string name="theme_mode_light">Light</string>
-    <string name="theme_mode_dark">Dark</string>
-    <string name="density_comfortable">Comfortable</string>
-    <string name="density_compact">Compact</string>
-
-    <!-- Design-system showcase (reference) -->
-    <string name="showcase_title">Design system</string>
-    <string name="showcase_section_environment">Environment</string>
-    <string name="showcase_environment_value">%1$s · v%2$s</string>
-    <string name="showcase_section_colors">Colors</string>
-    <string name="showcase_section_typography">OTT text styles</string>
-    <string name="showcase_section_components">Components</string>
-    <string name="showcase_section_states">Content states</string>
-    <string name="showcase_email_label">Email</string>
-    <string name="showcase_email_accepted">Looks good</string>
-    <string name="showcase_email_error_empty">Enter your email</string>
-    <string name="showcase_email_error_format">Enter a valid email address</string>
-    <string name="showcase_email_error_too_long">Use at most 50 characters</string>
-    <string name="showcase_action_submit">Submit</string>
-    <string name="showcase_action_show_dialog">Show dialog</string>
-    <string name="showcase_action_disabled">Disabled</string>
-    <string name="showcase_dialog_title">Dialog title</string>
-    <string name="showcase_dialog_message">Dialogs use the design-system shape, colors and typography.</string>
-    <string name="showcase_state_content">Content</string>
-    <string name="showcase_state_loading">Loading</string>
-    <string name="showcase_state_empty">Empty</string>
-    <string name="showcase_state_error">Error</string>
-    <string name="showcase_state_loading_message">Loading content</string>
-    <string name="showcase_state_empty_title">Nothing here yet</string>
-    <string name="showcase_state_empty_message">Titles you add to your list will appear here.</string>
-    <string name="showcase_state_error_message">Check your connection and try again.</string>
-    <string name="showcase_state_content_message">Content loaded successfully.</string>
-
-    <!-- Appearance settings -->
-    <string name="appearance_title">Appearance</string>
-    <string name="appearance_section_theme">Theme</string>
-    <string name="appearance_dynamic_color">Use wallpaper colors</string>
-    <string name="appearance_section_palette">Brand palette</string>
-    <string name="appearance_palette_dynamic_note">Wallpaper colors are on, so the palette applies only to status colors.</string>
-    <string name="appearance_section_font">Font</string>
-    <string name="appearance_section_size">Text and density</string>
-    <string name="appearance_text_size_value">Text size %1$d%%</string>
-    <string name="appearance_density">Density</string>
-    <string name="appearance_reset">Reset to defaults</string>
-    <string name="appearance_open_design_reference">Design system reference</string>
 </resources>

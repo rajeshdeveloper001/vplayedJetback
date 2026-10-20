@@ -12,14 +12,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.ShimmerBox
 import com.vplayed.core.designsystem.theme.AppDesignSystem
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_loading
+import org.jetbrains.compose.resources.stringResource
 
 private val TitleSkeletonWidth = 140.dp
 private val LineSkeletonHeight = 12.dp
@@ -30,7 +31,7 @@ private const val SKELETON_CARDS = 4
 @Composable
 internal fun HomeShimmer(cardWidth: Dp, modifier: Modifier = Modifier) {
     val dimens = AppDesignSystem.dimens
-    val loading = stringResource(R.string.cd_loading)
+    val loading = stringResource(Res.string.common_loading)
     Column(
         modifier = modifier
             .fillMaxSize()

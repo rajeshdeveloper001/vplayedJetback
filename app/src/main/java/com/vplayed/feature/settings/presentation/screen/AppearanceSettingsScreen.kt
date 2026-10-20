@@ -39,7 +39,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.AppButton
 import com.vplayed.core.designsystem.component.AppButtonStyle
 import com.vplayed.core.designsystem.component.AppCard
@@ -54,11 +53,31 @@ import com.vplayed.core.designsystem.theme.isDark
 import com.vplayed.core.designsystem.typography.TextScale
 import com.vplayed.core.ui.AppScreenScaffold
 import com.vplayed.core.ui.adaptive.ResponsiveContent
+import com.vplayed.core.ui.localizedNumber
 import com.vplayed.core.ui.plus
 import com.vplayed.core.ui.preview.ScreenPreviews
 import com.vplayed.feature.settings.presentation.viewmodel.AppearanceSettingsUiState
 import com.vplayed.feature.settings.presentation.viewmodel.AppearanceSettingsViewModel
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.appearance_density
+import com.vplayed.shared.l10n.appearance_dynamic_color
+import com.vplayed.shared.l10n.appearance_open_design_reference
+import com.vplayed.shared.l10n.appearance_palette_dynamic_note
+import com.vplayed.shared.l10n.appearance_reset
+import com.vplayed.shared.l10n.appearance_section_font
+import com.vplayed.shared.l10n.appearance_section_palette
+import com.vplayed.shared.l10n.appearance_section_size
+import com.vplayed.shared.l10n.appearance_section_theme
+import com.vplayed.shared.l10n.appearance_text_size_value
+import com.vplayed.shared.l10n.appearance_title
+import com.vplayed.shared.l10n.density_comfortable
+import com.vplayed.shared.l10n.density_compact
+import com.vplayed.shared.l10n.theme_mode_dark
+import com.vplayed.shared.l10n.theme_mode_light
+import com.vplayed.shared.l10n.theme_mode_system
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** All user actions on the appearance screen. */
 data class AppearanceActions(
@@ -104,7 +123,7 @@ fun AppearanceSettingsScreen(
     supportsDynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
 ) {
     AppScreenScaffold(
-        title = stringResource(R.string.appearance_title),
+        title = stringResource(Res.string.appearance_title),
         modifier = modifier,
         onNavigateBack = actions.onNavigateBack,
     ) { padding ->
@@ -132,13 +151,13 @@ fun AppearanceSettingsScreen(
                         item(key = "reset", span = { GridItemSpan(maxLineSpan) }) {
                             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                                 AppButton(
-                                    text = stringResource(R.string.appearance_reset),
+                                    text = stringResource(Res.string.appearance_reset),
                                     onClick = actions.onReset,
                                     style = AppButtonStyle.SECONDARY,
                                 )
                                 actions.onOpenDesignReference?.let { open ->
                                     AppButton(
-                                        text = stringResource(R.string.appearance_open_design_reference),
+                                        text = stringResource(Res.string.appearance_open_design_reference),
                                         onClick = open,
                                         style = AppButtonStyle.TEXT,
                                     )
@@ -166,7 +185,7 @@ private fun SectionHeader(text: String) {
 private fun ThemeSection(config: AppearanceConfig, supportsDynamicColor: Boolean, actions: AppearanceActions) {
     val modes = ThemeMode.entries
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionHeader(stringResource(R.string.appearance_section_theme))
+        SectionHeader(stringResource(Res.string.appearance_section_theme))
         SingleChoiceSegmentedButtonRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -183,7 +202,7 @@ private fun ThemeSection(config: AppearanceConfig, supportsDynamicColor: Boolean
         }
         if (supportsDynamicColor) {
             SwitchRow(
-                label = stringResource(R.string.appearance_dynamic_color),
+                label = stringResource(Res.string.appearance_dynamic_color),
                 checked = config.dynamicColor,
                 onCheckedChange = actions.onDynamicColorChanged,
             )
@@ -195,10 +214,10 @@ private fun ThemeSection(config: AppearanceConfig, supportsDynamicColor: Boolean
 private fun PaletteSection(config: AppearanceConfig, onSelected: (String) -> Unit) {
     val dark = config.themeMode.isDark()
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionHeader(stringResource(R.string.appearance_section_palette))
+        SectionHeader(stringResource(Res.string.appearance_section_palette))
         if (config.dynamicColor) {
             Text(
-                stringResource(R.string.appearance_palette_dynamic_note),
+                stringResource(Res.string.appearance_palette_dynamic_note),
                 style = AppDesignSystem.typography.bodySmall,
                 color = AppDesignSystem.colors.onSurfaceVariant,
             )
@@ -225,7 +244,7 @@ private fun PaletteSection(config: AppearanceConfig, onSelected: (String) -> Uni
 @Composable
 private fun FontSection(selectedFontId: String, onSelected: (String) -> Unit) {
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionHeader(stringResource(R.string.appearance_section_font))
+        SectionHeader(stringResource(Res.string.appearance_section_font))
         Column(Modifier.selectableGroup()) {
             BrandConfig.fonts.forEach { font ->
                 RadioRow(
@@ -244,10 +263,10 @@ private fun SizeSection(config: AppearanceConfig, actions: AppearanceActions) {
     // Local state while dragging; persisted once when the drag ends to avoid a write per frame.
     var sliderValue by remember(config.textScale) { mutableFloatStateOf(config.textScale) }
     val percent = (sliderValue * PERCENT).roundToInt()
-    val sliderDescription = stringResource(R.string.appearance_text_size_value, percent)
+    val sliderDescription = stringResource(Res.string.appearance_text_size_value, localizedNumber(percent))
     val densities = UiDensity.entries
     AppCard(modifier = Modifier.fillMaxWidth()) {
-        SectionHeader(stringResource(R.string.appearance_section_size))
+        SectionHeader(stringResource(Res.string.appearance_section_size))
         Text(sliderDescription, style = AppDesignSystem.typography.bodyMedium)
         Slider(
             value = sliderValue,
@@ -257,7 +276,7 @@ private fun SizeSection(config: AppearanceConfig, actions: AppearanceActions) {
             steps = TEXT_SCALE_STEPS,
             modifier = Modifier.semantics { contentDescription = sliderDescription },
         )
-        Text(stringResource(R.string.appearance_density), style = AppDesignSystem.typography.bodyMedium)
+        Text(stringResource(Res.string.appearance_density), style = AppDesignSystem.typography.bodyMedium)
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             densities.forEachIndexed { index, density ->
                 SegmentedButton(
@@ -318,17 +337,17 @@ private const val PERCENT = 100
 /** 0.85..1.30 in 0.05 increments → 8 intermediate stops. */
 private const val TEXT_SCALE_STEPS = 8
 
-private val ThemeMode.labelRes: Int
+private val ThemeMode.labelRes: StringResource
     get() = when (this) {
-        ThemeMode.SYSTEM -> R.string.theme_mode_system
-        ThemeMode.LIGHT -> R.string.theme_mode_light
-        ThemeMode.DARK -> R.string.theme_mode_dark
+        ThemeMode.SYSTEM -> Res.string.theme_mode_system
+        ThemeMode.LIGHT -> Res.string.theme_mode_light
+        ThemeMode.DARK -> Res.string.theme_mode_dark
     }
 
-private val UiDensity.labelRes: Int
+private val UiDensity.labelRes: StringResource
     get() = when (this) {
-        UiDensity.COMFORTABLE -> R.string.density_comfortable
-        UiDensity.COMPACT -> R.string.density_compact
+        UiDensity.COMFORTABLE -> Res.string.density_comfortable
+        UiDensity.COMPACT -> Res.string.density_compact
     }
 
 @ScreenPreviews

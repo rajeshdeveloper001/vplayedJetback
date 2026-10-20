@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
@@ -35,12 +34,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
+import com.vplayed.core.ui.brandName
+import com.vplayed.core.ui.localizedNumber
 import com.vplayed.core.ui.rememberReducedMotion
 import com.vplayed.feature.auth.presentation.viewmodel.OtpViewModel
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.login_step
+import com.vplayed.shared.l10n.otp_success_note
+import com.vplayed.shared.l10n.otp_success_progress
+import com.vplayed.shared.l10n.otp_success_title
+import org.jetbrains.compose.resources.stringResource
 
 private val CheckIconSize = 44.dp
 private const val CHECK_BACKGROUND_ALPHA = 0.16f
@@ -68,7 +74,7 @@ internal fun ColumnScope.AuthSuccessStep(notice: String? = null, title: String? 
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.otp_step_3_label).uppercase(),
+            text = stringResource(Res.string.login_step, localizedNumber(3)).uppercase(),
             style = AppDesignSystem.textStyles.badge,
             color = AppDesignSystem.extendedColors.formAccent,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
@@ -89,7 +95,7 @@ internal fun ColumnScope.AuthSuccessStep(notice: String? = null, title: String? 
         }
         Spacer(Modifier.height(dimens.spacing.xl))
         Text(
-            text = title ?: stringResource(R.string.otp_success_title),
+            text = title ?: stringResource(Res.string.otp_success_title),
             style = AppDesignSystem.textStyles.formTitle,
             color = auth.textStrong,
             textAlign = TextAlign.Center,
@@ -97,7 +103,7 @@ internal fun ColumnScope.AuthSuccessStep(notice: String? = null, title: String? 
         )
         Spacer(Modifier.height(dimens.spacing.sm))
         Text(
-            text = stringResource(R.string.otp_success_note),
+            text = stringResource(Res.string.otp_success_note, brandName()),
             style = AppDesignSystem.typography.bodyMedium,
             color = auth.textSecondary,
             textAlign = TextAlign.Center,
@@ -131,7 +137,7 @@ internal fun ColumnScope.AuthSuccessStep(notice: String? = null, title: String? 
                 )
             }
             Text(
-                text = stringResource(R.string.otp_success_progress),
+                text = stringResource(Res.string.otp_success_progress),
                 style = AppDesignSystem.textStyles.formSupporting,
                 color = auth.textSecondary,
                 modifier = Modifier.padding(top = dimens.spacing.xxs),

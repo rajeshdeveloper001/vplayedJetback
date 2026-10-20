@@ -1,55 +1,28 @@
 package com.vplayed.feature.auth.presentation.viewmodel
 
 import android.content.Context
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import com.vplayed.R
+import com.vplayed.core.ui.brandName
+import com.vplayed.core.ui.sharedString
 import com.vplayed.shared.auth.AuthMessage
-import com.vplayed.shared.auth.AuthMessageKey
+import com.vplayed.shared.l10n.resource
+import org.jetbrains.compose.resources.stringResource
 
 /*
  * Text for the shared layer's sign-in messages ([AuthMessage]): the server's own words when safe to
- * show, else a key this app translates ([stringRes]). The choice between the two is shared
- * (`AuthMessage.serverOr`).
+ * show, else the shared catalog's text for its key (`AuthMessageKey.resource`, the mapping VPlayed
+ * uses too). The choice between the two is shared (`AuthMessage.serverOr`).
  */
-
-@StringRes
-fun AuthMessageKey.stringRes(): Int = when (this) {
-    AuthMessageKey.DEVICE_LIMIT -> R.string.login_device_limit
-    AuthMessageKey.LOGIN_FAILED -> R.string.login_failed
-    AuthMessageKey.GUEST_LOGIN_FAILED -> R.string.login_failed
-    AuthMessageKey.OTP_INVALID -> R.string.otp_invalid
-    AuthMessageKey.REGISTRATION_REQUIRED -> R.string.otp_registration_pending
-    AuthMessageKey.REGISTRATION_FAILED -> R.string.register_failed
-    AuthMessageKey.REGISTRATION_CANCELLED -> R.string.register_cancelled
-    AuthMessageKey.DEVICE_SIGN_OUT_FAILED -> R.string.otp_device_sign_out_failed
-    AuthMessageKey.PROFILE_SETUP_PENDING -> R.string.otp_new_user_pending
-    AuthMessageKey.MULTI_PROFILE_PENDING -> R.string.otp_multi_profile_pending
-    AuthMessageKey.PHONE_CODE_SENT -> R.string.otp_phone_code_sent
-    AuthMessageKey.PHONE_CODE_SEND_FAILED -> R.string.otp_phone_code_send_failed
-    AuthMessageKey.PHONE_LOGIN_UNAVAILABLE -> R.string.login_phone_unavailable
-    AuthMessageKey.PHONE_INVALID -> R.string.login_phone_error_invalid
-    AuthMessageKey.SOCIAL_LOGIN_FAILED -> R.string.login_social_failed
-    // Only iOS offers Sign in with Apple; kept for completeness.
-    AuthMessageKey.APPLE_EMAIL_REQUIRED -> R.string.login_social_failed
-    // The app explains timeouts with its connection message, as for every other request.
-    AuthMessageKey.ERROR_NETWORK, AuthMessageKey.ERROR_TIMEOUT -> R.string.error_network
-    AuthMessageKey.ERROR_UNAUTHORIZED -> R.string.error_unauthorized
-    AuthMessageKey.ERROR_SERVER -> R.string.error_server
-    AuthMessageKey.ERROR_PARSING -> R.string.error_parsing
-    AuthMessageKey.ERROR_UNKNOWN -> R.string.error_unknown
-}
 
 /** The text to show for [message] in a composable. */
 @Composable
 fun AuthMessage.Companion.textOf(message: AuthMessage): String = when (message) {
     is AuthMessage.Server -> message.text
-    is AuthMessage.Localized -> stringResource(message.key.stringRes())
+    is AuthMessage.Localized -> stringResource(message.key.resource, brandName())
 }
 
 /** The text to show for this message outside composition (Toasts). */
 fun AuthMessage.resolve(context: Context): String = when (this) {
     is AuthMessage.Server -> text
-    is AuthMessage.Localized -> context.getString(key.stringRes())
+    is AuthMessage.Localized -> sharedString(key.resource, context.brandName())
 }

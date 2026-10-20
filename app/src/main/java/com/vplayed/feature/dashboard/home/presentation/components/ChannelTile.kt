@@ -26,8 +26,6 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,12 +33,16 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import coil3.compose.AsyncImage
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.cssLinearGradient
 import com.vplayed.core.designsystem.component.mixWith
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.shared.home.ContentItem
 import com.vplayed.shared.home.ItemDetails
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_follow
+import com.vplayed.shared.l10n.home_followers
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 // Prototype `.chtile` (mirror of the design system's ChannelCard).
 private const val GRADIENT_ANGLE = 155f
@@ -122,7 +124,7 @@ internal fun ChannelTile(item: ContentItem, modifier: Modifier = Modifier, onFol
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = pluralStringResource(R.plurals.home_followers, followerCount, followers),
+                        text = pluralStringResource(Res.plurals.home_followers, followerCount, followers),
                         style = AppDesignSystem.textStyles.cardSubtitle.copy(fontWeight = FontWeight.Medium),
                         color = white,
                         maxLines = 1,
@@ -139,7 +141,7 @@ internal fun ChannelTile(item: ContentItem, modifier: Modifier = Modifier, onFol
             contentPadding = PaddingValues(0.dp),
             modifier = Modifier.fillMaxWidth().height(AppDesignSystem.dimens.cardButtonHeight),
         ) {
-            Text(stringResource(R.string.home_follow), style = AppDesignSystem.textStyles.actionMedium)
+            Text(stringResource(Res.string.home_follow), style = AppDesignSystem.textStyles.actionMedium)
         }
     }
 }

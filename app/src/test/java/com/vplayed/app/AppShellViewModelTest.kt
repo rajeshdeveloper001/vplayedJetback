@@ -1,8 +1,10 @@
 package com.vplayed.app
 
-import com.vplayed.R
 import com.vplayed.shared.auth.LogoutResult
 import com.vplayed.shared.core.error.AppError
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.error_unreachable
+import com.vplayed.shared.l10n.menu_sign_out_failed
 import com.vplayed.shared.session.SessionStatus
 import com.vplayed.shared.session.SignOutReason
 import com.vplayed.testing.FakeAuthRepository
@@ -72,7 +74,7 @@ class AppShellViewModelTest {
 
         assertEquals(testAuthSession, sessions.session)
         assertEquals("user@example.com", vm.signedInEmail.value)
-        assertEquals(R.string.error_network, vm.messages.first())
+        assertEquals(Res.string.error_unreachable, vm.messages.first())
     }
 
     @Test
@@ -84,7 +86,7 @@ class AppShellViewModelTest {
         runCurrent()
 
         assertEquals(testAuthSession, sessions.session)
-        assertEquals(R.string.menu_sign_out_failed, vm.messages.first())
+        assertEquals(Res.string.menu_sign_out_failed, vm.messages.first())
     }
 
     @Test

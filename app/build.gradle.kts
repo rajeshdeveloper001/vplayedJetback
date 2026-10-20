@@ -317,6 +317,8 @@ dependencies {
         // Direct AARs do not bring transitive dependencies automatically:
         implementation(libs.ktor.client.core)
         implementation(libs.ktor.client.okhttp)
+        // The shared string catalog's runtime (Res lookups).
+        implementation(libs.compose.components.resources)
     } else {
         implementation(libs.vplayed.shared)
     }

@@ -21,12 +21,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
@@ -36,9 +35,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.vplayed.R
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.ui.adaptive.rememberAppLayoutInfo
+import com.vplayed.core.ui.brandName
+import com.vplayed.core.ui.sharedString
 import com.vplayed.feature.auth.presentation.navigation.LoginDestination
 import com.vplayed.feature.auth.presentation.navigation.OtpDestination
 import com.vplayed.feature.auth.presentation.navigation.loginScreen
@@ -48,12 +48,17 @@ import com.vplayed.feature.dashboard.navigation.DashboardTab
 import com.vplayed.feature.dashboard.navigation.dashboardGraph
 import com.vplayed.feature.dashboard.navigation.navigateToTab
 import com.vplayed.feature.settings.presentation.navigation.AppearanceDestination
+import com.vplayed.feature.settings.presentation.navigation.LanguageDestination
 import com.vplayed.feature.settings.presentation.navigation.appearanceScreen
+import com.vplayed.feature.settings.presentation.navigation.languageScreen
 import com.vplayed.feature.splashscreen.presentation.navigation.SplashDestination
 import com.vplayed.feature.splashscreen.presentation.navigation.splashScreen
 import com.vplayed.reference.showcase.presentation.navigation.DesignShowcaseDestination
 import com.vplayed.reference.showcase.presentation.navigation.designShowcaseScreen
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.session_expired
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Root composable. Splash → dashboard (Home, Search, Promos, Subscription). The tab bar shows
@@ -70,11 +75,13 @@ fun VPlayedApp(
     val isSigningOut by shellViewModel.isSigningOut.collectAsStateWithLifecycle()
     val context = LocalContext.current
     LaunchedEffect(shellViewModel) {
-        shellViewModel.messages.collect { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+        shellViewModel.messages.collect { message ->
+            Toast.makeText(context, sharedString(message, context.brandName()), Toast.LENGTH_SHORT).show()
+        }
     }
     LaunchedEffect(shellViewModel, navController) {
         shellViewModel.sessionExpired.collect {
-            Toast.makeText(context, R.string.session_expired, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, sharedString(Res.string.session_expired), Toast.LENGTH_LONG).show()
             navController.navigate(LoginDestination) { launchSingleTop = true }
         }
     }
@@ -125,6 +132,10 @@ fun VPlayedApp(
                 onLogin = {
                     scope.launch { drawerState.close() }
                     navController.navigate(LoginDestination) { launchSingleTop = true }
+                },
+                onLanguage = {
+                    scope.launch { drawerState.close() }
+                    navController.navigate(LanguageDestination) { launchSingleTop = true }
                 },
             )
         },
@@ -194,6 +205,7 @@ fun VPlayedApp(
                     onOpenDesignReference = { navController.navigate(DesignShowcaseDestination) },
                 )
                 designShowcaseScreen(onNavigateBack = { navController.navigateUp() })
+                languageScreen(onNavigateBack = { navController.navigateUp() })
             }
         }
     }

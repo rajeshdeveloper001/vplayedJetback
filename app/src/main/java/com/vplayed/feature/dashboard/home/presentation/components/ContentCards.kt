@@ -37,8 +37,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -52,13 +50,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import coil3.compose.AsyncImage
-import com.vplayed.R
 import com.vplayed.core.designsystem.component.skeleton
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
+import com.vplayed.core.ui.localizedNumber
 import com.vplayed.shared.home.ContentItem
 import com.vplayed.shared.home.ItemDetails
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_episodes
+import com.vplayed.shared.l10n.home_promo_stats
+import com.vplayed.shared.l10n.home_rank_label
 import java.util.Locale
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** Landscape artwork is 16:9 (`.hshot`); posters are 221:295 (`.pcard .poster`) and 3:4 (`.t10 .poster`). */
 internal const val CARD_ASPECT_RATIO = 16f / 9f
@@ -173,7 +177,7 @@ private fun MetaSeparator(color: Color) {
 /** Genre, then running time — or episode count for series and micro series (prototype `metaCount`). */
 @Composable
 internal fun ContentItem.metaParts(): List<String> {
-    val length = duration ?: episodeCount?.let { pluralStringResource(R.plurals.home_episodes, it, it) }
+    val length = duration ?: episodeCount?.let { pluralStringResource(Res.plurals.home_episodes, it, localizedNumber(it)) }
     return listOfNotNull(genre, length)
 }
 
@@ -230,7 +234,7 @@ internal fun PromoCard(item: ContentItem, width: Dp, modifier: Modifier = Modifi
     val stats = item.details as? ItemDetails.Promo
     val views = formatCompact(stats?.views ?: 0)
     val likes = formatCompact(stats?.likes ?: 0)
-    val statsDescription = stringResource(R.string.home_promo_stats, views, likes)
+    val statsDescription = stringResource(Res.string.home_promo_stats, views, likes)
     Column(modifier.width(width).semantics(mergeDescendants = true) {}) {
         ContentImage(
             url = item.imageUrl,
@@ -290,7 +294,7 @@ private val PillPaddingV = 3.dp
 @Composable
 internal fun TopTenCard(item: ContentItem, rank: Int, modifier: Modifier = Modifier) {
     val dimens = AppDesignSystem.dimens
-    val description = stringResource(R.string.home_rank_title, rank, item.title)
+    val description = stringResource(Res.string.home_rank_label, localizedNumber(rank), item.title)
     val twoDigits = rank >= 10
     val numeralHeight = dimens.topTenNumeralHeight
     val numeralWidth = numeralHeight * (if (twoDigits) RANK_DOUBLE_VIEWBOX_WIDTH else RANK_SINGLE_VIEWBOX_WIDTH) / RANK_VIEWBOX_HEIGHT

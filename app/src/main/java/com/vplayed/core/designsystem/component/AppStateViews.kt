@@ -16,17 +16,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_error_title
+import com.vplayed.shared.l10n.common_loading
+import com.vplayed.shared.l10n.common_try_again
+import org.jetbrains.compose.resources.stringResource
 
 /** Centered progress indicator with an optional message. Announced to accessibility services. */
 @Composable
@@ -34,7 +37,7 @@ fun AppLoadingIndicator(
     modifier: Modifier = Modifier,
     message: String? = null,
 ) {
-    val description = message ?: stringResource(R.string.cd_loading)
+    val description = message ?: stringResource(Res.string.common_loading)
     Column(
         modifier = modifier
             .padding(AppDesignSystem.dimens.spacing.xl)
@@ -57,7 +60,7 @@ fun AppLoadingIndicator(
 fun AppErrorView(
     message: String,
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.error_generic_title),
+    title: String = stringResource(Res.string.common_error_title),
     onRetry: (() -> Unit)? = null,
 ) {
     MessageState(
@@ -66,7 +69,7 @@ fun AppErrorView(
         title = title,
         message = message,
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Assertive },
-        actionLabel = onRetry?.let { stringResource(R.string.action_retry) },
+        actionLabel = onRetry?.let { stringResource(Res.string.common_try_again) },
         onAction = onRetry,
     )
 }

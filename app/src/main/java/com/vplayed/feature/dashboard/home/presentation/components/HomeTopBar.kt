@@ -17,6 +17,10 @@ import androidx.compose.ui.res.stringResource
 import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.home_open_appearance
+import com.vplayed.shared.l10n.menu_open
+import org.jetbrains.compose.resources.stringResource
 
 /** Width / height of the logo vector (viewport 500 × 95). */
 private const val LOGO_ASPECT_RATIO = 500f / 95f
@@ -45,7 +49,7 @@ internal fun HomeTopBar(
                 onClick = onOpenMenu,
                 modifier = Modifier.testTag(HomeTestTags.MENU),
             ) {
-                Icon(painterResource(AppIcons.Menu), contentDescription = stringResource(R.string.menu_open))
+                Icon(painterResource(AppIcons.Menu), contentDescription = stringResource(Res.string.menu_open))
             }
         },
         actions = {
@@ -53,7 +57,7 @@ internal fun HomeTopBar(
                 onClick = onOpenAppearance,
                 modifier = Modifier.testTag(HomeTestTags.APPEARANCE),
             ) {
-                Icon(painterResource(AppIcons.Tune), contentDescription = stringResource(R.string.home_open_appearance))
+                Icon(painterResource(AppIcons.Tune), contentDescription = stringResource(Res.string.home_open_appearance))
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

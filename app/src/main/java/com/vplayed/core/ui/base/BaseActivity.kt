@@ -1,5 +1,6 @@
 package com.vplayed.core.ui.base
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
@@ -13,6 +14,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.designsystem.theme.isDark
+import com.vplayed.core.locale.AppLocaleManager
+import com.vplayed.shared.l10n.SharedLocalization
 
 /**
  * Shared Activity behaviour: edge-to-edge, appearance-driven [AppTheme] and system bar styling.
@@ -25,9 +28,16 @@ abstract class BaseActivity : FragmentActivity() {
 
     protected val appearanceViewModel: AppearanceViewModel by viewModels()
 
+    /** The app language picked in Menu → Language (applied here on Android 7–12; see [AppLocaleManager]). */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleManager.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // The shared layer's record of the language this activity shows (shared string catalog).
+        SharedLocalization.setLanguage(resources.configuration.locales[0].toLanguageTag())
     }
 
     /**

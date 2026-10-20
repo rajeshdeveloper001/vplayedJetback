@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.error
@@ -45,10 +44,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
 import com.vplayed.core.ui.preview.ComponentPreviews
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.otp_code_description
+import org.jetbrains.compose.resources.stringResource
 
 /** Up to this window width the boxes use the prototype's ≤ 400px sizes (46dp boxes, 7dp apart). */
 private val NarrowWindowWidth = 400.dp
@@ -74,7 +75,7 @@ internal fun OtpCodeField(
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     var focused by remember { mutableStateOf(false) }
-    val description = stringResource(R.string.otp_code_description)
+    val description = stringResource(Res.string.otp_code_description)
 
     // Focus when shown and again when input is re-enabled (after a refused code the prototype
     // empties the boxes and focuses the first one).

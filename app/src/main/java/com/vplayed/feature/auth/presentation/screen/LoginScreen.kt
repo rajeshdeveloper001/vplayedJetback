@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -24,10 +23,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.vplayed.R
 import com.vplayed.core.designsystem.icon.AppIcons
 import com.vplayed.core.designsystem.theme.AppDesignSystem
 import com.vplayed.core.designsystem.theme.AppTheme
+import com.vplayed.core.ui.localizedNumber
+import com.vplayed.core.ui.markdownLinks
 import com.vplayed.core.ui.preview.ScreenPreviews
 import com.vplayed.feature.auth.presentation.components.AuthLayout
 import com.vplayed.feature.auth.presentation.components.AuthLayoutMode
@@ -38,10 +38,30 @@ import com.vplayed.feature.auth.presentation.components.LoginSocialButton
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.viewmodel.LoginOptions
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.shared.l10n.Res
+import com.vplayed.shared.l10n.common_continue
+import com.vplayed.shared.l10n.common_sign_in
+import com.vplayed.shared.l10n.login_apple
+import com.vplayed.shared.l10n.login_continue_as_guest
+import com.vplayed.shared.l10n.login_divider_email
+import com.vplayed.shared.l10n.login_divider_phone
+import com.vplayed.shared.l10n.login_email_help
+import com.vplayed.shared.l10n.login_email_label
+import com.vplayed.shared.l10n.login_email_placeholder
+import com.vplayed.shared.l10n.login_google
+import com.vplayed.shared.l10n.login_have_account
+import com.vplayed.shared.l10n.login_phone_country
+import com.vplayed.shared.l10n.login_phone_help
+import com.vplayed.shared.l10n.login_phone_label
+import com.vplayed.shared.l10n.login_step
+import com.vplayed.shared.l10n.login_terms
+import com.vplayed.shared.l10n.login_title
+import com.vplayed.shared.l10n.message
+import com.vplayed.shared.l10n.signInMessage
 import com.vplayed.shared.phone.CountryDialCode
 import com.vplayed.shared.phone.CountryDialCodes
 import com.vplayed.shared.validation.EmailValidationResult
-import com.vplayed.shared.validation.PhoneValidationResult
+import org.jetbrains.compose.resources.stringResource
 
 /** Callbacks of the login screen. */
 data class LoginActions(
@@ -105,13 +125,13 @@ private fun ColumnScope.LoginForm(
     val colors = AppDesignSystem.colors
     val dimens = AppDesignSystem.dimens
     Text(
-        text = stringResource(R.string.login_step_label).uppercase(),
+        text = stringResource(Res.string.login_step, localizedNumber(1)).uppercase(),
         style = textStyles.badge,
         color = AppDesignSystem.extendedColors.formAccent,
     )
     Spacer(Modifier.height(StepLabelSpacing))
     Text(
-        text = stringResource(R.string.login_title),
+        text = stringResource(Res.string.login_title),
         style = textStyles.formTitle,
         color = auth.textStrong,
         modifier = Modifier.semantics { heading() },
@@ -122,7 +142,7 @@ private fun ColumnScope.LoginForm(
     Column(verticalArrangement = Arrangement.spacedBy(SocialGap)) {
         if (options.googleAvailable) {
             LoginSocialButton(
-                text = stringResource(R.string.login_social_google),
+                text = stringResource(Res.string.login_google),
                 icon = AppIcons.Google,
                 iconTint = null,
                 enabled = !busy,
@@ -132,51 +152,44 @@ private fun ColumnScope.LoginForm(
         }
         // Sign in with Apple has no native Android flow (the previous apps offer it on iOS only).
         LoginSocialButton(
-            text = stringResource(R.string.login_social_apple),
+            text = stringResource(Res.string.login_apple),
             icon = AppIcons.Apple,
             enabled = false,
             onClick = {},
         )
     }
     Spacer(Modifier.height(SocialBottomSpacing + DividerTopSpacing))
-    OrDivider(text = stringResource(if (options.usesPhone) R.string.login_divider_phone else R.string.login_divider_email))
+    OrDivider(text = stringResource(if (options.usesPhone) Res.string.login_divider_phone else Res.string.login_divider_email))
     Spacer(Modifier.height(dimens.spacing.lg))
 
     if (options.usesPhone) {
-        val phoneError = when (options.phone.numberError) {
-            null, PhoneValidationResult.VALID -> null
-            // The prototype's message for India's ten-digit numbers; the previous app's for the others.
-            else -> stringResource(
-                if (options.phone.country.dialCode == CountryDialCodes.INDIA.dialCode) R.string.login_phone_error_india else R.string.login_phone_error_invalid,
-            )
-        }
+        // The shared rule (as VPlayed): India's ten-digit message, the previous app's for the others.
+        val phoneError = options.phone.numberError
+            ?.message(isIndia = options.phone.country.dialCode == CountryDialCodes.INDIA.dialCode, isRegistration = false)
+            ?.let { stringResource(it) }
         LoginPhoneField(
             value = options.phone.formattedNumber,
             onValueChange = actions.onPhoneChange,
             country = options.phone.country,
             countries = CountryDialCodes.all,
             onCountryChange = actions.onCountryChange,
-            label = stringResource(R.string.login_phone_label),
-            countryLabel = stringResource(R.string.login_phone_country),
-            helpText = stringResource(R.string.login_phone_help),
+            label = stringResource(Res.string.login_phone_label),
+            countryLabel = stringResource(Res.string.login_phone_country),
+            helpText = stringResource(Res.string.login_phone_help),
             errorMessage = phoneError,
             readOnly = options.phone.isSubmitting,
             onImeAction = actions.onSubmit,
             onFocusLost = actions.onPhoneFocusLost,
         )
     } else {
-        val errorMessage = when (uiState.emailError) {
-            EmailValidationResult.EMPTY -> stringResource(R.string.login_email_error_empty)
-            EmailValidationResult.INVALID_FORMAT -> stringResource(R.string.login_email_error_invalid)
-            EmailValidationResult.TOO_LONG -> stringResource(R.string.login_email_error_too_long)
-            EmailValidationResult.VALID, null -> null
-        }
+        // The field is capped at the maximum length, so every error is about the address (shared rule).
+        val errorMessage = uiState.emailError?.signInMessage?.let { stringResource(it) }
         LoginEmailField(
             value = uiState.email,
             onValueChange = actions.onEmailChange,
-            label = stringResource(R.string.login_email_label),
-            placeholder = stringResource(R.string.login_email_placeholder),
-            helpText = stringResource(R.string.login_email_help),
+            label = stringResource(Res.string.login_email_label),
+            placeholder = stringResource(Res.string.login_email_placeholder),
+            helpText = stringResource(Res.string.login_email_help),
             errorMessage = errorMessage,
             readOnly = uiState.isSubmitting,
             onImeAction = actions.onSubmit,
@@ -185,7 +198,7 @@ private fun ColumnScope.LoginForm(
     }
     Spacer(Modifier.height(FormGap + ActionTopSpacing))
     LoginPrimaryButton(
-        text = stringResource(R.string.login_continue),
+        text = stringResource(Res.string.common_continue),
         loading = uiState.isSubmitting || options.phone.isSubmitting,
         onClick = actions.onSubmit,
         modifier = Modifier.testTag(LoginTestTags.SUBMIT),
@@ -196,7 +209,7 @@ private fun ColumnScope.LoginForm(
     if (options.guestAllowed) {
         Spacer(Modifier.height(FormGap + ActionTopSpacing))
         LoginSocialButton(
-            text = stringResource(R.string.login_continue_as_guest),
+            text = stringResource(Res.string.login_continue_as_guest),
             icon = AppIcons.PersonOutline,
             enabled = !busy,
             onClick = actions.onGuest,
@@ -206,9 +219,9 @@ private fun ColumnScope.LoginForm(
 
     if (compactFooter) {
         Spacer(Modifier.height(SignInLineTopSpacing))
-        val signIn = stringResource(R.string.login_sign_in)
+        val signIn = stringResource(Res.string.common_sign_in)
         Text(
-            text = highlighted(stringResource(R.string.login_have_account, signIn), listOf(signIn), colors.primary, FontWeight.Bold),
+            text = highlighted(stringResource(Res.string.login_have_account, signIn), listOf(signIn), colors.primary, FontWeight.Bold),
             style = AppDesignSystem.typography.bodyMedium,
             color = auth.textPrimary,
             textAlign = TextAlign.Center,
@@ -232,11 +245,11 @@ private fun OrDivider(text: String) {
     }
 }
 
+/** The shared terms line; its links are Markdown (`[Terms of use](terms)`), drawn highlighted (no link targets yet). */
 @Composable
 private fun termsText(linkColor: Color): AnnotatedString {
-    val terms = stringResource(R.string.login_terms_of_use)
-    val privacy = stringResource(R.string.login_privacy_policy)
-    return highlighted(stringResource(R.string.login_terms, terms, privacy), listOf(terms, privacy), linkColor, FontWeight.SemiBold)
+    val (text, links) = markdownLinks(stringResource(Res.string.login_terms))
+    return highlighted(text, links, linkColor, FontWeight.SemiBold)
 }
 
 /** [text] with each of [parts] drawn in [color] / [weight] (no link targets yet). */
