@@ -31,6 +31,7 @@ import com.vplayed.core.ui.markdownLinks
 import com.vplayed.core.ui.preview.ScreenPreviews
 import com.vplayed.feature.auth.presentation.components.AuthLayout
 import com.vplayed.feature.auth.presentation.components.AuthLayoutMode
+import com.vplayed.feature.auth.presentation.components.AuthSuccessStep
 import com.vplayed.feature.auth.presentation.components.LoginEmailField
 import com.vplayed.feature.auth.presentation.components.LoginPhoneField
 import com.vplayed.feature.auth.presentation.components.LoginPrimaryButton
@@ -38,6 +39,8 @@ import com.vplayed.feature.auth.presentation.components.LoginSocialButton
 import com.vplayed.feature.auth.presentation.components.LoginTestTags
 import com.vplayed.feature.auth.presentation.viewmodel.LoginOptions
 import com.vplayed.feature.auth.presentation.viewmodel.LoginUiState
+import com.vplayed.feature.auth.presentation.viewmodel.textOf
+import com.vplayed.shared.auth.AuthMessage
 import com.vplayed.shared.auth.SocialProvider
 import com.vplayed.shared.l10n.Res
 import com.vplayed.shared.l10n.common_continue
@@ -110,7 +113,11 @@ fun LoginScreen(
         cardTag = LoginTestTags.CARD,
         modifier = modifier,
     ) { mode ->
-        LoginForm(uiState, options, actions, compactFooter = mode == AuthLayoutMode.SingleCard)
+        if (options.socialSucceeded) {
+            AuthSuccessStep(notice = options.notice?.let { AuthMessage.textOf(it) })
+        } else {
+            LoginForm(uiState, options, actions, compactFooter = mode == AuthLayoutMode.SingleCard)
+        }
     }
 }
 

@@ -49,6 +49,8 @@ data class LoginOptions(
     val guestAllowed: Boolean = false,
     /** The provider whose sheet or `auth/login` call is running. */
     val socialInFlight: SocialProvider? = null,
+    val socialSucceeded: Boolean = false,
+    val notice: AuthMessage? = null,
 )
 
 sealed interface LoginEvent {
@@ -115,6 +117,8 @@ class LoginViewModel @Inject constructor(
                 googleAvailable = channels.config.googleWebClientId.isNotBlank(),
                 guestAllowed = settings?.isGuestUser == true,
                 socialInFlight = social.inFlight,
+                socialSucceeded = social.succeeded,
+                notice = social.notice,
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, LoginOptions())
     }
@@ -129,10 +133,13 @@ class LoginViewModel @Inject constructor(
         // Once signed in or signed out, clean up any previous input or controller state.
         viewModelScope.launch {
             sessions.status.collect { status ->
-                if (status is SessionStatus.SignedIn || status is SessionStatus.SignedOut) {
+                if (status is SessionStatus.SignedOut) {
                     controller.clear()
                     phoneController?.clear()
                     socialController?.clear()
+                } else if (status is SessionStatus.SignedIn) {
+                    controller.clear()
+                    phoneController?.clear()
                 }
             }
         }
@@ -221,13 +228,13 @@ class LoginViewModel @Inject constructor(
     }
 
     private suspend fun SocialLoginEffect.toEvent(): LoginEvent? = when (this) {
-        // As the previous app: store the session, say so, leave Login.
+        // Store the session now while the success step is showing.
         is SocialLoginEffect.SignedIn -> {
             sessions.signIn(session)
-            LoginEvent.Close(showSignedIn = true)
+            null
         }
-        // The previous effect already closed Login.
-        SocialLoginEffect.Authenticated -> null
+        // The success step has completed: leave Login without showing any Toast.
+        SocialLoginEffect.Authenticated -> LoginEvent.Close(showSignedIn = false)
         is SocialLoginEffect.ShowDevices -> {
             channels?.socialHandoff?.put(credential, limit)
             LoginEvent.OpenOtp(credential.email.orEmpty(), startWithDeviceLimit = true, OtpChannelKind.SOCIAL)
