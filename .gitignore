@@ -27,7 +27,7 @@ buildCache/
 local.properties
 
 # Secrets & signing keys (NEVER COMMIT)
-secrets.properties
+#secrets.properties
 keystore.properties
 *.jks
 *.keystore
